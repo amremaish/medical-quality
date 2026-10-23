@@ -1,0 +1,442 @@
+{
+  "hospital": {
+    "name_ar": "المستشفى التخصصي جامعة عين شمس",
+    "name_en": "Ain Shams University Specialized Hospital",
+    "department_ar": "إدارة الرقابة على الجودة",
+    "department_en": "Quality Assurance Administration",
+    "platform_name_en": "ASUSH GSR Quality Management Platform",
+    "qa_director_ar": "د. أحمد الشين",
+    "qa_director_title_ar": "مدير إدارة الرقابة على الجودة",
+    "source_note": "Assessor and department assignments extracted from the official GSR Supervision Rounds sheet (جدول مرور الإشراف الطبي على الأقسام GSR)."
+  },
+  "assessors": [
+    {
+      "id": "AS-01",
+      "name_ar": "د/ نورهان أحمد",
+      "name_en": "Dr. Norhan Ahmed",
+      "departments": [
+        "الصيدليات",
+        "مخازن الأدوية",
+        "غرف تجهيز الدواء",
+        "الايكو"
+      ]
+    },
+    {
+      "id": "AS-02",
+      "name_ar": "م/ سحر ابراهيم",
+      "name_en": "Sahar Ibrahim",
+      "departments": [
+        "إجازة مرضية"
+      ],
+      "note": "على إجازة مرضية وقت إعداد الجدول"
+    },
+    {
+      "id": "AS-03",
+      "name_ar": "م/ ماري فايز",
+      "name_en": "Mary Fayez",
+      "departments": [
+        "أمراض الكلى",
+        "الصدر",
+        "معمل النوم",
+        "وظائف التنفس",
+        "ضمور العضلات"
+      ]
+    },
+    {
+      "id": "AS-04",
+      "name_ar": "م/ ايمان عبدالفتاح",
+      "name_en": "Eman Abdelfattah",
+      "departments": []
+    },
+    {
+      "id": "AS-05",
+      "name_ar": "م/ رحاب فتحي",
+      "name_en": "Rehab Fathy",
+      "departments": [
+        "عظام (3-4)",
+        "رعاية نهارية",
+        "غسيل الكلى",
+        "عيادة الرمد",
+        "السمعيات"
+      ]
+    },
+    {
+      "id": "AS-06",
+      "name_ar": "م/ فاطمة أحمد",
+      "name_en": "Fatma Ahmed",
+      "departments": [
+        "المعامل",
+        "المناظير",
+        "الأشعة"
+      ]
+    },
+    {
+      "id": "AS-07",
+      "name_ar": "م/ أسماء زكريا",
+      "name_en": "Asmaa Zakaria",
+      "departments": [
+        "رعاية B",
+        "الأورام",
+        "عيادة الأورام",
+        "رعاية نهارية - أورام",
+        "رعاية متوسطة باطنة",
+        "زرع النخاع",
+        "العمليات"
+      ]
+    },
+    {
+      "id": "AS-08",
+      "name_ar": "م/ رانيا عبدالله",
+      "name_en": "Rania Abdallah",
+      "departments": [
+        "قسطرة القلب",
+        "الطوارئ",
+        "مخ وأعصاب رعاية A"
+      ]
+    },
+    {
+      "id": "AS-09",
+      "name_ar": "م/ محمد جمال",
+      "name_en": "Mohamed Gamal",
+      "departments": [
+        "التفتيت",
+        "جراحة قلب وصدر",
+        "أنف وأذن",
+        "الدماغية",
+        "علاج طبيعي داخلي"
+      ]
+    },
+    {
+      "id": "AS-10",
+      "name_ar": "م/ محمد القاضي",
+      "name_en": "Mohamed Elkady",
+      "departments": [
+        "رعاية الصدر",
+        "القلب",
+        "الأجنحة",
+        "التخاطب",
+        "بنك الدم"
+      ]
+    },
+    {
+      "id": "AS-11",
+      "name_ar": "م/ آية يوسف",
+      "name_en": "Aya Youssef",
+      "departments": [
+        "زرع الكلى",
+        "عيادة زرع الكلى",
+        "أوعية دموية أطفال",
+        "جراحة 1-3",
+        "النساء",
+        "المحضن"
+      ]
+    },
+    {
+      "id": "AS-12",
+      "name_ar": "م/ هدير محمد",
+      "name_en": "Hadeer Mohamed",
+      "departments": [
+        "رعاية C",
+        "العيادات",
+        "جراحة 4",
+        "زرع الكبد",
+        "أعصاب باطنة",
+        "التعقيم"
+      ]
+    },
+    {
+      "id": "AS-13",
+      "name_ar": "م/ زينب",
+      "name_en": "Zeinab",
+      "departments": [
+        "رعاية القلب",
+        "الباطنة",
+        "عظام (1-2) ومسالك",
+        "جراحة 4",
+        "جراحة 2",
+        "أعصاب باطنة",
+        "رسم المخ",
+        "رعاية نهارية",
+        "تجميل",
+        "طب المناطق الحارة"
+      ]
+    }
+  ],
+  "departments": [
+    {
+      "name_ar": "الصيدليات",
+      "type": "Pharmacy",
+      "assessor_id": "AS-01"
+    },
+    {
+      "name_ar": "مخازن الأدوية",
+      "type": "Pharmacy",
+      "assessor_id": "AS-01"
+    },
+    {
+      "name_ar": "غرف تجهيز الدواء",
+      "type": "Pharmacy",
+      "assessor_id": "AS-01"
+    },
+    {
+      "name_ar": "الايكو",
+      "type": "Diagnostic",
+      "assessor_id": "AS-01"
+    },
+    {
+      "name_ar": "أمراض الكلى",
+      "type": "Inpatient",
+      "assessor_id": "AS-03"
+    },
+    {
+      "name_ar": "الصدر",
+      "type": "Inpatient",
+      "assessor_id": "AS-03"
+    },
+    {
+      "name_ar": "معمل النوم",
+      "type": "Diagnostic",
+      "assessor_id": "AS-03"
+    },
+    {
+      "name_ar": "وظائف التنفس",
+      "type": "Diagnostic",
+      "assessor_id": "AS-03"
+    },
+    {
+      "name_ar": "ضمور العضلات",
+      "type": "Inpatient",
+      "assessor_id": "AS-03"
+    },
+    {
+      "name_ar": "عظام (3-4)",
+      "type": "Inpatient",
+      "assessor_id": "AS-05"
+    },
+    {
+      "name_ar": "رعاية نهارية",
+      "type": "Day Care",
+      "assessor_id": "AS-05"
+    },
+    {
+      "name_ar": "غسيل الكلى",
+      "type": "Inpatient",
+      "assessor_id": "AS-05"
+    },
+    {
+      "name_ar": "عيادة الرمد",
+      "type": "Outpatient",
+      "assessor_id": "AS-05"
+    },
+    {
+      "name_ar": "السمعيات",
+      "type": "Diagnostic",
+      "assessor_id": "AS-05"
+    },
+    {
+      "name_ar": "المعامل",
+      "type": "Laboratory",
+      "assessor_id": "AS-06"
+    },
+    {
+      "name_ar": "المناظير",
+      "type": "Diagnostic",
+      "assessor_id": "AS-06"
+    },
+    {
+      "name_ar": "الأشعة",
+      "type": "Radiology",
+      "assessor_id": "AS-06"
+    },
+    {
+      "name_ar": "رعاية B",
+      "type": "Inpatient",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "الأورام",
+      "type": "Inpatient",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "عيادة الأورام",
+      "type": "Outpatient",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "رعاية متوسطة باطنة",
+      "type": "Inpatient",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "زرع النخاع",
+      "type": "Inpatient",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "العمليات",
+      "type": "Operating Rooms",
+      "assessor_id": "AS-07"
+    },
+    {
+      "name_ar": "قسطرة القلب",
+      "type": "Cath Lab",
+      "assessor_id": "AS-08"
+    },
+    {
+      "name_ar": "الطوارئ",
+      "type": "ER",
+      "assessor_id": "AS-08"
+    },
+    {
+      "name_ar": "مخ وأعصاب رعاية A",
+      "type": "ICU",
+      "assessor_id": "AS-08"
+    },
+    {
+      "name_ar": "التفتيت",
+      "type": "Diagnostic",
+      "assessor_id": "AS-09"
+    },
+    {
+      "name_ar": "جراحة قلب وصدر",
+      "type": "Operating Rooms",
+      "assessor_id": "AS-09"
+    },
+    {
+      "name_ar": "أنف وأذن",
+      "type": "Inpatient",
+      "assessor_id": "AS-09"
+    },
+    {
+      "name_ar": "الدماغية",
+      "type": "ICU",
+      "assessor_id": "AS-09"
+    },
+    {
+      "name_ar": "علاج طبيعي داخلي",
+      "type": "Rehabilitation",
+      "assessor_id": "AS-09"
+    },
+    {
+      "name_ar": "رعاية الصدر",
+      "type": "ICU",
+      "assessor_id": "AS-10"
+    },
+    {
+      "name_ar": "القلب",
+      "type": "Cardiology",
+      "assessor_id": "AS-10"
+    },
+    {
+      "name_ar": "الأجنحة",
+      "type": "Inpatient Wards",
+      "assessor_id": "AS-10"
+    },
+    {
+      "name_ar": "التخاطب",
+      "type": "Speech Therapy",
+      "assessor_id": "AS-10"
+    },
+    {
+      "name_ar": "بنك الدم",
+      "type": "Blood Bank",
+      "assessor_id": "AS-10"
+    },
+    {
+      "name_ar": "زرع الكلى",
+      "type": "Transplant",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "عيادة زرع الكلى",
+      "type": "Outpatient",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "أوعية دموية أطفال",
+      "type": "Inpatient",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "جراحة 1-3",
+      "type": "Operating Rooms",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "النساء",
+      "type": "Inpatient",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "المحضن",
+      "type": "NICU",
+      "assessor_id": "AS-11"
+    },
+    {
+      "name_ar": "رعاية C",
+      "type": "ICU",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "العيادات",
+      "type": "Outpatient",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "جراحة 4",
+      "type": "Operating Rooms",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "زرع الكبد",
+      "type": "Transplant",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "أعصاب باطنة",
+      "type": "Neurosciences",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "التعقيم",
+      "type": "CSSD",
+      "assessor_id": "AS-12"
+    },
+    {
+      "name_ar": "رعاية القلب",
+      "type": "ICU",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "الباطنة",
+      "type": "Inpatient",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "عظام (1-2) ومسالك",
+      "type": "Inpatient",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "جراحة 2",
+      "type": "Operating Rooms",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "رسم المخ",
+      "type": "Diagnostic",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "تجميل",
+      "type": "Plastic Surgery",
+      "assessor_id": "AS-13"
+    },
+    {
+      "name_ar": "طب المناطق الحارة",
+      "type": "Tropical Medicine",
+      "assessor_id": "AS-13"
+    }
+  ]
+}

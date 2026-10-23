@@ -2,6 +2,7 @@ package com.app.medicalquality.auth.security;
 
 import com.app.medicalquality.config.AdminProperties;
 import com.app.medicalquality.config.JwtProperties;
+import com.app.medicalquality.config.StorageProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, AdminProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, AdminProperties.class, StorageProperties.class})
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -36,6 +37,35 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.POST, "/api/auth/login")
                         .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**")
+                        .permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/audits",
+                                "/audits/*",
+                                "/record-reviews",
+                                "/record-reviews/*",
+                                "/dashboard",
+                                "/dashboard/*",
+                                "/departments",
+                                "/assessors",
+                                "/findings",
+                                "/capas",
+                                "/capas/**",
+                                "/evidence",
+                                "/evidence/**",
+                                "/imports",
+                                "/imports/**",
+                                "/hospitals",
+                                "/organizations",
+                                "/organizations/**",
+                                "/owners",
+                                "/owners/**",
+                                "/account/password",
+                                "/css/**",
+                                "/js/**",
+                                "/icons/**",
+                                "/fonts/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Import PDF</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/imports">PDF import</a>
+      <section class="panel form-card">
+        <h1>Import PDF</h1>
+        <p>Upload a text PDF. Correct the preview, then confirm to create the audit.</p>
+        <form id="upload" class="stack">
+          <div><label for="file">PDF</label><input id="file" type="file" accept="application/pdf" required></div>
+          <div class="form-actions">
+            <a class="btn ghost" href="/imports">Cancel</a>
+            <button type="submit">Parse PDF</button>
+          </div>
+        </form>
+        <textarea id="preview" rows="16" hidden></textarea>
+        <p class="no-print">
+          <button type="button" id="save-preview" class="ghost" hidden>Save preview</button>
+          <button type="button" id="confirm" hidden>Confirm and create audit</button>
+        </p>
+        <p class="err" id="err"></p>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  let importId = null;
+  $("#upload").on("submit", function (event) {
+    event.preventDefault();
+    const data = new FormData();
+    data.append("file", $("#file")[0].files[0]);
+    $.ajax({
+      url: "/api/audit-imports",
+      method: "POST",
+      data: data,
+      processData: false,
+      contentType: false,
+      headers: { Authorization: "Bearer " + sessionStorage.getItem("mq_token") }
+    }).done(function (res) {
+      importId = res.data.id;
+      $("#preview").val(res.data.extractedJson).prop("hidden", false);
+      $("#save-preview, #confirm").prop("hidden", false);
+    }).fail(function (xhr) {
+      $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Import failed");
+    });
+  });
+  $("#save-preview").on("click", function () {
+    let parsed;
+    try { parsed = JSON.parse($("#preview").val()); } catch (error) { $("#err").text("Preview is not valid JSON"); return; }
+    api("PUT", "/api/audit-imports/" + importId, parsed).done(function () { $("#err").text("Preview saved"); });
+  });
+  $("#confirm").on("click", function () {
+    api("POST", "/api/audit-imports/" + importId + "/confirm").done(function (res) {
+      window.location.href = "/audits/" + res.data;
+    });
+  });
+</script>
+</body>
+</html>

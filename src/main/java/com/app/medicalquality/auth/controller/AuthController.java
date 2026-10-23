@@ -2,6 +2,7 @@ package com.app.medicalquality.auth.controller;
 
 import com.app.medicalquality.auth.dto.LoginRequest;
 import com.app.medicalquality.auth.dto.MeResponse;
+import com.app.medicalquality.auth.dto.PasswordChangeRequest;
 import com.app.medicalquality.auth.dto.TokenResponse;
 import com.app.medicalquality.auth.service.AuthService;
 import com.app.medicalquality.common.AppResponse;
@@ -32,5 +33,12 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AppResponse<MeResponse>> me(Authentication a_authentication) {
         return AppResponse.success(authService.me(a_authentication.getName()));
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<AppResponse<String>> password(
+            @Valid @RequestBody PasswordChangeRequest a_request, Authentication a_authentication) {
+        authService.changePassword(a_authentication.getName(), a_request);
+        return AppResponse.success("Password updated");
     }
 }

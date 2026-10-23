@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF import</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div>
+          <h1>PDF import</h1>
+          <p>Read a filled GSR checklist from a text PDF, review the extraction, then create the audit.</p>
+        </div>
+        <a class="btn" href="/imports/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Import PDF</a>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+</body>
+</html>

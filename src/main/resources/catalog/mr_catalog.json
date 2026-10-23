@@ -1,0 +1,77 @@
+[
+  {"name":"Patient-Centered Care (PCC)","items":[
+    {"std":"PCC.04","eoc":"2","text":"The patient's or legal representative's approval and consent to being hospitalized is recorded in the patient record."},
+    {"std":"PCC.07","eoc":"4","text":"Patient education activities are recorded in the patient's medical record."},
+    {"std":"PCC.09","eoc":"4","text":"A new consent is recorded in the patient's medical record when indicated."},
+    {"std":"PCC.10","eoc":"3","text":"Informed refusal form is recorded and kept in the patient's medical record."},
+    {"std":"PCC.12","eoc":"2","text":"Patient needs and preferences are documented in the patient's medical record."}
+  ]},
+  {"name":"Access, Continuity of Care & Transfer (ACT)","items":[
+    {"std":"ACT.03","eoc":"4","text":"The patient's identifiers are recorded in the patient's medical record."},
+    {"std":"ACT.04","eoc":"4","text":"When patient care is required during the admission process, the care plan is recorded in the patient's medical record."},
+    {"std":"ACT.07","eoc":"3","text":"The patient's medical record identifies the physician responsible for care."},
+    {"std":"ACT.09","eoc":"5","text":"The process of requesting, communicating, and responding to second opinion requests is recorded in the patient's medical record."},
+    {"std":"ACT.10","eoc":"5","text":"Information exchange between consultation requestor and responder to consultation requests is comprehensive and recorded in the patient's medical record."},
+    {"std":"ACT.11","eoc":"5","text":"Information exchange between multidisciplinary management teams describes the patient's conditions and important findings and is recorded in the patient's medical record."},
+    {"std":"ACT.12","eoc":"5","text":"Requirements for transporting patients in critical conditions are identified, used, and recorded in the patient's medical record."},
+    {"std":"ACT.14","eoc":"3","text":"The discharge, temporary discharge, referral, and/or transfer-out orders are clearly recorded in the patient's medical record."},
+    {"std":"ACT.14","eoc":"5","text":"The referral feedback is reviewed, signed, and recorded in the patient's medical record."},
+    {"std":"ACT.15","eoc":"3","text":"A copy of the discharge summary is kept in the patient's medical record."}
+  ]},
+  {"name":"Integration of Care & Documentation (ICD)","items":[
+    {"std":"ICD.02","eoc":"3","text":"Pre-hospital care records are complete and kept in the patient's medical record."},
+    {"std":"ICD.03","eoc":"5","text":"Medical records of emergency patients include items from i) to viii) in the intent."},
+    {"std":"ICD.05","eoc":"4","text":"The assessment and reassessment are recorded in the patient's medical records."},
+    {"std":"ICD.05","eoc":"5","text":"The plans of care and follow-up instructions are recorded in the patient's medical records."},
+    {"std":"ICD.06","eoc":"3","text":"Initial medical assessments are performed within 24 hours of hospitalization or more frequently as per patient needs and recorded in the patient's medical record."},
+    {"std":"ICD.06","eoc":"5","text":"Medical reassessments are performed, as per the policy, and recorded in the patient's medical record."},
+    {"std":"ICD.07","eoc":"5","text":"Nurses' assessment and reassessment are timely recorded in the medical records."},
+    {"std":"ICD.09","eoc":"5","text":"Pain screening, assessment, pain management plan, and reassessment are documented in the patient records."},
+    {"std":"ICD.10","eoc":"3","text":"The hospital assesses and reassesses all inpatients for risk of fall using appropriate tools suitable for the patient population and documented in the patient's medical records."},
+    {"std":"ICD.10","eoc":"6","text":"General measures and tailored care plans (fall prevention) are recorded in the patient's medical record."},
+    {"std":"ICD.11","eoc":"5","text":"General measures and tailored care plans (pressure injury) are recorded in the patient's medical record."},
+    {"std":"ICD.12","eoc":"5","text":"Tailored care plans based on individual patient VTE risk assessments are conducted and recorded in the patient files."},
+    {"std":"ICD.13","eoc":"5","text":"The patient's nutritional needs assessment and management is recorded in the patient's medical record."},
+    {"std":"ICD.14","eoc":"4","text":"Special patient populations' needs assessment, and management is recorded in the patient's medical record."},
+    {"std":"ICD.15","eoc":"2","text":"The plan of care addresses all the elements mentioned in the intent from a) to g) and is documented in the patient medical record."},
+    {"std":"ICD.20","eoc":"3","text":"Indication for transfusion is recorded in the patient's medical record."},
+    {"std":"ICD.21","eoc":"4","text":"Monitoring of the patient's condition during transfusion is recorded in the patient's medical record."},
+    {"std":"ICD.22","eoc":"4","text":"Recognition and response to clinical deterioration are recorded in the patient's medical record."}
+  ]},
+  {"name":"Care of Special Populations & Services (CSS)","items":[
+    {"std":"CSS.01","eoc":"5","text":"Assessment, plan of care, and monitoring of progress are documented in the patient's medical record."},
+    {"std":"CSS.03","eoc":"4","text":"Management and use of tubes and catheters are recorded in patient medical records."},
+    {"std":"CSS.04","eoc":"5","text":"Terminally ill patients' assessment, reassessment, and management are recorded in the patient's medical record."},
+    {"std":"CSS.05","eoc":"6","text":"Management of cardio-pulmonary arrests is recorded in the patient's medical record."},
+    {"std":"CSS.07","eoc":"5","text":"Assessment, plan of care, monitoring of progress, and discharge instructions are documented in the patient's medical record."},
+    {"std":"CSS.08","eoc":"5","text":"Assessment, plan of care, and monitoring of progress are documented in the patient's medical record."},
+    {"std":"CSS.09","eoc":"5","text":"Assessment, reassessment, plan of care, CTG (cardiotocography), Partogram, pain management, and delivery summary are documented in the patient's medical record."},
+    {"std":"CSS.10","eoc":"4","text":"Assessment, plan of care, and monitoring of progress are documented in the patient's medical record."},
+    {"std":"CSS.12","eoc":"5","text":"Restraints and seclusions are recorded in the patient's medical record."},
+    {"std":"CSS.13","eoc":"4","text":"Assessment, plan of care, and monitoring of progress are documented in the patient's medical record."},
+    {"std":"CSS.14","eoc":"4","text":"Pre-transplantation evaluation and post-transplantation care plan are recorded in the patient's medical record."}
+  ]},
+  {"name":"Diagnostic & Ancillary Services (DAS)","items":[
+    {"std":"DAS.04","eoc":"6","text":"When an additional or substituted examination is called for, medical imaging diagnostic service staff member informs patients and referrers and documents it in the patient's medical record."},
+    {"std":"DAS.08","eoc":"3","text":"Complete medical imaging and ancillary studies are recorded in the patient's medical record."}
+  ]},
+  {"name":"Surgical & Anesthesia Services (SAS)","items":[
+    {"std":"SAS.03","eoc":"4","text":"The identified risks of the patient's conditions are documented in the patient's medical record before surgery or invasive procedure."},
+    {"std":"SAS.04","eoc":"3","text":"The focused assessment is documented in the patient's medical record."},
+    {"std":"SAS.08","eoc":"3","text":"The report is kept in the patient's medical record."},
+    {"std":"SAS.10","eoc":"4","text":"The examination results are available in the patient's medical record within the defined time frame."},
+    {"std":"SAS.16","eoc":"4","text":"The pre-anesthesia assessment and the anesthesia plan are recorded in the patient's medical record."},
+    {"std":"SAS.16","eoc":"5","text":"Immediate pre-induction assessment is performed by the anesthesiologist and recorded in the patient's medical record."},
+    {"std":"SAS.17","eoc":"3","text":"The results of the monitoring are recorded in the patient's medical record regularly according to the approved professional practice guidelines/protocols."},
+    {"std":"SAS.18","eoc":"2","text":"The implemented anesthesia care is recorded in the patient's medical record, including all elements from a) to k) in the intent."},
+    {"std":"SAS.18","eoc":"3","text":"A copy of the anesthesia record is kept in the patient's medical record."},
+    {"std":"SAS.20","eoc":"2","text":"The patient's physiologic status is monitored during post-anesthesia care, according to professional practice guidelines, and recorded in the patient's medical record."},
+    {"std":"SAS.20","eoc":"4","text":"The provided post-anesthesia care from a) to k) in the intent is recorded in the patient's medical record."},
+    {"std":"SAS.22","eoc":"4","text":"The pre-procedural sedation assessment and the procedural sedation plan are recorded in the patient's medical record."},
+    {"std":"SAS.23","eoc":"5","text":"Procedural sedation record is kept in the patient's medical record."},
+    {"std":"SAS.24","eoc":"3","text":"The provided post-procedural sedation care is recorded in the patient's medical record, including items from a) to g) in the intent."}
+  ]},
+  {"name":"Academic Affairs, Teaching & Research (ATH)","items":[
+    {"std":"ATH.09","eoc":"3","text":"Signed patient consent for participation in research is placed in the research file and the patient's medical record."}
+  ]}
+]

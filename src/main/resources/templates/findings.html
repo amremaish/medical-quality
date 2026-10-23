@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Findings</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head"><div><h1>Findings</h1><p>Gaps recorded against a standard, with risk and status.</p></div></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th>GSR</th><th>Risk</th><th>Status</th><th>Description</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/findings").done(function (res) {
+    $("#rows").html(res.data.map(function (row) {
+      return "<tr><td>" + esc(row.gsrCode) + "</td><td><span class='pill'>" + esc(row.riskLevel) + "</span></td><td><span class='pill'>" + esc(row.status) + "</span></td><td>" + esc(row.description) + "</td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>No findings</td></tr>");
+  });
+</script>
+</body>
+</html>

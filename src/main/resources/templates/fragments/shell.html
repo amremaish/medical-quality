@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<svg th:fragment="i(name)" class="icon" viewBox="0 0 24 24" aria-hidden="true">
+  <use th:href="|/icons/sprite.svg#${name}|"></use>
+</svg>
+
+<aside th:fragment="sidebar" class="sidebar">
+  <a class="brand" href="/">
+    <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('plus')}"></svg></span>
+    <span class="brand-name">Medical quality<small id="brand-org">Quality platform</small></span>
+  </a>
+  <div class="side-scroll">
+    <nav class="side-nav platform-nav">
+      <a class="side-link" href="/organizations"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg><span class="label">Organizations</span></a>
+      <a class="side-link" href="/owners"><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Owners</span></a>
+    </nav>
+    <nav class="side-nav org-nav">
+      <a class="side-link" href="/"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg><span class="label">Home</span></a>
+      <div class="nav-group" id="dash-group">
+        <button type="button" class="nav-toggle" id="dash-toggle">
+          <svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Dashboards</span>
+        </button>
+        <div class="subnav">
+          <a href="/dashboard">Command center</a>
+          <a href="/dashboard/executive">Executive</a>
+          <a href="/dashboard/assessor">Assessor</a>
+          <a href="/dashboard/quality-director">Quality director</a>
+        </div>
+      </div>
+      <a class="side-link" href="/audits"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg><span class="label">GSR audits</span></a>
+      <a class="side-link" href="/record-reviews"><svg th:replace="~{fragments/shell :: i('file')}"></svg><span class="label">Medical records</span></a>
+      <a class="side-link" href="/departments"><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Departments</span></a>
+      <a class="side-link" href="/assessors"><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Assessors</span></a>
+      <a class="side-link" href="/findings"><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="label">Findings</span></a>
+      <a class="side-link" href="/capas"><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">CAPA</span></a>
+      <a class="side-link" href="/evidence"><svg th:replace="~{fragments/shell :: i('card')}"></svg><span class="label">Evidence</span></a>
+      <a class="side-link" href="/imports"><svg th:replace="~{fragments/shell :: i('chart')}"></svg><span class="label">PDF import</span></a>
+    </nav>
+  </div>
+  <div class="side-foot">
+    <div class="profile">
+      <span class="avatar" id="profile-initial">A</span>
+      <span class="profile-text"><strong id="profile-name">Signed in</strong><small id="profile-role">Quality</small></span>
+    </div>
+    <button type="button" id="logout" class="side-link logout">
+      <svg th:replace="~{fragments/shell :: i('logout')}"></svg><span class="label">Log out</span>
+    </button>
+  </div>
+</aside>
+
+<div th:fragment="topbar">
+<div id="org-banner" class="org-banner">
+  <span>Viewing <strong id="org-banner-name"></strong> as platform admin</span>
+  <button type="button" id="leave-org">Return to platform</button>
+</div>
+<header class="topbar">
+  <button type="button" id="menu-toggle" class="icon-btn menu-toggle" aria-label="Menu">
+    <svg th:replace="~{fragments/shell :: i('menu')}"></svg>
+  </button>
+  <label class="search">
+    <svg th:replace="~{fragments/shell :: i('search')}"></svg>
+    <input id="global-search" placeholder="Search this page" autocomplete="off">
+  </label>
+  <a class="icon-btn hospital-tools" href="/findings" aria-label="Findings"><svg th:replace="~{fragments/shell :: i('bell')}"></svg></a>
+  <a class="icon-btn hospital-tools" href="/capas" aria-label="CAPA"><svg th:replace="~{fragments/shell :: i('mail')}"></svg></a>
+  <a class="btn hospital-tools" href="/audits/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New audit</a>
+  <span class="today-pill" id="today-pill">Today</span>
+</header>
+</div>
+</body>
+</html>

@@ -24,6 +24,14 @@ public class GlobalExceptionHandler {
         this.messageSource = a_messageSource;
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<AppResponse<Object>> handleNotFound(NotFoundException a_exception) {
+        return AppResponse.failure(
+                resolve(a_exception.getMessageKey(), a_exception.getArgs()),
+                a_exception.getData(),
+                HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(AppException.class)
     public ResponseEntity<AppResponse<Object>> handleAppException(AppException a_exception) {
         return AppResponse.failure(

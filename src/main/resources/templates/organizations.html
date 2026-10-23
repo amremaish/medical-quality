@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organizations</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div>
+          <h1>Organizations</h1>
+          <p>Hospitals and other facilities on the platform. Open one to work inside its dashboard.</p>
+        </div>
+        <a class="btn" href="/organizations/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New organization</a>
+      </div>
+      <p class="err" id="form-error"></p>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Owner</th><th>Email</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/organizations").done(function (res) {
+    $("#rows").html(res.data.map(function (row) {
+      return "<tr><td>" + esc(row.name) + "</td><td><span class='pill'>" + esc(row.orgType) +
+        "</span></td><td>" + esc(row.status) + "</td><td>" + esc(row.ownerName) + "</td><td>" + esc(row.ownerEmail) +
+        "</td><td><button type='button' class='ghost open-org' data-id='" + row.id + "' data-name='" + esc(row.name) +
+        "'>Open dashboard</button></td></tr>";
+    }).join("") || "<tr><td colspan='6' class='empty'>No organizations yet</td></tr>");
+  }).fail(function (xhr) {
+    $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Organizations are limited to the platform super admin");
+  });
+  $(document).on("click", ".open-org", function () {
+    sessionStorage.setItem("mq_org", JSON.stringify({ id: $(this).data("id"), name: $(this).attr("data-name") }));
+    window.location.href = "/";
+  });
+</script>
+</body>
+</html>

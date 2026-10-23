@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSR checklist</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-audit-id=${auditId}">
+  <div class="app-shell">
+    <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+    <div class="workspace">
+      <header th:replace="~{fragments/shell :: topbar}"></header>
+      <main id="gsr-app" class="page"></main>
+    </div>
+  </div>
+  <script th:src="@{/js/jquery.min.js}"></script>
+  <script th:src="@{/js/api.js}"></script>
+  <script th:src="@{/js/gsr.js}"></script>
+</body>
+</html>

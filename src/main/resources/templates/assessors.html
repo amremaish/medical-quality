@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assessors</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head"><div><h1>Assessors</h1><p>People assigned to score departments.</p></div></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th>Code</th><th>Name</th><th>Arabic</th><th>Active</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/assessors").done(function (res) {
+    $("#rows").html(res.data.map(function (row) {
+      return "<tr><td>" + esc(row.code) + "</td><td>" + esc(row.nameEn) + "</td><td>" + esc(row.nameAr) + "</td><td><span class='pill'>" + (row.active ? "Active" : "Inactive") + "</span></td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>No assessors</td></tr>");
+  });
+</script>
+</body>
+</html>

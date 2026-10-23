@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Owners</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div>
+          <h1>Owners</h1>
+          <p>People invited to run an organization. Invited owners still need to choose a password.</p>
+        </div>
+        <a class="btn" href="/owners/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Invite owner</a>
+      </div>
+      <p class="err" id="form-error"></p>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr><th>Owner</th><th>Email</th><th>Organization</th><th>Status</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/owners").done(function (res) {
+    $("#rows").html(res.data.map(function (row) {
+      return "<tr><td>" + esc(row.name) + "</td><td>" + esc(row.email) + "</td><td>" + esc(row.organizationName) +
+        "</td><td><span class='pill'>" + esc(row.status) + "</span></td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>No owners invited yet</td></tr>");
+  }).fail(function (xhr) {
+    $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Owners are limited to the platform super admin");
+  });
+</script>
+</body>
+</html>

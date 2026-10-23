@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evidence</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div>
+          <h1>Evidence</h1>
+          <p>Files collected for an audit.</p>
+        </div>
+        <a class="btn" href="/evidence/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Upload</a>
+      </div>
+      <div class="table-card">
+        <table class="data-table"><thead><tr><th>File</th><th>Size</th><th>Audit</th></tr></thead><tbody id="rows"></tbody></table>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function load() {
+    api("GET", "/api/evidence").done(function (res) {
+      $("#rows").html(res.data.map(function (row) {
+        return "<tr><td><a href='/api/files/" + row.documentId + "'>" + row.originalName + "</a></td><td>" + row.sizeBytes + "</td><td>" + (row.auditId || "") + "</td></tr>";
+      }).join("") || "<tr><td colspan='3' class='empty'>No evidence</td></tr>");
+    });
+  }
+  load();
+</script>
+</body>
+</html>

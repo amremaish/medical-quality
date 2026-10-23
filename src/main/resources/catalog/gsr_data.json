@@ -1,0 +1,410 @@
+[
+  {
+    "gsr": "GSR.01",
+    "title": "Patient Identification",
+    "ref": "ACT.03",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.01 Accurate patient identification through at least two identifiers to identify the",
+    "eoc": [
+      "The hospital has an approved policy and procedure for patient identification that addresses all elements mentioned in the intent from a) through f).",
+      "All healthcare professionals are aware of hospital policy.",
+      "Patient identification is conducted before performing diagnostic procedures, providing treatments, and performing any procedures.",
+      "The patient's identifiers are recorded in the patient’s medical record.",
+      "The hospital monitors the reported data on patients’ identification and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.02",
+    "title": "Verbal and Telephone Orders",
+    "ref": "ICD.18",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.02 Verbal or telephone orders are communicated and documented according to the",
+    "eoc": [
+      "The hospital has an approved policy guiding the communication of verbal and telephone orders that addresses at least all elements mentioned in the intent from a) through e).",
+      "Healthcare professionals are aware of the elements of the policy.",
+      "All verbal and telephone orders are documented, then read back by the receiver, and confirmed by the ordering physician.",
+      "All verbal and telephone orders are recorded in the patient’s medical record within a predefined timeframe.",
+      "The hospital monitors the reported data of verbal and telephone orders and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.03",
+    "title": "Critical Results",
+    "ref": "ICD.19",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.03 Critical results are communicated in time and documented according to the",
+    "eoc": [
+      "The hospital has an approved policy to guide critical results communications that address at least all elements mentioned in the intent from a) through d).",
+      "Healthcare professionals are aware of the elements of the policy.",
+      "All critical results are recorded within a predefined timeframe, including all elements in the intent from i) through vii).",
+      "The hospital monitors the reported data on critical results and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.04",
+    "title": "Handover Communication",
+    "ref": "ACT.08",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.04 A standardized approach to handover communications, including an opportunity",
+    "eoc": [
+      "The hospital has an approved policy that addresses all elements mentioned in the intent from a) through f).",
+      "All healthcare professionals are aware of hospital policy.",
+      "Handover communication conducted between different shifts and between different levels of care (different departments/ services).",
+      "Handover communications are documented using an established tool or format and are accessible as needed.",
+      "The hospital monitors the reported data on handover communication and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.05",
+    "title": "Fall Assessment and Prevention",
+    "ref": "ICD.10",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.05 Patient’s risk of falling is assessed, periodically reassessed, and managed.",
+    "eoc": [
+      "The hospital has an approved policy to guide the assessment of a patient’s risk of fall that includes all elements in the intent from a) through g).",
+      "Healthcare professionals are aware of the elements of approved policy.",
+      "The hospital assesses and reassesses all inpatients for risk of fall using appropriate tools suitable for the patient population and documented in the patient's medical records.",
+      "Outpatients with certain conditions, situations, or locations will be screened for risk of falls.",
+      "The families of patients who are at higher risk of falling are aware of and involved in fall prevention measures.",
+      "General measures and tailored care plans are recorded in the patient’s medical record."
+    ]
+  },
+  {
+    "gsr": "GSR.06",
+    "title": "Pressure Ulcers Prevention",
+    "ref": "ICD.11",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.06 The Patient’s risk of developing pressure ulcers is assessed, periodically",
+    "eoc": [
+      "The hospital has an approved policy to guide pressure ulcer risk assessment that addresses all elements mentioned in the intent from a) through f).",
+      "Healthcare professionals are aware of the elements of the pressure ulcer risk assessment and of prevention measures.",
+      "The hospital assesses upon admission and reassesses each patient's risk for developing a pressure ulcer using appropriate tools suitable for the patient population.",
+      "The families of patients at higher risk of pressure ulceration are aware of and involved in prevention measures.",
+      "General measures and tailored care plans are recorded in the patient’s medical record."
+    ]
+  },
+  {
+    "gsr": "GSR.07",
+    "title": "Venous Thromboembolism Prophylaxis",
+    "ref": "ICD.12",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.07 Patient’s risk of developing venous thromboembolism (deep venous thrombosis",
+    "eoc": [
+      "The hospital has an approved guideline for assessment and management of patient’s VTE risk that addresses all elements mentioned in the intent from a) through e).",
+      "Healthcare professionals are aware of the elements of the VTE assessment process and of prevention measures.",
+      "VTE risk assessments are completed and recorded within an approved timeframe.",
+      "The families of patients at higher risk for VTE are aware of and involved in prevention measures.",
+      "Tailored care plans based on individual patient VTE risk assessments are conducted and recorded in the patient files."
+    ]
+  },
+  {
+    "gsr": "GSR.08",
+    "title": "Critical Alarms",
+    "ref": "CSS.02",
+    "cat": "General Patient Safety",
+    "std_title": "The hospital has an approved policy and procedures for the management and use of clinical alarms.",
+    "eoc": [
+      "The hospital has an approved policy that addresses all the elements mentioned in the intent from a) through e).",
+      "Competent individuals are responsible for the management and use of critical alarms.",
+      "Management and use of critical alarms are done according to the approved policy.",
+      "Management and use of critical alarms are recorded according to policy.",
+      "Alarm events and malfunctions are reported, and actions are taken to maintain the safety of clinical alarms."
+    ]
+  },
+  {
+    "gsr": "GSR.09",
+    "title": "Catheter and Tube Misconnections",
+    "ref": "CSS.03",
+    "cat": "General Patient Safety",
+    "std_title": "A system is in place to prevent catheter and tubing misconnections.",
+    "eoc": [
+      "The hospital has an approved policy that addresses all the elements mentioned in the intent from a) through e).",
+      "Competent individuals are responsible for the management and use of tubes and catheters.",
+      "Management and use of tubes and catheters are done as per the hospital policy.",
+      "Management and use of tubes and catheters are recorded in patient medical records."
+    ]
+  },
+  {
+    "gsr": "GSR.10",
+    "title": "Recognition and Response to Clinical Deterioration",
+    "ref": "ICD.22",
+    "cat": "General Patient Safety",
+    "std_title": "GSR.10 The hospital has a hospital-wide process for recognition of and response to",
+    "eoc": [
+      "The hospital has an approved policy that addresses all the elements mentioned in the intent from a) through g).",
+      "All staff members involved in direct patient care are trained on recognition of and response to clinical deterioration.",
+      "Recognition and response to clinical deterioration are done as per the hospital policy, using age specific criteria.",
+      "Recognition and response to clinical deterioration are recorded in the patient’s medical record."
+    ]
+  },
+  {
+    "gsr": "GSR.11",
+    "title": "Cardiopulmonary Resuscitation",
+    "ref": "CSS.05",
+    "cat": "General Patient Safety",
+    "std_title": "Response to cardio-pulmonary arrest in the hospital is managed for both adult and pediatric patients.",
+    "eoc": [
+      "The hospital has an approved policy that addresses all the elements mentioned in the intent from a) through i).",
+      "All staff members involved in cardiopulmonary resuscitation are aware of the hospital policy.",
+      "Staff with basic life support start the process immediately, while those with advanced life support will start within a maximum of 5 minutes.",
+      "Age-appropriate emergency equipment, medications, and supplies are available throughout the hospital.",
+      "Emergency equipment and supplies are checked daily and replaced after use.",
+      "Management of cardio-pulmonary arrests is recorded in the patient's medical record."
+    ]
+  },
+  {
+    "gsr": "GSR.12",
+    "title": "Radiation Safety Program",
+    "ref": "DAS.09",
+    "cat": "Diagnostic & Ancillary Services",
+    "std_title": "Radiation safety program is developed and implemented.",
+    "eoc": [
+      "The hospital has a written, updated, and approved radiation safety program that addresses all elements mentioned in the intent from a) through h).",
+      "Staff members involved in medical imaging are aware of the radiation safety program.",
+      "The hospital ensures that exposed patients do not exceed the approved maximum level.",
+      "Environmental radiation safety measures, personal monitoring devices results, and the regular CBC results are available and documented.",
+      "Nuclear medicine safety measures are implemented by addressing the elements from i) through v) in the intent.",
+      "Laser safety measures are implemented by addressing the elements from I) to III) in the intent."
+    ]
+  },
+  {
+    "gsr": "GSR.13",
+    "title": "Laboratory Safety Program",
+    "ref": "DAS.23",
+    "cat": "Diagnostic & Ancillary Services",
+    "std_title": "GSR.13 A comprehensive documented laboratory safety program is implemented.",
+    "eoc": [
+      "A written updated program that describes safety measures for laboratory services and facilities is documented and includes the items in the intent from a) to j).",
+      "Laboratory staff are trained on the safety program.",
+      "Laboratory risk assessment is performed, and safety reports are issued at least semi-annually to the hospital environment and facility safety committee.",
+      "Spill kits, safety showers and eye washes are available, functioning and tested.",
+      "Safety precautions are implemented.",
+      "The hospital monitors the reported data on laboratory safety program and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.14",
+    "title": "Surgical Site Marking",
+    "ref": "SAS.05",
+    "cat": "Surgical & Invasive Procedural Safety",
+    "std_title": "GSR.14 The precise site where surgery or invasive procedure shall be performed is clearly",
+    "eoc": [
+      "The hospital has an approved policy guiding the site marking process that includes at least elements from a) through g) mentioned in the intent.",
+      "Involved staff are aware of the implementation of site marking.",
+      "Site marking is a unified mark throughout the hospital and is performed by the physician responsible for the surgery or invasive procedure.",
+      "Site marking is performed before sending the patient to the operating room, involving the patient and the patient’s family.",
+      "The hospital monitors the reported data regarding the site marking process and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.15",
+    "title": "Pre-operative Checklist",
+    "ref": "SAS.06",
+    "cat": "Surgical & Invasive Procedural Safety",
+    "std_title": "GSR.15 Documents and equipment needed for procedures, anesthesia, or sedation are",
+    "eoc": [
+      "The hospital has a process for preoperative verification of all needed documents and equipment.",
+      "The staff involved are trained on the hospital process for preoperative verification.",
+      "Recorded evidence of preoperative verification of all items mentioned in the intent before each surgery or invasive procedure exists.",
+      "The hospital monitors the reported data on the preoperative verification process and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.16",
+    "title": "Time-out / Sign-out",
+    "ref": "SAS.07",
+    "cat": "Surgical & Invasive Procedural Safety",
+    "std_title": "GSR.16 Time-out is conducted before starting surgical and invasive procedures, and",
+    "eoc": [
+      "The hospital has an approved policy to ensure the correct patient, procedure, and body part before surgical or invasive procedures.",
+      "Time out is done immediately before surgery or invasive procedure starts.",
+      "Sign-out is conducted at the end of all surgical and invasive procedures and before leaving the operating location.",
+      "The hospital monitors the reported data on time-out and sign-out processes and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.17",
+    "title": "Instrument Retention Prevention",
+    "ref": "SAS.09",
+    "cat": "Surgical & Invasive Procedural Safety",
+    "std_title": "GSR.17 The accuracy of counting sponges, needles, and instruments pre- and post-",
+    "eoc": [
+      "The hospital has a process to manage surgical counts.",
+      "Two staff members count sponges, needles, towels, or instruments before, during, and after the surgery or invasive procedure, as the second one acts as a witness for the first one.",
+      "The preoperative, intraoperative, and postoperative counts are recorded, and the performing physician signs the record.",
+      "There is a process to manage and deal with miscounts once identified.",
+      "The hospital monitors the reported data on the counting process and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.18",
+    "title": "Medication Reconciliation (BPMH)",
+    "ref": "MMS.10",
+    "cat": "Medication Management & Safety",
+    "std_title": "GSR.18 Medications are reconciled across all interfaces of care in the hospital.",
+    "eoc": [
+      "The hospital has an approved policy for medication reconciliation that includes all elements mentioned in the intent from a) through d).",
+      "Staff responsible for reconciling medications are trained to take the best possible medication history (BPMH) and reconcile medications.",
+      "Medication reconciliation occurs in situations mentioned in the intent from i) to iv) within a defined timeframe.",
+      "Medication prescribers compare the list of current medications with the list of medications to be prescribed and make clinical decisions based on the comparison.",
+      "Reconciled medications are clearly recorded, and related information is clearly communicated to healthcare professionals involved in the patient’s medication prescribing."
+    ]
+  },
+  {
+    "gsr": "GSR.19",
+    "title": "Medication Storage and Labelling",
+    "ref": "MMS.04",
+    "cat": "Medication Management & Safety",
+    "std_title": "GSR.19 Medications are stored in a manner that maintains the security and quality of the",
+    "eoc": [
+      "Medications are safely and securely stored according to the manufacturer/marketing authorization holder's recommendations and kept clean and organized.",
+      "The hospital has an approved process for the use and storage of multi-dose medications to ensure their stability and safety.",
+      "The hospital has a clear process to deal with an electric power outage to ensure the integrity of any affected medications before use.",
+      "Medications in stores, pharmacies, and patient care areas are periodically (at least monthly) inspected to confirm compliance with proper storage conditions.",
+      "Medications, medication containers, other solutions, and the components used in their preparation are clearly labeled (if not clearly shown in the original packages or boxes) with the name, concentration/ strength, expiration date, batch number, and any applicable warnings."
+    ]
+  },
+  {
+    "gsr": "GSR.20",
+    "title": "High-Alert Medications and Concentrated Electrolytes",
+    "ref": "MMS.06",
+    "cat": "Medication Management & Safety",
+    "std_title": "GSR.20 High-Alert medications and concentrated electrolytes are identified, stored, and",
+    "eoc": [
+      "The hospital has an approved policy that addresses all elements from a) through c) in the intent",
+      "The hospital has an approved and annually updated list(s) of high-alert medications and concentrated electrolytes.",
+      "The hospital implements process(es) to prevent inadvertent use of high-alert medications and concentrated electrolytes.",
+      "The hospital trains healthcare professionals involved in the management and use of high-alert medications and concentrated electrolytes.",
+      "The hospital monitors the reported data on the management of high-alert medications and concentrated electrolytes and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.21",
+    "title": "Look-alike and Sound-alike Medications",
+    "ref": "MMS.07",
+    "cat": "Medication Management & Safety",
+    "std_title": "GSR.21 Look-alike and sound-alike medications are identified and stored in a manner",
+    "eoc": [
+      "The hospital has an approved policy that addresses all elements from a) to d) in the intent.",
+      "There is an approved list of LASA medications that is updated at least annually.",
+      "The hospital provides training to the healthcare professionals involved in the management and use of LASA.",
+      "LASA medications are stored, segregated, and labeled safely and uniformly in all locations.",
+      "The hospital monitors the reported data on the management of LASA and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.22",
+    "title": "Hand Hygiene",
+    "ref": "IPC.04",
+    "cat": "Infection Prevention & Control",
+    "std_title": "GSR.22 professional hand hygiene guidelines are adopted and implemented throughout the",
+    "eoc": [
+      "The hospital has approved Hand Hygiene policies and procedures based on current professional guidelines that address all the elements mentioned in the intent from a) to g).",
+      "Healthcare professionals are trained on these policies and procedures.",
+      "Hand hygiene is implemented according to the policy.",
+      "Hand hygiene posters are displayed in required areas.",
+      "Hand hygiene facilities are present in the required numbers and places.",
+      "The hospital monitors the reported data on the hand hygiene process and takes actions to control or improve the process as appropriate."
+    ]
+  },
+  {
+    "gsr": "GSR.23",
+    "title": "Fire and Smoke Safety",
+    "ref": "EFS.03",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.23 Fire and smoke safety plan addresses prevention, early detection, response, and",
+    "eoc": [
+      "The hospital has an approved and updated fire and smoke safety plan that includes all elements from a) through f) in the intent.",
+      "The hospital provides training on fire safety and evacuation for all staff at least annually.",
+      "The hospital fire alarm and smoke containment system is available, accessible and functioning.",
+      "The hospital firefighting systems are available, accessible and functioning.",
+      "Inspection, maintenance and testing of fire alarms, firefighting, and smoke containment systems are performed and recorded.",
+      "The evacuation path is clearly marked with exit signs and free from obstructions."
+    ]
+  },
+  {
+    "gsr": "GSR.24",
+    "title": "Fire Drills",
+    "ref": "EFS.04",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.24 Fire drills are performed in different clinical and non-clinical areas.",
+    "eoc": [
+      "Fire drills are performed at least quarterly, including one unannounced drill annually.",
+      "All staff members participate in fire drills at least once annually.",
+      "Fire drill results are recorded, including items from a) through d) that are mentioned in the intent.",
+      "Fire drill evaluation is performed after performing each drill with a corrective action plan when indicated.",
+      "The hospital staff guarantees a safe evacuation for patients, staff, and visitors."
+    ]
+  },
+  {
+    "gsr": "GSR.25",
+    "title": "Hazardous Materials Safety",
+    "ref": "EFS.06",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.25 The hospital plans safe handling, storage, usage, and transportation of hazardous",
+    "eoc": [
+      "The hospital has an approved and updated hazardous material and waste management plan that addresses all elements from a) through k) in the intent.",
+      "The hospital ensures the availability of the hospital SDS.",
+      "Staff is trained on hazardous material and waste management plans.",
+      "The hospital ensures the safe use, handling, storage, and labeling of hazardous materials.",
+      "The hospital ensures that waste handling, storage, and labeling are according to laws and regulations.",
+      "The hospital has an approved document for spill management, Investigation, and recording of different incidents related to hazardous materials."
+    ]
+  },
+  {
+    "gsr": "GSR.26",
+    "title": "Safety Management Plan",
+    "ref": "EFS.07",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.26 A safe work environment plan addresses high-risk areas, procedures, risk mitigation",
+    "eoc": [
+      "The hospital has an approved and updated plan to ensure a safe work environment, including all elements from a) through h) in the intent.",
+      "Safety instructions are posted in all high-risk areas.",
+      "Staff are aware of safety measures based on their job hazards.",
+      "PPEs are available and used whenever indicated.",
+      "Safety measures are implemented in all areas."
+    ]
+  },
+  {
+    "gsr": "GSR.27",
+    "title": "Medical Equipment Plan",
+    "ref": "EFS.10",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.27 Medical equipment plan ensures selection, inspection, testing, maintenance, and",
+    "eoc": [
+      "The hospital has an approved and updated medical equipment management plan that addresses all elements from a) through c) in the intent.",
+      "The hospital has a qualified individual to oversee medical equipment management.",
+      "The hospital ensures that only trained and competent staff handles the specialized equipment(s).",
+      "Records are maintained for medical equipment inventory, user training, equipment identification cards, company emergency contact, and testing on installation.",
+      "Records are maintained for medical equipment, periodic preventive maintenance, calibration, and malfunction history.",
+      "Equipment adverse incidents are reported, and actions are taken."
+    ]
+  },
+  {
+    "gsr": "GSR.28",
+    "title": "Utilities Management Plan",
+    "ref": "EFS.11",
+    "cat": "Environmental & Facility Safety",
+    "std_title": "GSR.28 Essential utility plan addresses regular inspection, maintenance, testing, and repair.",
+    "eoc": [
+      "The hospital has an approved and updated plan for utility management that includes items a) through l) in the intent.",
+      "The hospital has trained staff members to oversee utility management.",
+      "The hospital utility management plan is implemented.",
+      "Records are maintained for utility systems inventory, testing, periodic preventive maintenance, and malfunction history.",
+      "Critical utility systems are identified, and backup availability is ensured."
+    ]
+  },
+  {
+    "gsr": "GSR.29",
+    "title": "Abbreviations",
+    "ref": "IMT.04",
+    "cat": "Information Management & Technology",
+    "std_title": "GSR.29 The hospital defines standardized symbols and abbreviations.",
+    "eoc": [
+      "The hospital has an approved policy that includes all the elements in the intent from a) through d).",
+      "All staff who record in the patient’s medical record are aware of the policy requirements.",
+      "Symbols and abbreviations, including the approved list, are used according to the policy.",
+      "Violation of the list of not-to-use symbols/abbreviations is monitored, and corrective actions are taken."
+    ]
+  }
+]

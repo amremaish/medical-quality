@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medical record reviews</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+    <div class="workspace">
+      <header th:replace="~{fragments/shell :: topbar}"></header>
+      <main class="page">
+        <div class="page-head">
+          <div>
+            <h1>Medical records</h1>
+            <p>Legible, accurate, and complete. A record counts only when all three are met.</p>
+          </div>
+          <a class="btn" href="/record-reviews/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New review</a>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Hospital</th><th>Reviewer</th><th>Department</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script th:src="@{/js/jquery.min.js}"></script>
+  <script th:src="@{/js/api.js}"></script>
+  <script>
+    function esc(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+      });
+    }
+    function load() {
+      api("GET", "/api/record-reviews").done(function (res) {
+        $("#rows").html(res.data.map(function (row) {
+          return "<tr><td>" + row.reviewDate + "</td><td><a href='/record-reviews/" + row.id + "'>" +
+            esc(row.hospitalName) + "</a></td><td>" + esc(row.reviewerName) + "</td><td>" + esc(row.departmentName) + "</td></tr>";
+        }).join("") || "<tr><td colspan='4'>No reviews yet</td></tr>");
+      });
+    }
+    load();
+  </script>
+</body>
+</html>

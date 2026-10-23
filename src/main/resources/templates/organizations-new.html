@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New organization</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/organizations">Organizations</a>
+      <section class="panel form-card">
+        <h1>New organization</h1>
+        <p>Choose a type and invite the first owner. Hospital is available now.</p>
+        <form id="create-organization" class="stack">
+          <div><label for="org-name">Name</label><input id="org-name" required maxlength="255"></div>
+          <div><label for="org-type">Type</label><select id="org-type" required></select></div>
+          <div><label for="owner-first">Owner first name</label><input id="owner-first" required maxlength="128"></div>
+          <div><label for="owner-last">Owner last name</label><input id="owner-last" maxlength="128"></div>
+          <div><label for="owner-email">Owner email</label><input id="owner-email" type="email" required maxlength="320"></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/organizations">Cancel</a>
+            <button type="submit">Create and invite owner</button>
+          </div>
+        </form>
+        <section id="invite" hidden>
+          <h2>Owner invitation</h2>
+          <p id="invite-text"></p>
+          <p><strong>Email</strong> <span id="invite-email"></span></p>
+          <p><strong>Temporary password</strong> <span id="invite-password"></span></p>
+          <button type="button" id="copy-invite" class="ghost">Copy invitation</button>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  api("GET", "/api/organizations/types").done(function (res) {
+    $("#org-type").html(res.data.map(function (type) {
+      return "<option value='" + type + "'>" + type.charAt(0) + type.slice(1).toLowerCase() + "</option>";
+    }).join(""));
+  });
+  $("#create-organization").on("submit", function (event) {
+    event.preventDefault();
+    $("#form-error").text("");
+    api("POST", "/api/organizations", {
+      name: $("#org-name").val(),
+      orgType: $("#org-type").val(),
+      ownerFirstName: $("#owner-first").val(),
+      ownerLastName: $("#owner-last").val(),
+      ownerEmail: $("#owner-email").val()
+    }).done(function (res) {
+      const invite = res.data;
+      $("#invite-text").text(invite.organizationName + " is ready. Send these credentials to the owner.");
+      $("#invite-email").text(invite.ownerEmail);
+      $("#invite-password").text(invite.temporaryPassword);
+      $("#invite").prop("hidden", false);
+      $("#create-organization").hide();
+    }).fail(function (xhr) {
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not create the organization");
+    });
+  });
+  $("#copy-invite").on("click", function () {
+    const text = "Sign in at " + window.location.origin + "/login\nEmail: " + $("#invite-email").text() +
+      "\nTemporary password: " + $("#invite-password").text() + "\nYou will be asked to choose a new password.";
+    navigator.clipboard.writeText(text);
+  });
+</script>
+</body>
+</html>

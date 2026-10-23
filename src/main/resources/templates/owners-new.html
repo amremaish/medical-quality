@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invite owner</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/owners">Owners</a>
+      <section class="panel form-card">
+        <h1>Invite owner</h1>
+        <p>The owner signs in with this email and must replace the temporary password.</p>
+        <form id="invite-owner" class="stack">
+          <div><label for="owner-org">Organization</label><select id="owner-org" required></select></div>
+          <div><label for="owner-first">First name</label><input id="owner-first" required maxlength="128"></div>
+          <div><label for="owner-last">Last name</label><input id="owner-last" maxlength="128"></div>
+          <div><label for="owner-email">Email</label><input id="owner-email" type="email" required maxlength="320"></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/owners">Cancel</a>
+            <button type="submit">Send invitation</button>
+          </div>
+        </form>
+        <section id="invite" hidden>
+          <h2>Owner invitation</h2>
+          <p id="invite-text"></p>
+          <p><strong>Email</strong> <span id="invite-email"></span></p>
+          <p><strong>Temporary password</strong> <span id="invite-password"></span></p>
+          <button type="button" id="copy-invite" class="ghost">Copy invitation</button>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/organizations").done(function (res) {
+    $("#owner-org").html(res.data.map(function (row) {
+      return "<option value='" + row.id + "'>" + esc(row.name) + "</option>";
+    }).join("") || "<option value=''>Create an organization first</option>");
+  });
+  $("#invite-owner").on("submit", function (event) {
+    event.preventDefault();
+    $("#form-error").text("");
+    api("POST", "/api/owners", {
+      organizationId: Number($("#owner-org").val()),
+      ownerFirstName: $("#owner-first").val(),
+      ownerLastName: $("#owner-last").val(),
+      ownerEmail: $("#owner-email").val()
+    }).done(function (res) {
+      const invite = res.data;
+      $("#invite-text").text(invite.organizationName + " owner is invited.");
+      $("#invite-email").text(invite.ownerEmail);
+      $("#invite-password").text(invite.temporaryPassword);
+      $("#invite").prop("hidden", false);
+      $("#invite-owner").hide();
+    }).fail(function (xhr) {
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not invite the owner");
+    });
+  });
+  $("#copy-invite").on("click", function () {
+    const text = "Sign in at " + window.location.origin + "/login\nEmail: " + $("#invite-email").text() +
+      "\nTemporary password: " + $("#invite-password").text() + "\nYou will be asked to choose a new password.";
+    navigator.clipboard.writeText(text);
+  });
+</script>
+</body>
+</html>

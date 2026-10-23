@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New CAPA</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/capas">CAPA</a>
+      <section class="panel form-card">
+        <h1>New CAPA</h1>
+        <p>Attach a corrective action to a finding.</p>
+        <form id="capa-form" class="stack">
+          <div><label for="findingId">Finding id</label><input id="findingId" required></div>
+          <div><label for="correctiveAction">Corrective action</label><input id="correctiveAction" required></div>
+          <div><label for="responsiblePerson">Responsible</label><input id="responsiblePerson" required></div>
+          <div><label for="targetDate">Target date</label><input id="targetDate" type="date"></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/capas">Cancel</a>
+            <button type="submit">Add CAPA</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  $("#capa-form").on("submit", function (event) {
+    event.preventDefault();
+    api("POST", "/api/findings/" + $("#findingId").val() + "/capas", {
+      correctiveAction: $("#correctiveAction").val(),
+      responsiblePerson: $("#responsiblePerson").val(),
+      targetDate: $("#targetDate").val() || null,
+      progress: 0,
+      status: "Open"
+    }).done(function () {
+      window.location.href = "/capas";
+    }).fail(function (xhr) {
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not add the CAPA");
+    });
+  });
+</script>
+</body>
+</html>

@@ -11,4 +11,6 @@ public class MeResponse {
     private final String username;
     private final String roleName;
     private final boolean superAdmin;
+    private final boolean mustChangePassword;
+    private final String organizationName;
 }

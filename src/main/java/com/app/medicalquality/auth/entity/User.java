@@ -1,6 +1,9 @@
 package com.app.medicalquality.auth.entity;
 
 import com.app.medicalquality.common.BaseEntity;
+import com.app.medicalquality.hospital.entity.Assessor;
+import com.app.medicalquality.hospital.entity.Department;
+import com.app.medicalquality.organization.entity.Organization;
 import com.app.medicalquality.role.entity.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,8 +29,17 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = 320)
     private String username;
+
+    @Column(length = 320, unique = true)
+    private String email;
+
+    @Column(name = "first_name", length = 128)
+    private String firstName;
+
+    @Column(name = "last_name", length = 128)
+    private String lastName;
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
@@ -41,4 +53,19 @@ public class User extends BaseEntity {
 
     @Column(name = "is_super_admin", nullable = false)
     private boolean superAdmin;
+
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assessor_id")
+    private Assessor assessor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
 }

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAPA</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div>
+          <h1>CAPA</h1>
+          <p>Corrective actions tied to an open finding.</p>
+        </div>
+        <a class="btn" href="/capas/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Add CAPA</a>
+      </div>
+      <div class="table-card">
+        <table class="data-table"><thead><tr><th>Finding</th><th>Status</th><th>Progress</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function load() {
+    api("GET", "/api/capas").done(function (res) {
+      $("#rows").html(res.data.map(function (row) {
+        return "<tr><td>" + row.findingId + "</td><td><span class='pill'>" + row.status + "</span></td><td>" + row.progress + "%</td><td>" + row.correctiveAction + "</td></tr>";
+      }).join("") || "<tr><td colspan='4' class='empty'>No CAPA</td></tr>");
+    });
+  }
+  load();
+</script>
+</body>
+</html>

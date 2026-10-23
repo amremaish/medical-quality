@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title}">Dashboard</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+    <div class="workspace">
+      <header th:replace="~{fragments/shell :: topbar}"></header>
+      <main class="page" id="board" th:attr="data-title=${title}">
+        <section class="hero" id="hero"></section>
+        <div class="kpis" id="kpis"></div>
+        <div class="icon-stats" id="icon-stats"></div>
+        <div class="split">
+          <div class="chart-card" id="bars"></div>
+          <div class="chart-card" id="ring"></div>
+        </div>
+        <div class="mini-row" id="mini"></div>
+        <p class="err" id="err"></p>
+      </main>
+    </div>
+  </div>
+  <script th:src="@{/js/jquery.min.js}"></script>
+  <script th:src="@{/js/api.js}"></script>
+  <script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

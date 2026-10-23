@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New audit</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/audits">GSR audits</a>
+      <section class="panel form-card">
+        <h1>New audit</h1>
+        <p>Name the round and the person scoring it. Link a department when it already exists.</p>
+        <form id="create-audit" class="stack">
+          <div><label for="departmentName">Department</label><input id="departmentName" required></div>
+          <div><label for="auditorName">Auditor</label><input id="auditorName" required></div>
+          <div><label for="auditDate">Date</label><input id="auditDate" type="date" required></div>
+          <div><label for="departmentId">Linked department</label><select id="departmentId"><option value="">None</option></select></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/audits">Cancel</a>
+            <button type="submit">Create audit</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/audits.js}"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="login-page" data-page="login">
+  <main class="login-split card">
+    <section class="login-brand">
+      <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('plus')}"></svg></span>
+      <h1>Medical quality</h1>
+      <p>One platform for every hospital. Standards, records, findings, and follow-up in the same workspace.</p>
+    </section>
+    <section class="login-panel">
+      <h1>Sign in</h1>
+      <p>Use your email and the password from your invitation.</p>
+      <form id="login-form" class="stack">
+        <div>
+          <label for="username">Email or username</label>
+          <input id="username" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="err" id="login-error"></p>
+        <button type="submit">Sign in</button>
+      </form>
+    </section>
+  </main>
+  <script th:src="@{/js/jquery.min.js}"></script>
+  <script th:src="@{/js/api.js}"></script>
+  <script>
+    $("#login-form").on("submit", function (event) {
+      event.preventDefault();
+      $("#login-error").text("");
+      $.ajax({
+        url: "/api/auth/login",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ username: $("#username").val(), password: $("#password").val() })
+      }).done(function (res) {
+        sessionStorage.setItem("mq_token", res.data.token);
+        window.location.href = "/";
+      }).fail(function (xhr) {
+        $("#login-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Login failed");
+      });
+    });
+  </script>
+</body>
+</html>
