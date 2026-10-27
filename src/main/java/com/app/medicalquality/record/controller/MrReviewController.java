@@ -28,8 +28,8 @@ public class MrReviewController {
     }
 
     @GetMapping("/api/record-reviews")
-    public ResponseEntity<AppResponse<List<MrViews.ReviewSummary>>> list() {
-        return AppResponse.success(mrReviewService.list());
+    public ResponseEntity<AppResponse<List<MrViews.ReviewSummary>>> list(Authentication a_authentication) {
+        return AppResponse.success(mrReviewService.list(a_authentication));
     }
 
     @PostMapping("/api/record-reviews")

@@ -1,5 +1,6 @@
 package com.app.medicalquality.finding.service;
 
+import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.service.CurrentUserService;
 import com.app.medicalquality.exception.AppException;
 import com.app.medicalquality.exception.NotFoundException;
@@ -10,8 +11,10 @@ import com.app.medicalquality.finding.repository.FindingRepository;
 import com.app.medicalquality.gsr.entity.Audit;
 import com.app.medicalquality.gsr.service.AuditAccess;
 import com.app.medicalquality.gsr.service.AuditTimelineWriter;
+import com.app.medicalquality.hospital.service.DepartmentScope;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.Authentication;
@@ -26,23 +29,29 @@ public class FindingService {
     private final AuditAccess auditAccess;
     private final CurrentUserService currentUserService;
     private final AuditTimelineWriter timelineWriter;
+    private final DepartmentScope departmentScope;
 
     public FindingService(
             FindingRepository a_findingRepository,
             CapaRepository a_capaRepository,
             AuditAccess a_auditAccess,
             CurrentUserService a_currentUserService,
-            AuditTimelineWriter a_timelineWriter) {
+            AuditTimelineWriter a_timelineWriter,
+            DepartmentScope a_departmentScope) {
         this.findingRepository = a_findingRepository;
         this.capaRepository = a_capaRepository;
         this.auditAccess = a_auditAccess;
         this.currentUserService = a_currentUserService;
         this.timelineWriter = a_timelineWriter;
+        this.departmentScope = a_departmentScope;
     }
 
     @Transactional(readOnly = true)
-    public List<FindingView> list() {
+    public List<FindingView> list(Authentication a_authentication) {
+        Set<Long> departmentIds = visibleDepartments(a_authentication);
         return findingRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .filter(a_finding -> a_finding.getDepartment() != null
+                        && departmentIds.contains(a_finding.getDepartment().getId()))
                 .map(this::findingView)
                 .toList();
     }
@@ -96,10 +105,19 @@ public class FindingService {
     }
 
     @Transactional(readOnly = true)
-    public List<CapaView> capas() {
+    public List<CapaView> capas(Authentication a_authentication) {
+        Set<Long> departmentIds = visibleDepartments(a_authentication);
         return capaRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .filter(a_capa -> a_capa.getFinding() != null
+                        && a_capa.getFinding().getDepartment() != null
+                        && departmentIds.contains(a_capa.getFinding().getDepartment().getId()))
                 .map(this::capaView)
                 .toList();
+    }
+
+    private Set<Long> visibleDepartments(Authentication a_authentication) {
+        User user = currentUserService.require(a_authentication);
+        return departmentScope.departmentIds(a_authentication, user);
     }
 
     @Transactional

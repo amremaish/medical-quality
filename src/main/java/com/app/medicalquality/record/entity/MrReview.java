@@ -2,6 +2,7 @@ package com.app.medicalquality.record.entity;
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.common.BaseEntity;
+import com.app.medicalquality.organization.entity.Organization;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,6 +39,10 @@ public class MrReview extends BaseEntity {
 
     @Column(name = "department_name", nullable = false, length = 200)
     private String departmentName;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")

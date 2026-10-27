@@ -116,8 +116,7 @@ public class AuditCommandService {
         Department department = departmentRepository
                 .findByIdAndDeletedAtIsNull(a_departmentId)
                 .orElseThrow(() -> new NotFoundException("error.department.not_found"));
-        if (!departmentScope.seesAll(a_authentication, a_user)
-                && !departmentScope.departmentIds(a_authentication, a_user).contains(department.getId())) {
+        if (!departmentScope.departmentIds(a_authentication, a_user).contains(department.getId())) {
             throw new AccessDeniedException("Access denied");
         }
         a_audit.setDepartment(department);

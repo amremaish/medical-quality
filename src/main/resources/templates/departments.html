@@ -12,8 +12,11 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <div class="page-head"><div><h1>Departments</h1><p>Clinical areas used when an audit is linked to a department.</p></div></div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Assessor</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="page-head">
+        <div><h1>Departments</h1><p>Clinical areas this hospital works with. Each hospital keeps its own list.</p></div>
+        <a class="btn" id="new-department" href="/departments/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New department</a>
+      </div>
+      <div class="table-card"><table class="data-table"><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Head</th><th>Assessor</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
     </main>
   </div>
 </div>
@@ -25,10 +28,17 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
+  api("GET", "/api/auth/me").done(function (res) {
+    if (res.data.superAdmin || res.data.roleName === "Hospital Owner") $("#new-department").prop("hidden", false);
+  });
   api("GET", "/api/departments").done(function (res) {
     $("#rows").html(res.data.map(function (row) {
-      return "<tr><td>" + esc(row.code) + "</td><td>" + esc(row.nameAr) + "</td><td><span class='pill'>" + esc(row.deptType) + "</span></td><td>" + esc(row.assessorName) + "</td></tr>";
-    }).join("") || "<tr><td colspan='4' class='empty'>No departments</td></tr>");
+      return "<tr><td>" + esc(row.code) + "</td><td>" + esc(row.nameAr) + "</td><td><span class='pill'>" + esc(row.deptType) + "</span></td><td>" +
+        esc(row.headName) + "</td><td>" + esc(row.assessorName) + "</td><td>" + esc(row.status) + "</td></tr>";
+    }).join("") || "<tr><td colspan='6' class='empty'>This hospital has no departments yet</td></tr>");
+  }).fail(function (xhr) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load departments";
+    $("#rows").html("<tr><td colspan='6' class='empty'>" + esc(message) + "</td></tr>");
   });
 </script>
 </body>

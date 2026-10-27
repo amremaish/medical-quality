@@ -1,6 +1,7 @@
 package com.app.medicalquality.hospital.entity;
 
 import com.app.medicalquality.common.BaseEntity;
+import com.app.medicalquality.organization.entity.Organization;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,8 +35,9 @@ public class Department extends BaseEntity {
     @Column(name = "name_en", nullable = false, length = 200)
     private String nameEn;
 
-    @Column(name = "dept_type", nullable = false, length = 80)
-    private String deptType;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "dept_type", referencedColumnName = "code", nullable = false)
+    private DepartmentType departmentType;
 
     @Column(name = "head_name", length = 200)
     private String headName;
@@ -49,4 +51,8 @@ public class Department extends BaseEntity {
 
     @Column(nullable = false, length = 40)
     private String status;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 }

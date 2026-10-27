@@ -69,6 +69,11 @@ public class PageController {
         return "departments";
     }
 
+    @GetMapping("/departments/new")
+    public String newDepartment() {
+        return "department-new";
+    }
+
     @GetMapping("/assessors")
     public String assessors() {
         return "assessors";

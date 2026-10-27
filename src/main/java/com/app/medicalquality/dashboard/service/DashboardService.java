@@ -14,11 +14,13 @@ import com.app.medicalquality.gsr.repository.AuditScoreRepository;
 import com.app.medicalquality.gsr.repository.GsrElementRepository;
 import com.app.medicalquality.hospital.repository.DepartmentRepository;
 import com.app.medicalquality.hospital.service.DepartmentScope;
+import com.app.medicalquality.hospital.service.HospitalContext;
 import com.app.medicalquality.score.ComplianceCalculator;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class DashboardService {
     private final EvidenceRepository evidenceRepository;
     private final CurrentUserService currentUserService;
     private final DepartmentScope departmentScope;
+    private final HospitalContext hospitalContext;
 
     public DashboardService(
             DepartmentRepository a_departmentRepository,
@@ -45,7 +48,8 @@ public class DashboardService {
             CapaRepository a_capaRepository,
             EvidenceRepository a_evidenceRepository,
             CurrentUserService a_currentUserService,
-            DepartmentScope a_departmentScope) {
+            DepartmentScope a_departmentScope,
+            HospitalContext a_hospitalContext) {
         this.departmentRepository = a_departmentRepository;
         this.auditRepository = a_auditRepository;
         this.scoreRepository = a_scoreRepository;
@@ -55,6 +59,7 @@ public class DashboardService {
         this.evidenceRepository = a_evidenceRepository;
         this.currentUserService = a_currentUserService;
         this.departmentScope = a_departmentScope;
+        this.hospitalContext = a_hospitalContext;
     }
 
     @Transactional(readOnly = true)
@@ -69,16 +74,32 @@ public class DashboardService {
                         || "Approved".equals(a_audit.getStatus())
                         || "Closed".equals(a_audit.getStatus()))
                 .count();
-        List<Finding> findings = findingRepository.findByDeletedAtIsNullOrderByCreatedAtDesc();
-        List<Capa> capas = capaRepository.findByDeletedAtIsNullOrderByCreatedAtDesc();
+        Set<Long> departmentIds = departmentScope.departmentIds(a_authentication, user);
+        Long organizationId = hospitalContext.require(a_authentication).getId();
+        List<Finding> findings = findingRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .filter(a_finding -> a_finding.getDepartment() != null
+                        && departmentIds.contains(a_finding.getDepartment().getId()))
+                .toList();
+        List<Capa> capas = capaRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .filter(a_capa -> a_capa.getFinding() != null
+                        && a_capa.getFinding().getDepartment() != null
+                        && departmentIds.contains(a_capa.getFinding().getDepartment().getId()))
+                .toList();
+        int evidence = (int) evidenceRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .filter(a_evidence -> (a_evidence.getDepartment() != null
+                                && departmentIds.contains(a_evidence.getDepartment().getId()))
+                        || (a_evidence.getAudit() != null
+                                && a_evidence.getAudit().getDepartment() != null
+                                && departmentIds.contains(a_evidence.getAudit().getDepartment().getId())))
+                .count();
         return new Summary(
-                (int) departmentRepository.countByDeletedAtIsNull(),
+                (int) departmentRepository.countByOrganizationIdAndDeletedAtIsNull(organizationId),
                 audits.size(),
                 completed,
                 audits.size() - completed,
                 (int) findings.stream().filter(a_finding -> "Open".equals(a_finding.getStatus())).count(),
                 (int) capas.stream().filter(a_capa -> !"Closed".equals(a_capa.getStatus())).count(),
-                evidenceRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().size(),
+                evidence,
                 average(audits));
     }
 

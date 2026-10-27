@@ -44,7 +44,7 @@ public class OrganizationProvisioningService {
     @Transactional(readOnly = true)
     public List<OrganizationViews.Summary> list(Authentication a_authentication) {
         requireSuperAdmin(a_authentication);
-        List<User> owners = userRepository.findByOrganizationIsNotNullAndDeletedAtIsNull();
+        List<User> owners = hospitalOwners();
         return organizationRepository.findByDeletedAtIsNullOrderByNameAsc().stream()
                 .map(a_organization -> summary(a_organization, owners))
                 .toList();
@@ -64,9 +64,7 @@ public class OrganizationProvisioningService {
     @Transactional(readOnly = true)
     public List<OrganizationViews.Owner> owners(Authentication a_authentication) {
         requireSuperAdmin(a_authentication);
-        return userRepository.findByOrganizationIsNotNullAndDeletedAtIsNull().stream()
-                .map(this::ownerView)
-                .toList();
+        return hospitalOwners().stream().map(this::ownerView).toList();
     }
 
     @Transactional
@@ -77,6 +75,12 @@ public class OrganizationProvisioningService {
                 .filter(a_organization -> a_organization.getDeletedAt() == null)
                 .orElseThrow(() -> new NotFoundException("error.organization.not_found"));
         return inviteOwner(organization, a_request.getOwnerFirstName(), a_request.getOwnerLastName(), a_request.getOwnerEmail());
+    }
+
+    private List<User> hospitalOwners() {
+        return userRepository.findByOrganizationIsNotNullAndDeletedAtIsNull().stream()
+                .filter(a_user -> a_user.getRole() != null && OWNER_ROLE.equals(a_user.getRole().getName()))
+                .toList();
     }
 
     private Organization saveOrganization(OrganizationRequests.Create a_request) {

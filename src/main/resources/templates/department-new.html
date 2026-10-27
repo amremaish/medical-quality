@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New department</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/departments">Departments</a>
+      <section class="panel form-card">
+        <h1>New department</h1>
+        <p>Add a clinical area this hospital knows. The code must be unique across the whole platform.</p>
+        <form id="create-department" class="stack">
+          <div><label for="code">Code</label><input id="code" maxlength="20" required></div>
+          <div><label for="nameAr">Arabic name</label><input id="nameAr" maxlength="200" required></div>
+          <div><label for="nameEn">English name</label><input id="nameEn" maxlength="200" required></div>
+          <div><label for="deptType">Type</label>
+            <select id="deptType" required><option value="">Select a type</option></select>
+          </div>
+          <div><label for="headName">Head</label><input id="headName" maxlength="200"></div>
+          <div><label for="coordinatorName">Coordinator</label><input id="coordinatorName" maxlength="200"></div>
+          <div><label for="assessorId">Assessor</label><select id="assessorId"><option value="">None</option></select></div>
+          <div><label for="status">Status</label>
+            <select id="status"><option>Active</option><option>Inactive</option></select>
+          </div>
+          <div><label for="units">Units</label><textarea id="units" rows="4" placeholder="One unit name per line"></textarea></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/departments">Cancel</a>
+            <button type="submit">Create department</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  api("GET", "/api/department-types").done(function (res) {
+    res.data.forEach(function (type) {
+      $("#deptType").append(
+        "<option value='" + esc(type.code) + "'>" + esc(type.nameEn) + " — " + esc(type.examplesAr) + "</option>"
+      );
+    });
+  });
+  api("GET", "/api/assessors").done(function (res) {
+    res.data.forEach(function (assessor) {
+      $("#assessorId").append("<option value='" + assessor.id + "'>" + esc(assessor.nameEn) + "</option>");
+    });
+  });
+  $("#create-department").on("submit", function (event) {
+    event.preventDefault();
+    const assessorId = $("#assessorId").val();
+    const units = $("#units").val().split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    api("POST", "/api/departments", {
+      code: $("#code").val(),
+      nameAr: $("#nameAr").val(),
+      nameEn: $("#nameEn").val(),
+      deptType: $("#deptType").val(),
+      headName: $("#headName").val(),
+      coordinatorName: $("#coordinatorName").val(),
+      status: $("#status").val(),
+      assessorId: assessorId ? Number(assessorId) : null,
+      units: units
+    }).done(function () {
+      window.location.href = "/departments";
+    }).fail(function (xhr) {
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not create department");
+    });
+  });
+</script>
+</body>
+</html>

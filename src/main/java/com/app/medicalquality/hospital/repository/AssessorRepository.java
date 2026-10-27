@@ -11,5 +11,9 @@ public interface AssessorRepository extends JpaRepository<Assessor, Long> {
 
     List<Assessor> findByDeletedAtIsNullOrderByCodeAsc();
 
+    List<Assessor> findByOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(Long a_organizationId);
+
+    Optional<Assessor> findByIdAndOrganizationIdAndDeletedAtIsNull(Long a_id, Long a_organizationId);
+
     long countByDeletedAtIsNull();
 }

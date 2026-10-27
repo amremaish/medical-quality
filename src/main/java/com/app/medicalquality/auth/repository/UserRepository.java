@@ -8,8 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @EntityGraph(attributePaths = {"role", "assessor", "department", "organization"})
+    @EntityGraph(attributePaths = {"role", "assessor", "assessor.organization", "department", "department.organization", "organization"})
     Optional<User> findByUsername(String a_username);
 
+    @EntityGraph(attributePaths = {"role", "organization"})
     List<User> findByOrganizationIsNotNullAndDeletedAtIsNull();
 }

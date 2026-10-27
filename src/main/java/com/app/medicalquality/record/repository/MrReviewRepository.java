@@ -10,4 +10,6 @@ public interface MrReviewRepository extends JpaRepository<MrReview, Long> {
     Optional<MrReview> findByIdAndDeletedAtIsNull(Long a_id);
 
     List<MrReview> findByDeletedAtIsNullOrderByReviewDateDesc();
+
+    List<MrReview> findByOrganizationIdAndDeletedAtIsNullOrderByReviewDateDesc(Long a_organizationId);
 }

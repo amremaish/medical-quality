@@ -1,10 +1,17 @@
+function authHeaders() {
+  const headers = { Authorization: "Bearer " + (sessionStorage.getItem("mq_token") || "") };
+  const opened = openedOrg();
+  if (opened && opened.id != null) headers["X-Organization-Id"] = String(opened.id);
+  return headers;
+}
+
 function api(method, url, body) {
   return $.ajax({
     url: url,
     method: method,
     contentType: body === undefined ? undefined : "application/json",
     data: body === undefined ? undefined : JSON.stringify(body),
-    headers: { Authorization: "Bearer " + (sessionStorage.getItem("mq_token") || "") }
+    headers: authHeaders()
   });
 }
 

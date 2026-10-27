@@ -56,8 +56,8 @@ public class OperationsController {
     }
 
     @GetMapping("/api/findings")
-    public ResponseEntity<AppResponse<List<FindingService.FindingView>>> findings() {
-        return AppResponse.success(findingService.list());
+    public ResponseEntity<AppResponse<List<FindingService.FindingView>>> findings(Authentication a_authentication) {
+        return AppResponse.success(findingService.list(a_authentication));
     }
 
     @PostMapping("/api/findings")
@@ -68,8 +68,8 @@ public class OperationsController {
     }
 
     @GetMapping("/api/capas")
-    public ResponseEntity<AppResponse<List<FindingService.CapaView>>> capas() {
-        return AppResponse.success(findingService.capas());
+    public ResponseEntity<AppResponse<List<FindingService.CapaView>>> capas(Authentication a_authentication) {
+        return AppResponse.success(findingService.capas(a_authentication));
     }
 
     @PostMapping("/api/findings/{findingId}/capas")
@@ -88,21 +88,28 @@ public class OperationsController {
         return AppResponse.success(findingService.updateCapa(a_capaId, a_form));
     }
 
+    @GetMapping("/api/department-types")
+    public ResponseEntity<AppResponse<List<HospitalQueryService.DepartmentTypeView>>> departmentTypes() {
+        return AppResponse.success(hospitalQueryService.departmentTypes());
+    }
+
     @GetMapping("/api/departments")
-    public ResponseEntity<AppResponse<List<HospitalQueryService.DepartmentView>>> departments() {
-        return AppResponse.success(hospitalQueryService.departments());
+    public ResponseEntity<AppResponse<List<HospitalQueryService.DepartmentView>>> departments(
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.departments(a_authentication));
     }
 
     @PostMapping("/api/departments")
     @HasPermission(PermissionEnum.MANAGE_DEPARTMENTS)
     public ResponseEntity<AppResponse<HospitalQueryService.DepartmentView>> createDepartment(
-            @RequestBody HospitalQueryService.DepartmentForm a_form) {
-        return AppResponse.success(hospitalQueryService.createDepartment(a_form));
+            @RequestBody HospitalQueryService.DepartmentForm a_form, Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.createDepartment(a_form, a_authentication));
     }
 
     @GetMapping("/api/assessors")
-    public ResponseEntity<AppResponse<List<HospitalQueryService.AssessorView>>> assessors() {
-        return AppResponse.success(hospitalQueryService.assessors());
+    public ResponseEntity<AppResponse<List<HospitalQueryService.AssessorView>>> assessors(
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.assessors(a_authentication));
     }
 
     @GetMapping("/api/dashboard")
@@ -112,8 +119,8 @@ public class OperationsController {
     }
 
     @GetMapping("/api/evidence")
-    public ResponseEntity<AppResponse<List<EvidenceService.EvidenceView>>> evidence() {
-        return AppResponse.success(evidenceService.list());
+    public ResponseEntity<AppResponse<List<EvidenceService.EvidenceView>>> evidence(Authentication a_authentication) {
+        return AppResponse.success(evidenceService.list(a_authentication));
     }
 
     @PostMapping(value = "/api/evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

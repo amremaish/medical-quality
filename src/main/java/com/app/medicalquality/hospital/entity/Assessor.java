@@ -1,7 +1,11 @@
 package com.app.medicalquality.hospital.entity;
 
 import com.app.medicalquality.common.BaseEntity;
+import com.app.medicalquality.organization.entity.Organization;
 import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,4 +40,8 @@ public class Assessor extends BaseEntity {
 
     @Column(nullable = false)
     private boolean active;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 }

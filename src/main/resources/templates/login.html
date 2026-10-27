@@ -42,6 +42,7 @@
         contentType: "application/json",
         data: JSON.stringify({ username: $("#username").val(), password: $("#password").val() })
       }).done(function (res) {
+        sessionStorage.removeItem("mq_org");
         sessionStorage.setItem("mq_token", res.data.token);
         window.location.href = "/";
       }).fail(function (xhr) {

@@ -48,6 +48,7 @@ public class SecurityConfig {
                                 "/dashboard",
                                 "/dashboard/*",
                                 "/departments",
+                                "/departments/**",
                                 "/assessors",
                                 "/findings",
                                 "/capas",

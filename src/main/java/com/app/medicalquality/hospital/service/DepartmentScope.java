@@ -22,14 +22,17 @@ public class DepartmentScope {
     private final DepartmentRepository departmentRepository;
     private final UserDepartmentAccessRepository accessRepository;
     private final PermissionEvaluator permissionEvaluator;
+    private final HospitalContext hospitalContext;
 
     public DepartmentScope(
             DepartmentRepository a_departmentRepository,
             UserDepartmentAccessRepository a_accessRepository,
-            PermissionEvaluator a_permissionEvaluator) {
+            PermissionEvaluator a_permissionEvaluator,
+            HospitalContext a_hospitalContext) {
         this.departmentRepository = a_departmentRepository;
         this.accessRepository = a_accessRepository;
         this.permissionEvaluator = a_permissionEvaluator;
+        this.hospitalContext = a_hospitalContext;
     }
 
     public boolean seesAll(Authentication a_authentication, User a_user) {
@@ -40,11 +43,28 @@ public class DepartmentScope {
     }
 
     public Set<Long> departmentIds(Authentication a_authentication, User a_user) {
+        Long organizationId = hospitalContext.require(a_authentication).getId();
+        Set<Long> inHospital = departmentRepository
+                .findByOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(organizationId)
+                .stream()
+                .map(Department::getId)
+                .collect(Collectors.toCollection(HashSet::new));
         if (seesAll(a_authentication, a_user)) {
-            return departmentRepository.findByDeletedAtIsNullOrderByCodeAsc().stream()
-                    .map(Department::getId)
-                    .collect(Collectors.toSet());
+            return inHospital;
         }
+        Set<Long> own = assigned(a_user);
+        own.retainAll(inHospital);
+        return own;
+    }
+
+    public boolean canSee(Authentication a_authentication, User a_user, Audit a_audit) {
+        if (a_audit.getDepartment() == null) {
+            return false;
+        }
+        return departmentIds(a_authentication, a_user).contains(a_audit.getDepartment().getId());
+    }
+
+    private Set<Long> assigned(User a_user) {
         Set<Long> base = new HashSet<>();
         if (a_user.getAssessor() != null) {
             departmentRepository
@@ -65,15 +85,5 @@ public class DepartmentScope {
         }
         base.retainAll(allowed);
         return base;
-    }
-
-    public boolean canSee(Authentication a_authentication, User a_user, Audit a_audit) {
-        if (seesAll(a_authentication, a_user)) {
-            return true;
-        }
-        if (a_audit.getDepartment() != null) {
-            return departmentIds(a_authentication, a_user).contains(a_audit.getDepartment().getId());
-        }
-        return a_audit.getCreatedBy() != null && a_user.getId().equals(a_audit.getCreatedBy().getId());
     }
 }

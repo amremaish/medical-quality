@@ -2,6 +2,8 @@ package com.app.medicalquality.record.service;
 
 import com.app.medicalquality.auth.service.CurrentUserService;
 import com.app.medicalquality.exception.NotFoundException;
+import com.app.medicalquality.hospital.service.HospitalContext;
+import com.app.medicalquality.organization.entity.Organization;
 import com.app.medicalquality.record.dto.MrRequests;
 import com.app.medicalquality.record.dto.MrViews;
 import com.app.medicalquality.record.entity.MrAnswer;
@@ -18,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,18 +32,21 @@ public class MrReviewService {
     private final MrItemRepository itemRepository;
     private final MrAnswerRepository answerRepository;
     private final CurrentUserService currentUserService;
+    private final HospitalContext hospitalContext;
 
     public MrReviewService(
             MrReviewRepository a_reviewRepository,
             MrRecordRepository a_recordRepository,
             MrItemRepository a_itemRepository,
             MrAnswerRepository a_answerRepository,
-            CurrentUserService a_currentUserService) {
+            CurrentUserService a_currentUserService,
+            HospitalContext a_hospitalContext) {
         this.reviewRepository = a_reviewRepository;
         this.recordRepository = a_recordRepository;
         this.itemRepository = a_itemRepository;
         this.answerRepository = a_answerRepository;
         this.currentUserService = a_currentUserService;
+        this.hospitalContext = a_hospitalContext;
     }
 
     @Transactional
@@ -50,6 +56,7 @@ public class MrReviewService {
         review.setReviewerName(a_request.getReviewerName().trim());
         review.setReviewDate(a_request.getReviewDate());
         review.setDepartmentName(a_request.getDepartmentName().trim());
+        review.setOrganization(hospitalContext.require(a_authentication));
         review.setCreatedBy(currentUserService.require(a_authentication));
         reviewRepository.save(review);
         for (int index = 1; index <= 10; index++) {
@@ -62,8 +69,9 @@ public class MrReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<MrViews.ReviewSummary> list() {
-        return reviewRepository.findByDeletedAtIsNullOrderByReviewDateDesc().stream()
+    public List<MrViews.ReviewSummary> list(Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        return reviewRepository.findByOrganizationIdAndDeletedAtIsNullOrderByReviewDateDesc(organization.getId()).stream()
                 .map(this::summary)
                 .toList();
     }
@@ -126,9 +134,14 @@ public class MrReviewService {
     }
 
     private MrReview require(Long a_reviewId) {
-        return reviewRepository
+        MrReview review = reviewRepository
                 .findByIdAndDeletedAtIsNull(a_reviewId)
                 .orElseThrow(() -> new NotFoundException("error.review.not_found"));
+        Organization organization = hospitalContext.require(SecurityContextHolder.getContext().getAuthentication());
+        if (review.getOrganization() == null || !organization.getId().equals(review.getOrganization().getId())) {
+            throw new NotFoundException("error.review.not_found");
+        }
+        return review;
     }
 
     private MrViews.ReviewSummary summary(MrReview a_review) {

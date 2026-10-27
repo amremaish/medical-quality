@@ -47,7 +47,7 @@
       data: data,
       processData: false,
       contentType: false,
-      headers: { Authorization: "Bearer " + sessionStorage.getItem("mq_token") }
+      headers: authHeaders()
     }).done(function (res) {
       importId = res.data.id;
       $("#preview").val(res.data.extractedJson).prop("hidden", false);
