@@ -58,20 +58,19 @@ public class FindingService {
 
     @Transactional
     public FindingView open(Create a_request, Authentication a_authentication) {
-        Audit audit = a_request.getAuditId() == null
-                ? null
-                : auditAccess.require(a_request.getAuditId(), a_authentication);
-        if (audit != null) {
-            Finding existing = findingRepository
-                    .findFirstByAuditIdAndGsrCodeAndStatusAndDeletedAtIsNull(audit.getId(), a_request.getGsrCode(), "Open")
-                    .orElse(null);
-            if (existing != null) {
-                return findingView(existing);
-            }
+        if (a_request.getAuditId() == null) {
+            throw new AppException("error.finding.audit_required");
+        }
+        Audit audit = auditAccess.require(a_request.getAuditId(), a_authentication);
+        Finding existing = findingRepository
+                .findFirstByAuditIdAndGsrCodeAndStatusAndDeletedAtIsNull(audit.getId(), a_request.getGsrCode(), "Open")
+                .orElse(null);
+        if (existing != null) {
+            return findingView(existing);
         }
         Finding finding = new Finding();
         finding.setAudit(audit);
-        finding.setDepartment(audit == null ? null : audit.getDepartment());
+        finding.setDepartment(audit.getDepartment());
         finding.setGsrCode(a_request.getGsrCode());
         finding.setElementIndex(a_request.getElementIndex());
         finding.setDescription(a_request.getDescription().trim());
@@ -80,9 +79,7 @@ public class FindingService {
         finding.setStatus("Open");
         finding.setCreatedBy(currentUserService.require(a_authentication));
         findingRepository.save(finding);
-        if (audit != null) {
-            timelineWriter.add(audit, "finding", finding.getGsrCode(), finding.getCreatedBy());
-        }
+        timelineWriter.add(audit, "finding", finding.getGsrCode(), finding.getCreatedBy());
         return findingView(finding);
     }
 
@@ -91,6 +88,10 @@ public class FindingService {
         Finding finding = findingRepository
                 .findByIdAndDeletedAtIsNull(a_findingId)
                 .orElseThrow(() -> new NotFoundException("error.finding.not_found"));
+        if (finding.getDepartment() == null
+                || !visibleDepartments(a_authentication).contains(finding.getDepartment().getId())) {
+            throw new NotFoundException("error.finding.not_found");
+        }
         Capa capa = new Capa();
         capa.setFinding(finding);
         capa.setCorrectiveAction(a_form.getCorrectiveAction().trim());
@@ -121,10 +122,16 @@ public class FindingService {
     }
 
     @Transactional
-    public CapaView updateCapa(Long a_capaId, CapaForm a_form) {
+    public CapaView updateCapa(Long a_capaId, CapaForm a_form, Authentication a_authentication) {
         Capa capa = capaRepository
                 .findByIdAndDeletedAtIsNull(a_capaId)
                 .orElseThrow(() -> new NotFoundException("error.capa.not_found"));
+        Finding finding = capa.getFinding();
+        if (finding == null
+                || finding.getDepartment() == null
+                || !visibleDepartments(a_authentication).contains(finding.getDepartment().getId())) {
+            throw new NotFoundException("error.capa.not_found");
+        }
         if (a_form.getProgress() < 0 || a_form.getProgress() > 100) {
             throw new AppException("error.validation.failed");
         }

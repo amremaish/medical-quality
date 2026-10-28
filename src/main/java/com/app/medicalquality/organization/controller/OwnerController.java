@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/owners")
@@ -34,6 +35,12 @@ public class OwnerController {
     public ResponseEntity<AppResponse<OrganizationViews.Invitation>> invite(
             @Valid @RequestBody OrganizationRequests.Invite a_request, Authentication a_authentication) {
         return AppResponse.success(
-                provisioningService.invite(a_request, a_authentication), "Successfully Done", HttpStatus.CREATED);
+                provisioningService.invite(a_request, a_authentication, baseUrl()),
+                "Successfully Done",
+                HttpStatus.CREATED);
+    }
+
+    private String baseUrl() {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 }

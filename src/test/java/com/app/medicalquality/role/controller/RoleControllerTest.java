@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.repository.UserRepository;
+import com.app.medicalquality.auth.security.EffectivePermissionService;
 import com.app.medicalquality.auth.security.JwtAuthenticationEntryPoint;
 import com.app.medicalquality.auth.security.JwtAuthenticationFilter;
 import com.app.medicalquality.auth.security.PermissionAspect;
@@ -19,6 +20,7 @@ import com.app.medicalquality.exception.GlobalExceptionHandler;
 import com.app.medicalquality.role.dto.RoleResponse;
 import com.app.medicalquality.role.entity.Role;
 import com.app.medicalquality.role.repository.RolePermissionRepository;
+import com.app.medicalquality.auth.repository.UserPermissionOverrideRepository;
 import com.app.medicalquality.role.service.RoleService;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
     JwtService.class,
     PermissionAspect.class,
     PermissionEvaluator.class,
+    EffectivePermissionService.class,
     RoleAspect.class,
     GlobalExceptionHandler.class
 })
@@ -67,6 +70,9 @@ class RoleControllerTest {
 
     @MockitoBean
     private RolePermissionRepository rolePermissionRepository;
+
+    @MockitoBean
+    private UserPermissionOverrideRepository userPermissionOverrideRepository;
 
     @MockitoBean
     private RoleService roleService;

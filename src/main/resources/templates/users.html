@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Users</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div><h1>Users</h1><p id="user-count">People who can sign in to this hospital.</p></div>
+        <a class="btn" id="invite-user" href="/users/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Invite user</a>
+      </div>
+      <div class="table-card"><table class="data-table"><thead><tr><th>Person</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <p class="err" id="list-error"></p>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function statusClass(status) {
+    return status === "Active" ? "ok" : "off";
+  }
+  function fail(xhr) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load users";
+    $("#list-error").text(message);
+  }
+  api("GET", "/api/auth/me").done(function (me) {
+    const viewer = me.data;
+    const orgId = actingOrganizationId(viewer);
+    const canEditProfile = directoryAdmin(viewer);
+    $("#invite-user").prop("hidden", !canEditProfile);
+    if (!orgId) {
+      $("#rows").html("<tr><td colspan='4' class='empty'>Open a hospital first</td></tr>");
+      return;
+    }
+    const label = canEditProfile ? "Edit" : "Exceptional permissions";
+    api("GET", "/api/organizations/" + orgId + "/users").done(function (res) {
+      const count = res.data.length;
+      $("#user-count").text(count === 1 ? "1 person in this hospital." : count + " people in this hospital.");
+      $("#rows").html(res.data.map(function (row) {
+        const name = ((row.firstName || "") + (row.lastName ? " " + row.lastName : "")).trim() || row.email;
+        const initial = name.slice(0, 1).toUpperCase();
+        return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong>" +
+          esc(name) + "</strong><small>" + esc(row.email) + "</small></div></div></td><td><span class='pill'>" +
+          esc(row.roleName) + "</span></td><td><span class='status " + statusClass(row.status) + "'>" +
+          esc(row.status) + "</span></td><td class='actions'><a class='btn ghost sm' href='/users/" +
+          row.id + "'>" + label + "</a></td></tr>";
+      }).join("") || "<tr><td colspan='4' class='empty'>No users yet</td></tr>");
+    }).fail(fail);
+  });
+</script>
+</body>
+</html>

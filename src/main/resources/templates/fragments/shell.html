@@ -17,25 +17,27 @@
     </nav>
     <nav class="side-nav org-nav">
       <a class="side-link" href="/"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg><span class="label">Home</span></a>
-      <div class="nav-group" id="dash-group">
+      <div class="nav-group" id="dash-group" hidden>
         <button type="button" class="nav-toggle" id="dash-toggle">
           <svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Dashboards</span>
         </button>
         <div class="subnav">
-          <a href="/dashboard">Command center</a>
-          <a href="/dashboard/executive">Executive</a>
-          <a href="/dashboard/assessor">Assessor</a>
-          <a href="/dashboard/quality-director">Quality director</a>
+          <a href="/dashboard" data-perm="VIEW_COMMAND_CENTER" hidden>Command center</a>
+          <a href="/dashboard/executive" data-perm="VIEW_EXECUTIVE_DASHBOARD" hidden>Executive</a>
+          <a href="/dashboard/assessor" data-perm="VIEW_ASSESSOR_DASHBOARD" hidden>Assessor</a>
+          <a href="/dashboard/quality-director" data-perm="VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden>Quality director</a>
         </div>
       </div>
       <a class="side-link" href="/audits"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg><span class="label">GSR audits</span></a>
       <a class="side-link" href="/record-reviews"><svg th:replace="~{fragments/shell :: i('file')}"></svg><span class="label">Medical records</span></a>
+      <a class="side-link users-nav" href="/users" hidden><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Users</span></a>
+      <a class="side-link directory-nav" href="/roles" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">Roles</span></a>
       <a class="side-link" href="/departments"><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Departments</span></a>
       <a class="side-link" href="/assessors"><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Assessors</span></a>
       <a class="side-link" href="/findings"><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="label">Findings</span></a>
       <a class="side-link" href="/capas"><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">CAPA</span></a>
       <a class="side-link" href="/evidence"><svg th:replace="~{fragments/shell :: i('card')}"></svg><span class="label">Evidence</span></a>
-      <a class="side-link" href="/imports"><svg th:replace="~{fragments/shell :: i('chart')}"></svg><span class="label">PDF import</span></a>
+      <a class="side-link" href="/imports" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('chart')}"></svg><span class="label">PDF import</span></a>
     </nav>
   </div>
   <div class="side-foot">
@@ -64,7 +66,7 @@
   </label>
   <a class="icon-btn hospital-tools" href="/findings" aria-label="Findings"><svg th:replace="~{fragments/shell :: i('bell')}"></svg></a>
   <a class="icon-btn hospital-tools" href="/capas" aria-label="CAPA"><svg th:replace="~{fragments/shell :: i('mail')}"></svg></a>
-  <a class="btn hospital-tools" href="/audits/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New audit</a>
+  <a class="btn hospital-tools" href="/audits/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New audit</a>
   <span class="today-pill" id="today-pill">Today</span>
 </header>
 </div>

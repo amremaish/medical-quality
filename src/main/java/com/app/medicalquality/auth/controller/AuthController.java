@@ -1,5 +1,6 @@
 package com.app.medicalquality.auth.controller;
 
+import com.app.medicalquality.auth.dto.InvitationAcceptRequest;
 import com.app.medicalquality.auth.dto.LoginRequest;
 import com.app.medicalquality.auth.dto.MeResponse;
 import com.app.medicalquality.auth.dto.PasswordChangeRequest;
@@ -33,6 +34,12 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AppResponse<MeResponse>> me(Authentication a_authentication) {
         return AppResponse.success(authService.me(a_authentication.getName()));
+    }
+
+    @PostMapping("/invitations/accept")
+    public ResponseEntity<AppResponse<String>> accept(@Valid @RequestBody InvitationAcceptRequest a_request) {
+        authService.acceptInvitation(a_request);
+        return AppResponse.success("Password saved");
     }
 
     @PostMapping("/password")

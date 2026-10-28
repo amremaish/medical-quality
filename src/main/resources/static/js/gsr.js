@@ -104,6 +104,10 @@ function visible(standard, chapterName) {
   return true;
 }
 
+function allowed(name) {
+  return typeof hasPerm === "function" && hasPerm(name);
+}
+
 function render() {
   const audit = checklist.audit;
   const view = checklist.compliance || counts();
@@ -121,12 +125,19 @@ function render() {
   ["all", "unscored", "met", "partial", "not"].forEach(function (name) {
     html += "<button type='button' class='st' data-st='" + name + "'>" + name + "</button>";
   });
-  html += "<button type='button' id='clear-scores' class='ghost'>Clear scores</button>";
-  html += "<button type='button' id='submit-audit'>Submit</button>";
+  if (allowed("CONDUCT_AUDIT")) {
+    html += "<button type='button' id='clear-scores' class='ghost'>Clear scores</button>";
+    html += "<button type='button' id='submit-audit'>Submit</button>";
+  }
   html += "<button type='button' id='print-audit' class='ghost'>Print</button>";
-  html += "<button type='button' id='archive-audit' class='ghost'>Archive</button>";
-  html += "<button type='button' id='restore-audit' class='ghost'>Restore</button>";
-  html += "<button type='button' id='delete-audit' class='danger'>Delete</button></div></div>";
+  if (allowed("ARCHIVE_AUDIT")) {
+    html += "<button type='button' id='archive-audit' class='ghost'>Archive</button>";
+    html += "<button type='button' id='restore-audit' class='ghost'>Restore</button>";
+  }
+  if (allowed("DELETE_AUDIT_PDF") || allowed("DELETE_AUDIT_ONLY") || allowed("DELETE_AUDIT_EVERYTHING")) {
+    html += "<button type='button' id='delete-audit' class='danger'>Delete</button>";
+  }
+  html += "</div></div>";
   checklist.chapters.forEach(function (chapter) {
     chapter.standards.forEach(function (standard) {
       if (!visible(standard, chapter.name)) return;
@@ -137,20 +148,28 @@ function render() {
       html += "<div class='gsr-body" + (openStandard === standard.id ? " open" : "") + "'>";
       standard.elements.forEach(function (element) {
         html += "<p><b>" + element.sortOrder + ".</b> " + esc(element.text) + "</p><p>";
-        ["met", "partial", "not", "na"].forEach(function (value) {
-          const on = element.score === value ? " on" : "";
-          html += "<button type='button' class='score-btn " + value + on + "' data-el='" + element.id + "' data-value='" + value + "'>" + value + "</button>";
-        });
-        html += "</p><textarea data-comment='" + element.id + "' placeholder='Comment'>" + esc(element.comment || "") + "</textarea>";
-        if (element.score === "partial" || element.score === "not") {
+        if (allowed("CONDUCT_AUDIT")) {
+          ["met", "partial", "not", "na"].forEach(function (value) {
+            const on = element.score === value ? " on" : "";
+            html += "<button type='button' class='score-btn " + value + on + "' data-el='" + element.id + "' data-value='" + value + "'>" + value + "</button>";
+          });
+          html += "</p><textarea data-comment='" + element.id + "' placeholder='Comment'>" + esc(element.comment || "") + "</textarea>";
+        } else {
+          html += esc(element.score || "unscored") + "</p>";
+          if (element.comment) html += "<p>" + esc(element.comment) + "</p>";
+        }
+        if ((element.score === "partial" || element.score === "not") && allowed("MANAGE_FINDINGS")) {
           html += "<p><button type='button' class='ghost finding' data-code='" + esc(standard.code) + "' data-idx='" + element.sortOrder + "' data-el='" + element.id + "'>Open finding</button></p>";
         }
       });
-      html += "<p>Mark all ";
-      ["met", "partial", "not", "na"].forEach(function (value) {
-        html += "<button type='button' class='bulk' data-std='" + standard.id + "' data-value='" + value + "'>" + value + "</button> ";
-      });
-      html += "</p></div></article>";
+      if (allowed("CONDUCT_AUDIT")) {
+        html += "<p>Mark all ";
+        ["met", "partial", "not", "na"].forEach(function (value) {
+          html += "<button type='button' class='bulk' data-std='" + standard.id + "' data-value='" + value + "'>" + value + "</button> ";
+        });
+        html += "</p>";
+      }
+      html += "</div></article>";
     });
   });
   $("#gsr-app").html(html);
@@ -165,14 +184,17 @@ $(document).on("click", ".gsr-head", function () {
 });
 
 $(document).on("click", ".score-btn", function () {
+  if (!allowed("CONDUCT_AUDIT")) return;
   saveScore(Number($(this).data("el")), $(this).data("value"));
 });
 
 $(document).on("change", "textarea[data-comment]", function () {
+  if (!allowed("CONDUCT_AUDIT")) return;
   api("PUT", base() + "/comments", { elementId: Number($(this).data("comment")), text: $(this).val() });
 });
 
 $(document).on("click", ".bulk", function () {
+  if (!allowed("CONDUCT_AUDIT")) return;
   api("POST", base() + "/scores/bulk", { standardId: Number($(this).data("std")), value: $(this).data("value") })
     .done(loadChecklist);
 });
@@ -181,28 +203,40 @@ $(document).on("click", ".ch", function () { chapterFilter = $(this).data("ch");
 $(document).on("click", ".st", function () { statusFilter = $(this).data("st"); render(); });
 $(document).on("input", "#search", function () { window._q = $(this).val(); render(); });
 $(document).on("click", "#clear-scores", function () {
+  if (!allowed("CONDUCT_AUDIT")) return;
   if (confirm("Reset all scores and comments?")) api("DELETE", base() + "/scores").done(loadChecklist);
 });
 $(document).on("click", "#submit-audit", function () {
+  if (!allowed("CONDUCT_AUDIT")) return;
   api("POST", base() + "/submit").done(function () { alert("Submitted"); loadChecklist(); })
     .fail(function (xhr) { alert(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Submit failed"); });
 });
 $(document).on("click", "#print-audit", function () { window.print(); });
 $(document).on("click", "#archive-audit", function () {
+  if (!allowed("ARCHIVE_AUDIT")) return;
   api("POST", base() + "/archive").done(function () { alert("Archived"); loadChecklist(); });
 });
 $(document).on("click", "#restore-audit", function () {
+  if (!allowed("ARCHIVE_AUDIT")) return;
   api("POST", base() + "/restore").done(function () { alert("Restored"); loadChecklist(); });
 });
 $(document).on("click", "#delete-audit", function () {
-  const mode = window.prompt("Delete mode: pdf, audit, or everything", "audit");
+  const modes = { pdf: "DELETE_AUDIT_PDF", audit: "DELETE_AUDIT_ONLY", everything: "DELETE_AUDIT_EVERYTHING" };
+  const offered = Object.keys(modes).filter(function (mode) { return allowed(modes[mode]); });
+  if (!offered.length) return;
+  const mode = window.prompt("Delete mode: " + offered.join(", "), offered[0]);
   if (!mode) return;
+  if (!modes[mode] || !allowed(modes[mode])) {
+    alert("You cannot use that delete mode");
+    return;
+  }
   const typed = mode === "pdf" ? "" : window.prompt("Type DELETE to confirm");
   if (mode !== "pdf" && typed !== "DELETE") return;
   api("POST", base() + "/remove?mode=" + encodeURIComponent(mode) + "&confirm=" + encodeURIComponent(typed || ""))
     .done(function () { window.location.href = "/audits"; });
 });
 $(document).on("click", ".finding", function () {
+  if (!allowed("MANAGE_FINDINGS")) return;
   const element = findElement(Number($(this).data("el")));
   api("POST", "/api/findings", {
     auditId: Number(auditId()),
@@ -214,4 +248,5 @@ $(document).on("click", ".finding", function () {
   }).done(function () { alert("Finding saved"); });
 });
 
+$(document).on("mq-ready", function () { if (checklist) render(); });
 $(function () { loadChecklist(); });

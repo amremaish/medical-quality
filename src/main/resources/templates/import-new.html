@@ -26,7 +26,7 @@
         <textarea id="preview" rows="16" hidden></textarea>
         <p class="no-print">
           <button type="button" id="save-preview" class="ghost" hidden>Save preview</button>
-          <button type="button" id="confirm" hidden>Confirm and create audit</button>
+          <button type="button" id="confirm" data-perm-all="MANAGE_IMPORT,CONDUCT_AUDIT" hidden>Confirm and create audit</button>
         </p>
         <p class="err" id="err"></p>
       </section>
@@ -51,7 +51,8 @@
     }).done(function (res) {
       importId = res.data.id;
       $("#preview").val(res.data.extractedJson).prop("hidden", false);
-      $("#save-preview, #confirm").prop("hidden", false);
+      $("#save-preview").prop("hidden", false);
+      $("#confirm").prop("hidden", !(hasPerm("MANAGE_IMPORT") && hasPerm("CONDUCT_AUDIT")));
     }).fail(function (xhr) {
       $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Import failed");
     });
@@ -60,6 +61,9 @@
     let parsed;
     try { parsed = JSON.parse($("#preview").val()); } catch (error) { $("#err").text("Preview is not valid JSON"); return; }
     api("PUT", "/api/audit-imports/" + importId, parsed).done(function () { $("#err").text("Preview saved"); });
+  });
+  $(document).on("mq-ready", function () {
+    if (importId) $("#confirm").prop("hidden", !(hasPerm("MANAGE_IMPORT") && hasPerm("CONDUCT_AUDIT")));
   });
   $("#confirm").on("click", function () {
     api("POST", "/api/audit-imports/" + importId + "/confirm").done(function (res) {

@@ -36,7 +36,7 @@ function paint(row) {
     ["users", "Departments", row.departments, "/departments"],
     ["clipboard", "Audits", row.audits, "/audits"],
     ["calendar", "Completed", row.completedAudits, "/audits"],
-    ["chart", "Compliance", row.averageCompliance + "%", "/dashboard"]
+    ["chart", "Compliance", row.averageCompliance + "%", window.location.pathname]
   ].map(function (card) {
     return "<a class='kpi' href='" + card[3] + "'><span class='disc blue'>" + icon(card[0]) +
       "</span><div><b>" + card[2] + "</b><span>" + card[1] + "</span></div></a>";

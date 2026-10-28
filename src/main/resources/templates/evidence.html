@@ -17,7 +17,7 @@
           <h1>Evidence</h1>
           <p>Files collected for an audit.</p>
         </div>
-        <a class="btn" href="/evidence/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Upload</a>
+        <a class="btn" href="/evidence/new" data-perm="MANAGE_EVIDENCE" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Upload</a>
       </div>
       <div class="table-card">
         <table class="data-table"><thead><tr><th>File</th><th>Size</th><th>Audit</th></tr></thead><tbody id="rows"></tbody></table>

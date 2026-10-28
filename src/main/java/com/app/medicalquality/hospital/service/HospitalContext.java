@@ -8,7 +8,8 @@ import com.app.medicalquality.hospital.entity.UserDepartmentAccess;
 import com.app.medicalquality.hospital.repository.UserDepartmentAccessRepository;
 import com.app.medicalquality.organization.entity.Organization;
 import com.app.medicalquality.organization.repository.OrganizationRepository;
-import com.app.medicalquality.organization.service.OrganizationProvisioningService;
+import com.app.medicalquality.role.RoleCodes;
+import com.app.medicalquality.role.entity.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -58,13 +59,34 @@ public class HospitalContext {
     @Transactional(readOnly = true)
     public void requireManager(Authentication a_authentication) {
         User user = currentUserService.require(a_authentication);
-        require(a_authentication);
+        Organization acting = require(a_authentication);
         if (user.isSuperAdmin()) {
             return;
         }
-        if (user.getRole() == null
-                || !OrganizationProvisioningService.OWNER_ROLE.equals(user.getRole().getName())) {
+        Role role = user.getRole();
+        if (role == null
+                || !role.isBuiltIn()
+                || !RoleCodes.HOSPITAL_OWNER.equals(role.getRoleCode())
+                || role.getOrganization() == null
+                || !acting.getId().equals(role.getOrganization().getId())) {
             throw new AccessDeniedException("Access denied");
+        }
+    }
+
+    public void requireDirectoryAdmin(Authentication a_authentication, Long a_organizationId) {
+        Organization acting = require(a_authentication);
+        if (a_organizationId == null || !acting.getId().equals(a_organizationId)) {
+            throw new AccessDeniedException("Access denied");
+        }
+        requireManager(a_authentication);
+    }
+
+    public boolean managesDirectory(Authentication a_authentication) {
+        try {
+            requireManager(a_authentication);
+            return true;
+        } catch (AccessDeniedException ex) {
+            return false;
         }
     }
 

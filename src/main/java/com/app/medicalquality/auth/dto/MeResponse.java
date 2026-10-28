@@ -1,5 +1,6 @@
 package com.app.medicalquality.auth.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,4 +14,7 @@ public class MeResponse {
     private final boolean superAdmin;
     private final boolean mustChangePassword;
     private final String organizationName;
+    private final String roleCode;
+    private final Long organizationId;
+    private final List<String> permissions;
 }

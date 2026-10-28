@@ -32,7 +32,7 @@
           <h2>Owner invitation</h2>
           <p id="invite-text"></p>
           <p><strong>Email</strong> <span id="invite-email"></span></p>
-          <p><strong>Temporary password</strong> <span id="invite-password"></span></p>
+          <div class="url-line"><code id="invite-url"></code></div>
           <button type="button" id="copy-invite" class="ghost">Copy invitation</button>
         </section>
       </section>
@@ -58,9 +58,9 @@
       ownerEmail: $("#owner-email").val()
     }).done(function (res) {
       const invite = res.data;
-      $("#invite-text").text(invite.organizationName + " is ready. Send these credentials to the owner.");
+      $("#invite-text").text(invite.organizationName + " is ready. Send the owner this one-time setup link.");
       $("#invite-email").text(invite.ownerEmail);
-      $("#invite-password").text(invite.temporaryPassword);
+      $("#invite-url").text(invite.setupUrl);
       $("#invite").prop("hidden", false);
       $("#create-organization").hide();
     }).fail(function (xhr) {
@@ -68,8 +68,7 @@
     });
   });
   $("#copy-invite").on("click", function () {
-    const text = "Sign in at " + window.location.origin + "/login\nEmail: " + $("#invite-email").text() +
-      "\nTemporary password: " + $("#invite-password").text() + "\nYou will be asked to choose a new password.";
+    const text = "Email: " + $("#invite-email").text() + "\nOpen this link to choose a password:\n" + $("#invite-url").text();
     navigator.clipboard.writeText(text);
   });
 </script>

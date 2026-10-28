@@ -4,6 +4,8 @@ import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.security.AccessRules;
 import com.app.medicalquality.auth.security.PermissionEvaluator;
 import com.app.medicalquality.gsr.entity.Audit;
+import com.app.medicalquality.role.RoleCodes;
+import com.app.medicalquality.role.entity.Role;
 import com.app.medicalquality.hospital.entity.Department;
 import com.app.medicalquality.hospital.entity.UserDepartmentAccess;
 import com.app.medicalquality.hospital.repository.DepartmentRepository;
@@ -39,7 +41,14 @@ public class DepartmentScope {
         if (a_user.isSuperAdmin() || AccessRules.isSuperAdmin(a_authentication)) {
             return true;
         }
-        return permissionEvaluator.hasPermission(a_authentication, PermissionEnum.VIEW_ALL_ASSESSORS_DATA.name());
+        Role role = a_user.getRole();
+        if (role == null || role.getDeletedAt() != null) {
+            return false;
+        }
+        if (role.isBuiltIn()) {
+            return permissionEvaluator.hasPermission(a_authentication, PermissionEnum.VIEW_ALL_ASSESSORS_DATA.name());
+        }
+        return RoleCodes.SCOPE_HOSPITAL.equals(role.getScopeMode());
     }
 
     public Set<Long> departmentIds(Authentication a_authentication, User a_user) {

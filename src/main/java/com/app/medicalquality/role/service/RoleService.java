@@ -2,6 +2,7 @@ package com.app.medicalquality.role.service;
 
 import com.app.medicalquality.exception.AppException;
 import com.app.medicalquality.role.PermissionEnum;
+import com.app.medicalquality.role.RoleCodes;
 import com.app.medicalquality.role.dto.CreateRoleRequest;
 import com.app.medicalquality.role.dto.PermissionResponse;
 import com.app.medicalquality.role.dto.RoleResponse;
@@ -11,6 +12,8 @@ import com.app.medicalquality.role.entity.RolePermission;
 import com.app.medicalquality.role.repository.PermissionRepository;
 import com.app.medicalquality.role.repository.RolePermissionRepository;
 import com.app.medicalquality.role.repository.RoleRepository;
+import java.security.SecureRandom;
+import java.util.HexFormat;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +36,19 @@ public class RoleService {
     }
 
     public RoleResponse create(CreateRoleRequest a_request) {
-        if (roleRepository.findByName(a_request.getName().trim()).isPresent()) {
+        String name = a_request.getName().trim();
+        if (RoleCodes.RESERVED_NAMES.contains(name)) {
+            throw new AppException("error.role.reserved");
+        }
+        if (roleRepository.existsByNameAndOrganizationIsNullAndDeletedAtIsNull(name)) {
             throw new AppException("error.role.already_exists");
         }
         Role role = new Role();
-        role.setName(a_request.getName().trim());
+        role.setName(name);
+        role.setRoleCode(platformCode());
+        role.setBuiltIn(false);
+        role.setTemplate(false);
+        role.setScopeMode(RoleCodes.SCOPE_HOSPITAL);
         roleRepository.save(role);
         for (PermissionEnum permission : a_request.getPermissions().stream().distinct().toList()) {
             link(role, permission);
@@ -46,9 +57,19 @@ public class RoleService {
     }
 
     public List<RoleResponse> list() {
-        return roleRepository.findByDeletedAtIsNullOrderByNameAsc().stream()
+        return roleRepository.findByOrganizationIsNullAndDeletedAtIsNullOrderByNameAsc().stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private String platformCode() {
+        byte[] bytes = new byte[8];
+        new SecureRandom().nextBytes(bytes);
+        String code = "PLATFORM_" + HexFormat.of().formatHex(bytes).toUpperCase();
+        if (RoleCodes.RESERVED.contains(code)) {
+            throw new AppException("error.role.reserved");
+        }
+        return code;
     }
 
     public List<PermissionResponse> permissions() {

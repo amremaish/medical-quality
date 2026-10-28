@@ -2,6 +2,8 @@ package com.app.medicalquality.evidence.service;
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.service.CurrentUserService;
+import com.app.medicalquality.exception.AppException;
+import com.app.medicalquality.exception.NotFoundException;
 import com.app.medicalquality.evidence.entity.DocumentFile;
 import com.app.medicalquality.evidence.entity.Evidence;
 import com.app.medicalquality.evidence.repository.DocumentFileRepository;
@@ -76,6 +78,9 @@ public class EvidenceService {
                 throw new AccessDeniedException("Access denied");
             }
         }
+        if (audit == null && department == null) {
+            throw new AppException("error.validation.failed");
+        }
         FileStorageService.Stored stored = fileStorageService.store(a_file, "evidence");
         DocumentFile document = new DocumentFile();
         document.setCategory("evidence");
@@ -108,11 +113,14 @@ public class EvidenceService {
     }
 
     @Transactional(readOnly = true)
-    public Resource download(Long a_documentId) {
-        DocumentFile document = documentFileRepository
-                .findByIdAndDeletedAtIsNull(a_documentId)
-                .orElseThrow(() -> new com.app.medicalquality.exception.NotFoundException("error.element.not_found"));
-        return fileStorageService.load("evidence", document.getStoredName());
+    public Resource download(Long a_documentId, Authentication a_authentication) {
+        Evidence evidence = evidenceRepository
+                .findByDocument_IdAndDeletedAtIsNull(a_documentId)
+                .orElseThrow(() -> new NotFoundException("error.document.not_found"));
+        if (!visible(evidence, visibleDepartments(a_authentication))) {
+            throw new NotFoundException("error.document.not_found");
+        }
+        return fileStorageService.load("evidence", evidence.getDocument().getStoredName());
     }
 
     private EvidenceView view(Evidence a_evidence) {

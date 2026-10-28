@@ -17,7 +17,7 @@
           <h1>PDF import</h1>
           <p>Read a filled GSR checklist from a text PDF, review the extraction, then create the audit.</p>
         </div>
-        <a class="btn" href="/imports/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Import PDF</a>
+        <a class="btn" href="/imports/new" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Import PDF</a>
       </div>
     </main>
   </div>

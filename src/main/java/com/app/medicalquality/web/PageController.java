@@ -144,6 +144,37 @@ public class PageController {
         return "password";
     }
 
+    @GetMapping("/account/setup")
+    public String setup() {
+        return "setup";
+    }
+
+    @GetMapping("/users")
+    public String users() {
+        return "users";
+    }
+
+    @GetMapping("/users/new")
+    public String newUser() {
+        return "users-new";
+    }
+
+    @GetMapping("/users/{id}")
+    public String editUser(@PathVariable("id") Long a_id, Model a_model) {
+        a_model.addAttribute("userId", a_id);
+        return "users-edit";
+    }
+
+    @GetMapping("/roles")
+    public String roles() {
+        return "roles";
+    }
+
+    @GetMapping("/roles/new")
+    public String newRole() {
+        return "roles-new";
+    }
+
     private String dashboardTitle(String a_view) {
         return switch (a_view) {
             case "executive" -> "Executive view";

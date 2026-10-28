@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New role</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/roles">Roles</a>
+      <section class="panel form-card">
+        <h1>New role</h1>
+        <p>A custom role can receive only the permissions you already hold, and only ones this hospital can assign.</p>
+        <form id="create-role" class="stack">
+          <div><label for="name">Name</label><input id="name" required maxlength="100"></div>
+          <div><label for="scope">What this role can see</label>
+            <select id="scope" required>
+              <option value="HOSPITAL">Whole hospital</option>
+              <option value="ASSESSOR">Own assessments</option>
+              <option value="DEPARTMENT">One department</option>
+              <option value="DEPARTMENT_LIST">Assigned departments</option>
+            </select>
+          </div>
+          <div><label>Permissions</label><div id="permissions" class="stack"></div></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/roles">Cancel</a>
+            <button type="submit">Save role</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  const permissions = [
+    ["CONDUCT_AUDIT", "Conduct audits"],
+    ["MANAGE_FINDINGS", "Manage findings"],
+    ["MANAGE_CAPA", "Manage CAPA"],
+    ["MANAGE_EVIDENCE", "Manage evidence"],
+    ["VIEW_COMMAND_CENTER", "Command center"],
+    ["VIEW_EXECUTIVE_DASHBOARD", "Executive dashboard"],
+    ["VIEW_ASSESSOR_DASHBOARD", "Assessor dashboard"],
+    ["VIEW_QUALITY_DIRECTOR_DASHBOARD", "Quality director dashboard"],
+    ["MANAGE_IMPORT", "Import PDFs"],
+    ["ARCHIVE_AUDIT", "Archive audits"],
+    ["EDIT_AUDIT_LIFECYCLE", "Edit audit lifecycle"],
+    ["DELETE_AUDIT_PDF", "Delete an audit PDF"],
+    ["DELETE_AUDIT_ONLY", "Delete an audit"],
+    ["DELETE_AUDIT_EVERYTHING", "Delete an audit and related records"]
+  ];
+  $("#permissions").html(permissions.map(function (row) {
+    return "<label><input type='checkbox' value='" + row[0] + "'> " + row[1] + "</label>";
+  }).join(""));
+  api("GET", "/api/auth/me").done(function (me) {
+    if (me.data && me.data.superAdmin) {
+      $("#permissions").append(
+        "<label><input type='checkbox' value='MANAGE_USER_PERMISSION_OVERRIDES'> Manage exceptional permissions</label>"
+      );
+    }
+    const orgId = actingOrganizationId(me.data);
+    $("#create-role").on("submit", function (event) {
+      event.preventDefault();
+      $("#form-error").text("");
+      if (!orgId) {
+        $("#form-error").text("Open a hospital first");
+        return;
+      }
+      const selected = $("#permissions input:checked").map(function () { return this.value; }).get();
+      api("POST", "/api/organizations/" + orgId + "/roles", {
+        name: $("#name").val(),
+        scopeMode: $("#scope").val(),
+        permissions: selected
+      }).done(function () {
+        window.location.href = "/roles";
+      }).fail(function (xhr) {
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not save the role");
+      });
+    });
+  });
+</script>
+</body>
+</html>

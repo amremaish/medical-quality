@@ -15,10 +15,10 @@
       <a class="back" href="/evidence">Evidence</a>
       <section class="panel form-card">
         <h1>Upload evidence</h1>
-        <p>Attach a file to an audit, or leave the audit blank.</p>
+        <p>Attach a file to an audit in this hospital.</p>
         <form id="upload" class="stack">
           <div><label for="file">File</label><input id="file" type="file" required></div>
-          <div><label for="auditId">Audit id</label><input id="auditId" placeholder="Optional"></div>
+          <div><label for="auditId">Audit id</label><input id="auditId" required inputmode="numeric"></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
             <a class="btn ghost" href="/evidence">Cancel</a>
@@ -36,7 +36,7 @@
     event.preventDefault();
     const data = new FormData();
     data.append("file", $("#file")[0].files[0]);
-    if ($("#auditId").val()) data.append("auditId", $("#auditId").val());
+    data.append("auditId", $("#auditId").val());
     $.ajax({
       url: "/api/evidence",
       method: "POST",

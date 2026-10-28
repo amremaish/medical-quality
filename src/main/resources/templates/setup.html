@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose a password</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="login-page" data-page="setup">
+  <main class="login-split card">
+    <section class="login-brand">
+      <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('plus')}"></svg></span>
+      <h1>Medical quality</h1>
+      <p>Choose a password for your hospital account. This link works once.</p>
+    </section>
+    <section class="login-panel">
+      <h1>Choose a password</h1>
+      <form id="setup-form" class="stack">
+        <div>
+          <label for="new-password">New password</label>
+          <input id="new-password" type="password" autocomplete="new-password" required minlength="8" maxlength="128">
+        </div>
+        <p class="err" id="form-error"></p>
+        <button type="submit">Save password</button>
+      </form>
+    </section>
+  </main>
+  <script th:src="@{/js/jquery.min.js}"></script>
+  <script th:src="@{/js/api.js}"></script>
+  <script>
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token");
+    if (!token) $("#form-error").text("This invitation link is invalid or has already been used");
+    $("#setup-form").on("submit", function (event) {
+      event.preventDefault();
+      if (!token) return;
+      $("#form-error").text("");
+      $.ajax({
+        url: "/api/auth/invitations/accept",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ token: token, newPassword: $("#new-password").val() })
+      }).done(function () {
+        window.location.href = "/login";
+      }).fail(function (xhr) {
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not save the password");
+      });
+    });
+  </script>
+</body>
+</html>

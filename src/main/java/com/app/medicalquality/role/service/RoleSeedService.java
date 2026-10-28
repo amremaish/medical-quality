@@ -1,6 +1,7 @@
 package com.app.medicalquality.role.service;
 
 import com.app.medicalquality.role.PermissionEnum;
+import com.app.medicalquality.role.RoleCodes;
 import com.app.medicalquality.role.entity.Permission;
 import com.app.medicalquality.role.entity.Role;
 import com.app.medicalquality.role.entity.RolePermission;
@@ -35,21 +36,25 @@ public class RoleSeedService implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments a_args) {
-        seed("System Administrator", EnumSet.allOf(PermissionEnum.class));
-        seed("Quality Director", except(roleKeys(PermissionEnum.MANAGE_USERS, PermissionEnum.RESET_DATA)));
-        seed("Quality Supervisor", except(roleKeys(PermissionEnum.RESET_DATA)));
-        seed("Assessor", except(assessorDenied()));
-        seed("Department Coordinator", except(coordinatorDenied()));
-        seed("View Only", except(viewOnlyDenied()));
-        seed("Hospital Owner", except(roleKeys(PermissionEnum.RESET_DATA)));
+        seed(RoleCodes.SYSTEM_ADMINISTRATOR, "System Administrator", false, RoleCodes.SCOPE_HOSPITAL, EnumSet.allOf(PermissionEnum.class));
+        seed(RoleCodes.QUALITY_DIRECTOR, "Quality Director", true, RoleCodes.SCOPE_HOSPITAL, except(roleKeys(PermissionEnum.MANAGE_USERS, PermissionEnum.RESET_DATA)));
+        seed(RoleCodes.QUALITY_SUPERVISOR, "Quality Supervisor", true, RoleCodes.SCOPE_HOSPITAL, except(roleKeys(PermissionEnum.RESET_DATA)));
+        seed(RoleCodes.ASSESSOR, "Assessor", true, RoleCodes.SCOPE_ASSESSOR, except(assessorDenied()));
+        seed(RoleCodes.DEPARTMENT_COORDINATOR, "Department Coordinator", true, RoleCodes.SCOPE_DEPARTMENT, except(coordinatorDenied()));
+        seed(RoleCodes.VIEW_ONLY, "View Only", true, RoleCodes.SCOPE_DEPARTMENT_LIST, except(viewOnlyDenied()));
+        seed(RoleCodes.HOSPITAL_OWNER, "Hospital Owner", true, RoleCodes.SCOPE_HOSPITAL, except(roleKeys(PermissionEnum.RESET_DATA)));
     }
 
-    private void seed(String a_name, Set<PermissionEnum> a_granted) {
-        Role role = roleRepository.findByName(a_name).orElseGet(() -> newRole(a_name));
+    private void seed(String a_code, String a_name, boolean a_template, String a_scope, Set<PermissionEnum> a_granted) {
+        Role role = roleRepository
+                .findByRoleCodeAndOrganizationIsNullAndDeletedAtIsNull(a_code)
+                .orElseGet(() -> newRole(a_code, a_name, a_template, a_scope));
         if (!rolePermissionRepository.findByRoleAndDeletedAtIsNull(role).isEmpty()) {
             return;
         }
-        for (PermissionEnum permission : a_granted) {
+        EnumSet<PermissionEnum> granted = EnumSet.copyOf(a_granted);
+        granted.remove(PermissionEnum.MANAGE_USER_PERMISSION_OVERRIDES);
+        for (PermissionEnum permission : granted) {
             Permission row = permissionRepository.findByName(permission.name()).orElseThrow();
             RolePermission link = new RolePermission();
             link.setRole(role);
@@ -58,9 +63,13 @@ public class RoleSeedService implements ApplicationRunner {
         }
     }
 
-    private Role newRole(String a_name) {
+    private Role newRole(String a_code, String a_name, boolean a_template, String a_scope) {
         Role role = new Role();
+        role.setRoleCode(a_code);
         role.setName(a_name);
+        role.setBuiltIn(true);
+        role.setTemplate(a_template);
+        role.setScopeMode(a_scope);
         return roleRepository.save(role);
     }
 

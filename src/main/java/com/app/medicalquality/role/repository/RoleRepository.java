@@ -7,7 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
-    Optional<Role> findByName(String a_name);
+    Optional<Role> findByRoleCodeAndOrganizationIsNullAndDeletedAtIsNull(String a_roleCode);
 
-    List<Role> findByDeletedAtIsNullOrderByNameAsc();
+    Optional<Role> findByRoleCodeAndOrganizationIdAndDeletedAtIsNull(String a_roleCode, Long a_organizationId);
+
+    boolean existsByRoleCodeAndOrganizationIdAndDeletedAtIsNull(String a_roleCode, Long a_organizationId);
+
+    List<Role> findByTemplateTrueAndOrganizationIsNullAndDeletedAtIsNull();
+
+    List<Role> findByOrganizationIsNullAndDeletedAtIsNullOrderByNameAsc();
+
+    List<Role> findByOrganizationIdAndDeletedAtIsNullOrderByNameAsc(Long a_organizationId);
+
+    boolean existsByNameAndOrganizationIsNullAndDeletedAtIsNull(String a_name);
+
+    boolean existsByOrganizationIdAndNameAndDeletedAtIsNull(Long a_organizationId, String a_name);
+
+    Optional<Role> findByIdAndOrganizationIdAndDeletedAtIsNull(Long a_id, Long a_organizationId);
 }

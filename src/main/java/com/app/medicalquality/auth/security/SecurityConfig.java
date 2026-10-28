@@ -1,8 +1,11 @@
 package com.app.medicalquality.auth.security;
 
+import com.app.medicalquality.auth.repository.UserRepository;
 import com.app.medicalquality.config.AdminProperties;
 import com.app.medicalquality.config.JwtProperties;
 import com.app.medicalquality.config.StorageProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.MessageSource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -31,10 +34,25 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity a_http) throws Exception {
+    public MustChangePasswordFilter mustChangePasswordFilter(
+            UserRepository a_userRepository, MessageSource a_messageSource, ObjectMapper a_objectMapper) {
+        return new MustChangePasswordFilter(a_userRepository, a_messageSource, a_objectMapper);
+    }
+
+    @Bean
+    public FilterRegistrationBean<MustChangePasswordFilter> mustChangePasswordFilterRegistration(
+            MustChangePasswordFilter a_filter) {
+        FilterRegistrationBean<MustChangePasswordFilter> registration = new FilterRegistrationBean<>(a_filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity a_http, MustChangePasswordFilter a_mustChangePasswordFilter)
+            throws Exception {
         a_http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.POST, "/api/auth/login")
+                .authorizeHttpRequests(auth -> auth                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/invitations/accept")
                         .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**")
                         .permitAll()
@@ -63,6 +81,11 @@ public class SecurityConfig {
                                 "/owners",
                                 "/owners/**",
                                 "/account/password",
+                                "/account/setup",
+                                "/users",
+                                "/users/**",
+                                "/roles",
+                                "/roles/**",
                                 "/css/**",
                                 "/js/**",
                                 "/icons/**",
@@ -72,7 +95,8 @@ public class SecurityConfig {
                         .authenticated())
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(jwtAuthenticationEntryPoint))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(a_mustChangePasswordFilter, JwtAuthenticationFilter.class);
         return a_http.build();
     }
 

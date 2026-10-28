@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.repository.UserRepository;
+import com.app.medicalquality.auth.security.EffectivePermissionService;
 import com.app.medicalquality.auth.security.JwtAuthenticationEntryPoint;
 import com.app.medicalquality.auth.security.JwtAuthenticationFilter;
 import com.app.medicalquality.auth.security.PermissionAspect;
@@ -21,6 +22,7 @@ import com.app.medicalquality.gsr.service.AuditQueryService;
 import com.app.medicalquality.gsr.service.AuditScoreService;
 import com.app.medicalquality.gsr.service.AuditSubmitService;
 import com.app.medicalquality.role.repository.RolePermissionRepository;
+import com.app.medicalquality.auth.repository.UserPermissionOverrideRepository;
 import com.app.medicalquality.score.ComplianceCalculator;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
     JwtService.class,
     PermissionAspect.class,
     PermissionEvaluator.class,
+    EffectivePermissionService.class,
     GlobalExceptionHandler.class
 })
 @ImportAutoConfiguration(MessageSourceAutoConfiguration.class)
@@ -67,6 +70,9 @@ class AuditScoreControllerTest {
 
     @MockitoBean
     private RolePermissionRepository rolePermissionRepository;
+
+    @MockitoBean
+    private UserPermissionOverrideRepository userPermissionOverrideRepository;
 
     @MockitoBean
     private AuditQueryService auditQueryService;

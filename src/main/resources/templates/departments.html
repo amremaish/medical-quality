@@ -29,7 +29,7 @@
     });
   }
   api("GET", "/api/auth/me").done(function (res) {
-    if (res.data.superAdmin || res.data.roleName === "Hospital Owner") $("#new-department").prop("hidden", false);
+    if (res.data.superAdmin || res.data.roleCode === "HOSPITAL_OWNER") $("#new-department").prop("hidden", false);
   });
   api("GET", "/api/departments").done(function (res) {
     $("#rows").html(res.data.map(function (row) {

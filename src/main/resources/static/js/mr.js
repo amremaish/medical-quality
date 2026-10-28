@@ -43,6 +43,10 @@ function saveAnswer(itemId, patch) {
   });
 }
 
+function canReview() {
+  return typeof hasPerm === "function" && hasPerm("CONDUCT_AUDIT");
+}
+
 function render() {
   const record = recordByCode(current);
   let html = "<h1>Patient medical record review</h1>";
@@ -54,8 +58,14 @@ function render() {
   html += "</div>";
   html += "<p>" + record.stats.compliant + "/" + record.stats.applicable + " fully compliant · Legible " +
     record.stats.percentLegible + "% · Accurate " + record.stats.percentAccurate + "% · Complete " + record.stats.percentComplete + "%</p>";
-  html += "<p class='no-print'>Patient identifier <input id='patient-id' value='" + esc(record.patientIdentifier || "") + "'></p>";
-  html += "<p class='no-print'><button type='button' id='export-csv' class='ghost'>Export CSV</button> <button type='button' id='print-review' class='ghost'>Print</button> <button type='button' id='reset-review' class='danger'>Reset</button></p>";
+  if (canReview()) {
+    html += "<p class='no-print'>Patient identifier <input id='patient-id' value='" + esc(record.patientIdentifier || "") + "'></p>";
+  } else if (record.patientIdentifier) {
+    html += "<p>Patient identifier " + esc(record.patientIdentifier) + "</p>";
+  }
+  html += "<p class='no-print'><button type='button' id='export-csv' class='ghost'>Export CSV</button> <button type='button' id='print-review' class='ghost'>Print</button>";
+  if (canReview()) html += " <button type='button' id='reset-review' class='danger'>Reset</button>";
+  html += "</p>";
   html += "<table><thead><tr><th>Standard</th><th>Evidence</th><th>Legible</th><th>Accurate</th><th>Complete</th></tr></thead><tbody>";
   let section = "";
   review.items.forEach(function (item) {
@@ -65,11 +75,14 @@ function render() {
     }
     const answer = answerFor(record, item.id);
     html += "<tr class='" + answer.tone + "'><td>" + esc(item.standardCode) + "<br>EOC " + esc(item.eocNo) + "</td><td>" + esc(item.text);
-    html += "<div><button type='button' class='ghost na' data-item='" + item.id + "'>" + (answer.na ? "Marked N/A" : "Mark N/A") + "</button></div></td>";
+    if (canReview()) {
+      html += "<div><button type='button' class='ghost na' data-item='" + item.id + "'>" + (answer.na ? "Marked N/A" : "Mark N/A") + "</button></div>";
+    }
+    html += "</td>";
     ["legible", "accurate", "complete"].forEach(function (key) {
-      html += "<td><input type='checkbox' data-item='" + item.id + "' data-key='" + key + "'" + (answer[key] ? " checked" : "") + (answer.na ? " disabled" : "") + "></td>";
+      html += "<td><input type='checkbox' data-item='" + item.id + "' data-key='" + key + "'" + (answer[key] ? " checked" : "") + (answer.na || !canReview() ? " disabled" : "") + "></td>";
     });
-    html += "</tr><tr><td colspan='5'><textarea data-comment='" + item.id + "'>" + esc(answer.comment || "") + "</textarea></td></tr>";
+    html += "</tr><tr><td colspan='5'><textarea data-comment='" + item.id + "'" + (canReview() ? "" : " readonly") + ">" + esc(answer.comment || "") + "</textarea></td></tr>";
   });
   html += "</tbody></table><h2>Overall</h2><table><thead><tr><th>Record</th><th>Identifier</th><th>Legible</th><th>Accurate</th><th>Complete</th><th>Score</th></tr></thead><tbody>";
   review.records.forEach(function (row) {
@@ -82,25 +95,30 @@ function render() {
 
 $(document).on("click", ".rec-card", function () { current = $(this).data("code"); render(); });
 $(document).on("change", "input[type=checkbox]", function () {
+  if (!canReview()) return;
   const patch = {};
   patch[$(this).data("key")] = $(this).is(":checked");
   saveAnswer(Number($(this).data("item")), patch);
 });
 $(document).on("click", ".na", function () {
+  if (!canReview()) return;
   const record = recordByCode(current);
   const answer = answerFor(record, Number($(this).data("item")));
   saveAnswer(answer.itemId, { na: !answer.na });
 });
 $(document).on("change", "textarea[data-comment]", function () {
+  if (!canReview()) return;
   saveAnswer(Number($(this).data("comment")), { comment: $(this).val() });
 });
 $(document).on("change", "#patient-id", function () {
+  if (!canReview()) return;
   api("PUT", "/api/record-reviews/" + reviewId() + "/records/" + current, { patientIdentifier: $(this).val() }).done(function (res) {
     review = res.data;
   });
 });
 $(document).on("click", "#print-review", function () { window.print(); });
 $(document).on("click", "#reset-review", function () {
+  if (!canReview()) return;
   if (confirm("Reset all ten records?")) api("POST", "/api/record-reviews/" + reviewId() + "/reset").done(function (res) {
     review = res.data;
     render();
@@ -124,4 +142,5 @@ $(document).on("click", "#export-csv", function () {
   link.click();
 });
 
+$(document).on("mq-ready", function () { if (review) render(); });
 $(function () { loadReview(); });

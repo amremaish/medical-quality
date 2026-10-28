@@ -2,6 +2,7 @@ package com.app.medicalquality.hospital.entity;
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.common.BaseEntity;
+import com.app.medicalquality.organization.entity.Organization;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -32,4 +33,8 @@ public class UserDepartmentAccess extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 }

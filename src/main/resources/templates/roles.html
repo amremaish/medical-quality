@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roles</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <div class="page-head">
+        <div><h1>Roles</h1><p>Built-in roles for this hospital, plus roles you add.</p></div>
+        <a class="btn" href="/roles/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New role</a>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr><th>Role</th><th>Sees</th><th>Permissions</th><th>People</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="err" id="form-error"></p>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  const scopes = {
+    HOSPITAL: "Whole hospital",
+    ASSESSOR: "Own assessments",
+    DEPARTMENT: "One department",
+    DEPARTMENT_LIST: "Assigned departments"
+  };
+  const groups = [
+    ["Audits", [
+      ["CONDUCT_AUDIT", "Conduct audits"],
+      ["EDIT_AUDIT_LIFECYCLE", "Edit audit lifecycle"],
+      ["DELETE_AUDIT_PDF", "Delete an audit PDF"],
+      ["DELETE_AUDIT_ONLY", "Delete an audit"],
+      ["DELETE_AUDIT_EVERYTHING", "Delete an audit and related records"]
+    ]],
+    ["Findings and CAPA", [
+      ["MANAGE_FINDINGS", "Manage findings"],
+      ["MANAGE_CAPA", "Manage CAPA"]
+    ]],
+    ["Evidence", [
+      ["MANAGE_EVIDENCE", "Manage evidence"]
+    ]],
+    ["Dashboards", [
+      ["VIEW_COMMAND_CENTER", "Command center"],
+      ["VIEW_EXECUTIVE_DASHBOARD", "Executive dashboard"],
+      ["VIEW_ASSESSOR_DASHBOARD", "Assessor dashboard"],
+      ["VIEW_QUALITY_DIRECTOR_DASHBOARD", "Quality director dashboard"]
+    ]],
+    ["Import and archive", [
+      ["MANAGE_IMPORT", "Import PDFs"],
+      ["ARCHIVE_AUDIT", "Archive audits"]
+    ]],
+    ["Hospital", [
+      ["MANAGE_USERS", "Manage users"],
+      ["MANAGE_DEPARTMENTS", "Manage departments"],
+      ["MANAGE_ASSESSORS", "Manage assessors"],
+      ["VIEW_ALL_ASSESSORS_DATA", "See every assessor's work"]
+    ]],
+    ["Reports", [
+      ["GENERATE_REPORTS", "Generate reports"],
+      ["MANAGE_EXPORT", "Export data"]
+    ]],
+    ["System", [
+      ["MANAGE_NOTIFICATIONS", "Manage notifications"],
+      ["MANAGE_SETTINGS", "Manage settings"],
+      ["VIEW_SYSTEM_LOGS", "View system logs"],
+      ["MANAGE_BACKUP", "Manage backups"],
+      ["MANAGE_RESTORE", "Restore backups"],
+      ["RESET_DATA", "Reset data"],
+      ["CREATE_ROLE", "Create roles"],
+      ["VIEW_ROLES", "View roles"],
+      ["UPDATE_ROLE", "Update roles"],
+      ["DELETE_ROLE", "Delete roles"],
+      ["VIEW_PERMISSIONS", "View permissions"],
+      ["MANAGE_USER_PERMISSION_OVERRIDES", "Manage exceptional permissions"]
+    ]]
+  ];
+  let roles = [];
+  let counts = {};
+  let openId = null;
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function scopeLabel(mode) { return scopes[mode] || "Limited"; }
+  function permLabel(count) { return count === 1 ? "1 permission" : count + " permissions"; }
+  function peopleText(count) {
+    if (!count) return "No one is assigned";
+    return count === 1 ? "1 person" : count + " people";
+  }
+  function humanize(code) {
+    const text = String(code || "").toLowerCase().replace(/_/g, " ");
+    return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+  }
+  function render(list, users) {
+    roles = list || [];
+    counts = {};
+    (users || []).forEach(function (user) {
+      if (user.roleId == null) return;
+      counts[user.roleId] = (counts[user.roleId] || 0) + 1;
+    });
+    $("#rows").html(roles.map(function (row) {
+      const people = counts[row.id] || 0;
+      const action = row.builtIn
+        ? "<span class='pill quiet'>Built-in</span>"
+        : "<button type='button' class='ghost remove' data-id='" + row.id + "'>Delete</button>";
+      const peopleCell = people ? esc(peopleText(people)) : "<span class='quiet-text'>No one</span>";
+      const open = openId === row.id;
+      return "<tr data-role-id='" + row.id + "'" + (open ? " class='role-open'" : "") + "><td><div class='person'><div><strong>" + esc(row.name) +
+        "</strong><small>" + esc(row.roleCode) + "</small></div></div></td><td class='nowrap'>" +
+        esc(scopeLabel(row.scopeMode)) + "</td><td class='nowrap'><button type='button' class='quiet view-role' data-id='" +
+        row.id + "' aria-expanded='" + open + "'><i class='caret'></i>" + esc(permLabel((row.permissions || []).length)) +
+        "</button></td><td class='nowrap'>" + peopleCell + "</td><td class='actions'>" + action + "</td></tr>" +
+        "<tr class='role-detail' data-for='" + row.id + "'" + (open ? "" : " hidden") + "><td colspan='5'><div class='perm-groups'>" +
+        permissionHtml(row) + "</div></td></tr>";
+    }).join("") || "<tr><td colspan='5' class='empty'>No roles yet</td></tr>");
+  }
+  function permissionHtml(role) {
+    const held = {};
+    (role.permissions || []).forEach(function (name) { held[name] = true; });
+    const used = {};
+    let html = "";
+    groups.forEach(function (group) {
+      const items = group[1].filter(function (item) { return held[item[0]]; });
+      items.forEach(function (item) { used[item[0]] = true; });
+      if (!items.length) return;
+      html += "<section><h3>" + esc(group[0]) + "<span>" + items.length + "</span></h3><ul>" +
+        items.map(function (item) { return "<li>" + esc(item[1]) + "</li>"; }).join("") + "</ul></section>";
+    });
+    const extra = (role.permissions || []).filter(function (name) { return !used[name]; });
+    if (extra.length) {
+      html += "<section><h3>Other<span>" + extra.length + "</span></h3><ul>" +
+        extra.map(function (name) { return "<li>" + esc(humanize(name)) + "</li>"; }).join("") + "</ul></section>";
+    }
+    return html || "<p class='quiet-text'>This role has no permissions.</p>";
+  }
+  function toggleRole(id) {
+    id = Number(id);
+    openId = openId === id ? null : id;
+    $("#rows tr[data-role-id]").removeClass("role-open");
+    $("#rows .view-role").attr("aria-expanded", "false");
+    $("#rows tr.role-detail").prop("hidden", true);
+    if (openId == null) return;
+    $("#rows tr[data-role-id='" + openId + "']").addClass("role-open");
+    $("#rows .view-role[data-id='" + openId + "']").attr("aria-expanded", "true");
+    $("#rows tr.role-detail[data-for='" + openId + "']").prop("hidden", false);
+  }
+
+  api("GET", "/api/auth/me").done(function (me) {
+    const orgId = actingOrganizationId(me.data);
+    if (!orgId) {
+      $("#rows").html("<tr><td colspan='5' class='empty'>Open a hospital first</td></tr>");
+      return;
+    }
+    const base = "/api/organizations/" + orgId + "/roles";
+    const usersUrl = "/api/organizations/" + orgId + "/users";
+    function load() {
+      const usersReq = api("GET", usersUrl);
+      api("GET", base).done(function (res) {
+        usersReq.done(function (users) { render(res.data, users.data); })
+          .fail(function () { render(res.data, []); });
+      }).fail(function (xhr) {
+        const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load roles";
+        $("#rows").html("<tr><td colspan='5' class='empty'>" + esc(message) + "</td></tr>");
+      });
+    }
+    load();
+    $("#rows").on("click", "tr[data-role-id]", function (event) {
+      if ($(event.target).closest(".remove").length) return;
+      toggleRole($(this).data("roleId"));
+    });
+    $("#rows").on("click", ".remove", function (event) {
+      event.stopPropagation();
+      const id = Number($(this).data("id"));
+      const role = roles.filter(function (row) { return row.id === id; })[0];
+      if (!window.confirm("Delete " + (role ? role.name : "this role") + "?")) return;
+      $("#form-error").text("");
+      api("DELETE", base + "/" + id).done(function () {
+        if (openId === id) openId = null;
+        load();
+      }).fail(function (xhr) {
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not delete the role");
+      });
+    });
+    $(document).on("keydown", function (event) {
+      if (event.key === "Escape" && openId != null) toggleRole(openId);
+    });
+  });
+</script>
+</body>
+</html>

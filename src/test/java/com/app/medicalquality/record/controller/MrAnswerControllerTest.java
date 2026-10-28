@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.repository.UserRepository;
+import com.app.medicalquality.auth.security.EffectivePermissionService;
 import com.app.medicalquality.auth.security.JwtAuthenticationEntryPoint;
 import com.app.medicalquality.auth.security.JwtAuthenticationFilter;
 import com.app.medicalquality.auth.security.PermissionAspect;
@@ -19,6 +20,7 @@ import com.app.medicalquality.exception.GlobalExceptionHandler;
 import com.app.medicalquality.record.dto.MrViews;
 import com.app.medicalquality.record.service.MrReviewService;
 import com.app.medicalquality.role.repository.RolePermissionRepository;
+import com.app.medicalquality.auth.repository.UserPermissionOverrideRepository;
 import com.app.medicalquality.score.RecordScoreCalculator;
 import java.time.LocalDate;
 import java.util.List;
@@ -46,6 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
     JwtService.class,
     PermissionAspect.class,
     PermissionEvaluator.class,
+    EffectivePermissionService.class,
     GlobalExceptionHandler.class
 })
 @ImportAutoConfiguration(MessageSourceAutoConfiguration.class)
@@ -67,6 +70,9 @@ class MrAnswerControllerTest {
 
     @MockitoBean
     private RolePermissionRepository rolePermissionRepository;
+
+    @MockitoBean
+    private UserPermissionOverrideRepository userPermissionOverrideRepository;
 
     @MockitoBean
     private MrReviewService mrReviewService;

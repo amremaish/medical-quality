@@ -18,6 +18,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     Optional<Department> findByIdAndDeletedAtIsNull(Long a_id);
 
+    Optional<Department> findByIdAndOrganizationIdAndDeletedAtIsNull(Long a_id, Long a_organizationId);
+
     boolean existsByCode(String a_code);
 
     long countByDeletedAtIsNull();

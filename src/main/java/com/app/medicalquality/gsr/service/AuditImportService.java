@@ -1,10 +1,12 @@
 package com.app.medicalquality.gsr.service;
 
+import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.auth.service.CurrentUserService;
 import com.app.medicalquality.evidence.service.FileStorageService;
 import com.app.medicalquality.exception.AppException;
 import com.app.medicalquality.exception.NotFoundException;
 import com.app.medicalquality.finding.service.FindingService;
+import com.app.medicalquality.hospital.service.HospitalContext;
 import com.app.medicalquality.gsr.dto.GsrRequests;
 import com.app.medicalquality.gsr.entity.AuditImport;
 import com.app.medicalquality.gsr.entity.GsrElement;
@@ -41,6 +43,7 @@ public class AuditImportService {
     private final FindingService findingService;
     private final FileStorageService fileStorageService;
     private final CurrentUserService currentUserService;
+    private final HospitalContext hospitalContext;
     private final ObjectMapper objectMapper;
 
     public AuditImportService(
@@ -53,6 +56,7 @@ public class AuditImportService {
             FindingService a_findingService,
             FileStorageService a_fileStorageService,
             CurrentUserService a_currentUserService,
+            HospitalContext a_hospitalContext,
             ObjectMapper a_objectMapper) {
         this.importRepository = a_importRepository;
         this.auditRepository = a_auditRepository;
@@ -63,6 +67,7 @@ public class AuditImportService {
         this.findingService = a_findingService;
         this.fileStorageService = a_fileStorageService;
         this.currentUserService = a_currentUserService;
+        this.hospitalContext = a_hospitalContext;
         this.objectMapper = a_objectMapper;
     }
 
@@ -90,6 +95,7 @@ public class AuditImportService {
         AuditImport row = importRepository
                 .findByIdAndDeletedAtIsNull(a_importId)
                 .orElseThrow(() -> new NotFoundException("error.import.not_found"));
+        requireUploaderHospital(row, a_authentication);
         Long auditId = a_auditId == null ? createAudit(row, a_authentication) : a_auditId;
         apply(auditId, row.getExtractedJson(), a_authentication);
         Audit audit = auditRepository
@@ -101,10 +107,11 @@ public class AuditImportService {
     }
 
     @Transactional
-    public ImportView updatePreview(Long a_importId, String a_json) {
+    public ImportView updatePreview(Long a_importId, String a_json, Authentication a_authentication) {
         AuditImport row = importRepository
                 .findByIdAndDeletedAtIsNull(a_importId)
                 .orElseThrow(() -> new NotFoundException("error.import.not_found"));
+        requireUploaderHospital(row, a_authentication);
         try {
             if (!objectMapper.readTree(a_json).has("standards")) {
                 throw new AppException("error.validation.failed");
@@ -117,6 +124,25 @@ public class AuditImportService {
     }
 
     public record ImportView(Long id, String originalName, String status, String extractedJson) {}
+
+    private void requireUploaderHospital(AuditImport a_row, Authentication a_authentication) {
+        User caller = currentUserService.require(a_authentication);
+        User uploader = a_row.getUploadedBy();
+        if (uploader == null) {
+            throw new NotFoundException("error.import.not_found");
+        }
+        if (uploader.isSuperAdmin()) {
+            if (!caller.getId().equals(uploader.getId())) {
+                throw new NotFoundException("error.import.not_found");
+            }
+            hospitalContext.require(a_authentication);
+            return;
+        }
+        if (uploader.getOrganization() == null
+                || !hospitalContext.require(a_authentication).getId().equals(uploader.getOrganization().getId())) {
+            throw new NotFoundException("error.import.not_found");
+        }
+    }
 
     private Long createAudit(AuditImport a_row, Authentication a_authentication) {
         try {

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invite user</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/users">Users</a>
+      <section class="panel form-card">
+        <h1>Invite user</h1>
+        <p>The account stays off until they open the setup link and choose a password.</p>
+        <form id="invite-user" class="stack">
+          <div class="row">
+            <div><label for="first">First name</label><input id="first" required maxlength="128"></div>
+            <div><label for="last">Last name</label><input id="last" maxlength="128"></div>
+          </div>
+          <div><label for="email">Email</label><input id="email" type="email" required maxlength="320"></div>
+          <div><label for="role">Role</label><select id="role" required></select></div>
+          <div id="assessor-field" hidden><label for="assessor">Assessor</label><select id="assessor"></select></div>
+          <div id="department-field" hidden><label for="department">Department</label><select id="department"></select></div>
+          <div id="departments-field" hidden><label>Departments</label><div id="departments" class="check-list"></div></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/users">Cancel</a>
+            <button type="submit">Create setup link</button>
+          </div>
+        </form>
+        <section id="invite" class="link-result" hidden>
+          <h2>Setup link</h2>
+          <p>Send this once. The account stays off until they open it and choose a password.</p>
+          <div class="url-line">
+            <code id="invite-url"></code>
+            <button type="button" id="copy-invite" class="btn sm">Copy</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function scopeOf() {
+    return $("#role option:selected").data("scope") || "HOSPITAL";
+  }
+  function showScope() {
+    const scope = scopeOf();
+    $("#assessor-field").prop("hidden", scope !== "ASSESSOR");
+    $("#department-field").prop("hidden", scope !== "DEPARTMENT");
+    $("#departments-field").prop("hidden", scope !== "DEPARTMENT_LIST");
+  }
+  api("GET", "/api/auth/me").done(function (me) {
+    const orgId = actingOrganizationId(me.data);
+    if (!orgId) {
+      $("#form-error").text("Open a hospital first");
+      return;
+    }
+    api("GET", "/api/organizations/" + orgId + "/roles").done(function (res) {
+      $("#role").html(res.data.map(function (row) {
+        return "<option value='" + row.id + "' data-scope='" + esc(row.scopeMode) + "'>" + esc(row.name) + "</option>";
+      }).join(""));
+      showScope();
+    });
+    api("GET", "/api/assessors").done(function (res) {
+      $("#assessor").html(res.data.map(function (row) {
+        return "<option value='" + row.id + "'>" + esc(row.nameEn || row.code) + "</option>";
+      }).join(""));
+    });
+    api("GET", "/api/departments").done(function (res) {
+      $("#department").html(res.data.map(function (row) {
+        return "<option value='" + row.id + "'>" + esc(row.code) + " " + esc(row.nameAr) + "</option>";
+      }).join(""));
+      $("#departments").html(res.data.map(function (row) {
+        return "<label class='choice'><input type='checkbox' value='" + row.id + "'><span>" + esc(row.code) + " " + esc(row.nameAr) + "</span></label>";
+      }).join(""));
+    });
+    $("#role").on("change", showScope);
+    $("#invite-user").on("submit", function (event) {
+      event.preventDefault();
+      $("#form-error").text("");
+      const scope = scopeOf();
+      const body = {
+        firstName: $("#first").val(),
+        lastName: $("#last").val(),
+        email: $("#email").val(),
+        roleId: Number($("#role").val())
+      };
+      if (scope === "ASSESSOR") body.assessorId = Number($("#assessor").val());
+      if (scope === "DEPARTMENT") body.departmentId = Number($("#department").val());
+      if (scope === "DEPARTMENT_LIST") {
+        body.departmentIds = $("#departments input:checked").map(function () { return Number(this.value); }).get();
+      }
+      api("POST", "/api/organizations/" + orgId + "/users", body).done(function (res) {
+        $("#invite-url").text(res.data.setupUrl);
+        $("#invite").prop("hidden", false);
+        $("#invite-user").hide();
+      }).fail(function (xhr) {
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not invite the user");
+      });
+    });
+  });
+  $("#copy-invite").on("click", function () {
+    const button = $(this);
+    navigator.clipboard.writeText($("#invite-url").text()).then(function () {
+      button.text("Copied");
+    });
+  });
+</script>
+</body>
+</html>

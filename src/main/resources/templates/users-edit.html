@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit user</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-user-id=${userId}">
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/users">Users</a>
+      <section class="panel form-screen">
+        <div class="form-intro">
+          <span class="avatar lg" id="form-avatar">?</span>
+          <div>
+            <h1 id="page-title">Edit user</h1>
+            <p id="form-who">Loading…</p>
+            <span id="form-status" class="status" hidden></span>
+          </div>
+        </div>
+        <form id="edit-user" class="stack">
+          <div class="row">
+            <div><label for="first">First name</label><input id="first" required maxlength="128"></div>
+            <div><label for="last">Last name</label><input id="last" maxlength="128"></div>
+          </div>
+          <div><label for="email">Email</label><input id="email" type="email" required maxlength="320"></div>
+          <div><label for="role">Role</label><select id="role" required></select></div>
+          <div id="assessor-field" hidden><label for="assessor">Assessor</label><select id="assessor"></select></div>
+          <div id="department-field" hidden><label for="department">Department</label><select id="department"></select></div>
+          <div id="departments-field" hidden><label>Departments</label><div id="departments" class="check-list"></div></div>
+          <fieldset class="option-group">
+            <label class="choice" for="enabled">
+              <input id="enabled" type="checkbox">
+              <span>Account can sign in<small>Turn this off to mark them Inactive. They stay in the directory and cannot sign in.</small></span>
+            </label>
+            <label class="choice" for="reissue">
+              <input id="reissue" type="checkbox">
+              <span>Send a new setup link<small>The account stays off until they open the link and choose a password.</small></span>
+            </label>
+          </fieldset>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/users">Cancel</a>
+            <button type="submit" class="btn" id="save-user">Save profile</button>
+          </div>
+        </form>
+        <section id="profile-summary" hidden>
+          <p id="summary-line"></p>
+        </section>
+        <section id="invite" class="link-result" hidden>
+          <h2>Setup link</h2>
+          <p>Send this once. The account stays off until they open it and choose a password.</p>
+          <div class="url-line">
+            <code id="invite-url"></code>
+            <button type="button" id="copy-invite" class="btn sm">Copy</button>
+          </div>
+          <div class="form-actions"><a class="btn" href="/users">Done</a></div>
+        </section>
+        <section id="exceptional" class="exceptional" hidden>
+          <div class="exceptional-bar">
+            <div>
+              <h2>Exceptional permissions</h2>
+              <p>These choices apply only to this person. They do not change the shared role, and they do not change anyone else who has that role.</p>
+            </div>
+            <button type="button" class="btn" id="save-exceptional">Save permissions</button>
+          </div>
+          <div class="override-head">
+            <span>Permission</span>
+            <span>Role</span>
+            <span>This person</span>
+          </div>
+          <div id="exceptional-rows"></div>
+          <p class="err" id="exceptional-error"></p>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function scopeOf() {
+    return $("#role option:selected").data("scope") || "HOSPITAL";
+  }
+  function showScope() {
+    const scope = scopeOf();
+    $("#assessor-field").prop("hidden", scope !== "ASSESSOR");
+    $("#department-field").prop("hidden", scope !== "DEPARTMENT");
+    $("#departments-field").prop("hidden", scope !== "DEPARTMENT_LIST");
+  }
+  function statusClass(status) {
+    return status === "Active" ? "ok" : "off";
+  }
+  function fail(xhr, target) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the user";
+    $(target).text(message);
+  }
+  const userId = Number($("body").attr("data-user-id"));
+  api("GET", "/api/auth/me").done(function (me) {
+    const viewer = me.data;
+    const orgId = actingOrganizationId(viewer);
+    const canEditProfile = directoryAdmin(viewer);
+    const canOverrides = holds(viewer, "MANAGE_USER_PERMISSION_OVERRIDES");
+    if (!orgId) {
+      $("#form-error").text("Open a hospital first");
+      return;
+    }
+    const base = "/api/organizations/" + orgId + "/users/" + userId;
+    $("#edit-user").prop("hidden", !canEditProfile);
+    $("#profile-summary").prop("hidden", canEditProfile);
+    $("#page-title").text(canEditProfile ? "Edit user" : "Exceptional permissions");
+
+    function exceptionNote(roleGranted, effect) {
+      if (effect === "DENY" && roleGranted) return "Explicit denial. The role grants this, and this person does not.";
+      if (effect === "ALLOW" && !roleGranted) return "Explicit grant. The role does not include this, and this person does.";
+      return "";
+    }
+    function effectButton(effect, value, label) {
+      const on = effect === value;
+      return "<button type='button' class='effect-option" + (on ? " on" : "") + "' data-effect='" + value +
+        "' aria-pressed='" + (on ? "true" : "false") + "'>" + label + "</button>";
+    }
+    function renderExceptional(rows) {
+      const list = rows || [];
+      $(".override-head").prop("hidden", list.length === 0);
+      $("#exceptional-rows").html(list.map(function (row) {
+        const effect = row.effect || "INHERIT";
+        const roleGranted = !!row.roleGranted;
+        const mark = effect === "DENY" ? " is-deny" : effect === "ALLOW" ? " is-allow" : "";
+        const note = row.note || exceptionNote(roleGranted, effect);
+        return "<div class='override-row" + mark + "' data-permission='" + esc(row.permission) +
+          "' data-role-granted='" + (roleGranted ? "1" : "0") + "'>" +
+          "<div><strong>" + esc(row.label) + "</strong><small>" + esc(row.description) + "</small>" +
+          "<small class='override-note'" + (note ? "" : " hidden") + ">" + esc(note) + "</small></div>" +
+          "<div class='role-state" + (roleGranted ? " granted" : "") + "'>" +
+          (roleGranted ? "Granted" : "Not granted") + "</div>" +
+          "<div class='effect-choice' role='group' aria-label='Exception for " + esc(row.label) + "'>" +
+          effectButton(effect, "INHERIT", "Inherit") +
+          effectButton(effect, "ALLOW", "Allow") +
+          effectButton(effect, "DENY", "Deny") +
+          "</div></div>";
+      }).join("") || "<p>No permissions can be overridden for one person.</p>");
+      $("#exceptional").prop("hidden", false);
+    }
+
+    function loadExceptional() {
+      if (!canOverrides) return;
+      api("GET", base + "/permission-overrides").done(function (res) {
+        renderExceptional(res.data && res.data.permissions);
+      }).fail(function (xhr) {
+        fail(xhr, "#exceptional-error");
+        $("#exceptional").prop("hidden", false);
+      });
+    }
+
+    const ready = canEditProfile ? $.when(
+      api("GET", "/api/organizations/" + orgId + "/roles"),
+      api("GET", "/api/assessors"),
+      api("GET", "/api/departments"),
+      api("GET", base)
+    ) : api("GET", base);
+
+    ready.done(function (userRes, assessorRes, departmentRes, personRes) {
+      const user = canEditProfile ? personRes[0].data : userRes.data;
+      const display = ((user.firstName || "") + (user.lastName ? " " + user.lastName : "")).trim() || user.email;
+      $("#form-avatar").text((display || "?").slice(0, 1).toUpperCase());
+      $("#form-who").text(display);
+      $("#form-status").text(user.status || "").attr("class", "status " + statusClass(user.status)).prop("hidden", !user.status);
+      if (!canEditProfile) {
+        $("#summary-line").text((user.roleName || "No role") + " · " + (user.email || ""));
+        loadExceptional();
+        return;
+      }
+      const roles = userRes[0].data;
+      const assessors = assessorRes[0].data;
+      const departments = departmentRes[0].data;
+      $("#first").val(user.firstName || "");
+      $("#last").val(user.lastName || "");
+      $("#email").val(user.email || "");
+      $("#enabled").prop("checked", user.enabled);
+      $("#role").html(roles.map(function (row) {
+        return "<option value='" + row.id + "' data-scope='" + esc(row.scopeMode) + "'>" + esc(row.name) + "</option>";
+      }).join("")).val(String(user.roleId));
+      $("#assessor").html(assessors.map(function (row) {
+        return "<option value='" + row.id + "'>" + esc(row.nameEn || row.code) + "</option>";
+      }).join(""));
+      if (user.assessorId) $("#assessor").val(String(user.assessorId));
+      $("#department").html(departments.map(function (row) {
+        return "<option value='" + row.id + "'>" + esc(row.code) + " " + esc(row.nameAr) + "</option>";
+      }).join(""));
+      if (user.departmentId) $("#department").val(String(user.departmentId));
+      const selected = user.departmentIds || [];
+      $("#departments").html(departments.map(function (row) {
+        const checked = selected.indexOf(row.id) >= 0 ? " checked" : "";
+        return "<label class='choice'><input type='checkbox' value='" + row.id + "'" + checked + "><span>" +
+          esc(row.code) + " " + esc(row.nameAr) + "</span></label>";
+      }).join(""));
+      showScope();
+      loadExceptional();
+      $("#first").trigger("focus");
+    }).fail(function (xhr) { fail(xhr, "#form-error"); });
+
+    $("#role").on("change", showScope);
+    $("#reissue").on("change", function () {
+      if (this.checked) $("#enabled").prop("checked", false);
+    });
+    $("#edit-user").on("submit", function (event) {
+      event.preventDefault();
+      $("#form-error").text("");
+      const scope = scopeOf();
+      const body = {
+        firstName: $("#first").val(),
+        lastName: $("#last").val(),
+        email: $("#email").val(),
+        roleId: Number($("#role").val()),
+        enabled: $("#enabled").prop("checked"),
+        reissueSetup: $("#reissue").prop("checked")
+      };
+      if (scope === "ASSESSOR") body.assessorId = Number($("#assessor").val());
+      if (scope === "DEPARTMENT") body.departmentId = Number($("#department").val());
+      if (scope === "DEPARTMENT_LIST") {
+        body.departmentIds = $("#departments input:checked").map(function () { return Number(this.value); }).get();
+      }
+      $("#save-user").prop("disabled", true);
+      api("PUT", base, body).done(function (res) {
+        $("#save-user").prop("disabled", false);
+        if (res.data && res.data.setupUrl) {
+          $("#invite-url").text(res.data.setupUrl);
+          $("#edit-user").prop("hidden", true);
+          $("#invite").prop("hidden", false);
+          return;
+        }
+        window.location.href = "/users";
+      }).fail(function (xhr) {
+        $("#save-user").prop("disabled", false);
+        fail(xhr, "#form-error");
+      });
+    });
+    $("#exceptional-rows").on("click", ".effect-option", function () {
+      const button = $(this);
+      const row = button.closest(".override-row");
+      const effect = button.attr("data-effect");
+      row.find(".effect-option").removeClass("on").attr("aria-pressed", "false");
+      button.addClass("on").attr("aria-pressed", "true");
+      row.removeClass("is-allow is-deny");
+      if (effect === "ALLOW") row.addClass("is-allow");
+      if (effect === "DENY") row.addClass("is-deny");
+      const note = exceptionNote(row.attr("data-role-granted") === "1", effect);
+      row.find(".override-note").text(note).prop("hidden", !note);
+    });
+    $("#save-exceptional").on("click", function () {
+      const changes = $("#exceptional-rows .override-row").map(function () {
+        return { permission: $(this).attr("data-permission"), effect: $(this).find(".effect-option.on").attr("data-effect") };
+      }).get();
+      $("#exceptional-error").text("");
+      $("#save-exceptional").prop("disabled", true);
+      api("PUT", base + "/permission-overrides", { changes: changes }).done(function (res) {
+        $("#save-exceptional").prop("disabled", false);
+        renderExceptional(res.data && res.data.permissions);
+        if (viewer.id === userId) {
+          api("GET", "/api/auth/me").done(function (next) { showNav(next.data); });
+        }
+      }).fail(function (xhr) {
+        $("#save-exceptional").prop("disabled", false);
+        fail(xhr, "#exceptional-error");
+      });
+    });
+    $("#copy-invite").on("click", function () {
+      const button = $(this);
+      navigator.clipboard.writeText($("#invite-url").text()).then(function () {
+        button.text("Copied");
+      });
+    });
+  });
+</script>
+</body>
+</html>

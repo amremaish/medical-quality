@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -42,6 +43,12 @@ public class OrganizationController {
     public ResponseEntity<AppResponse<OrganizationViews.Invitation>> create(
             @Valid @RequestBody OrganizationRequests.Create a_request, Authentication a_authentication) {
         return AppResponse.success(
-                provisioningService.provision(a_request, a_authentication), "Successfully Done", HttpStatus.CREATED);
+                provisioningService.provision(a_request, a_authentication, baseUrl()),
+                "Successfully Done",
+                HttpStatus.CREATED);
+    }
+
+    private String baseUrl() {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 }

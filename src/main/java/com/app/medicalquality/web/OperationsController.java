@@ -84,8 +84,10 @@ public class OperationsController {
     @PutMapping("/api/capas/{capaId}")
     @HasPermission(PermissionEnum.MANAGE_CAPA)
     public ResponseEntity<AppResponse<FindingService.CapaView>> updateCapa(
-            @PathVariable("capaId") Long a_capaId, @RequestBody FindingService.CapaForm a_form) {
-        return AppResponse.success(findingService.updateCapa(a_capaId, a_form));
+            @PathVariable("capaId") Long a_capaId,
+            @RequestBody FindingService.CapaForm a_form,
+            Authentication a_authentication) {
+        return AppResponse.success(findingService.updateCapa(a_capaId, a_form, a_authentication));
     }
 
     @GetMapping("/api/department-types")
@@ -134,8 +136,9 @@ public class OperationsController {
     }
 
     @GetMapping("/api/files/{documentId}")
-    public ResponseEntity<Resource> file(@PathVariable("documentId") Long a_documentId) {
-        Resource resource = evidenceService.download(a_documentId);
+    public ResponseEntity<Resource> file(
+            @PathVariable("documentId") Long a_documentId, Authentication a_authentication) {
+        Resource resource = evidenceService.download(a_documentId, a_authentication);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment")
                 .body(resource);
@@ -151,8 +154,8 @@ public class OperationsController {
     @PutMapping("/api/audit-imports/{importId}")
     @HasPermission(PermissionEnum.MANAGE_IMPORT)
     public ResponseEntity<AppResponse<AuditImportService.ImportView>> updateImport(
-            @PathVariable("importId") Long a_importId, @RequestBody JsonNode a_json) {
-        return AppResponse.success(auditImportService.updatePreview(a_importId, a_json.toString()));
+            @PathVariable("importId") Long a_importId, @RequestBody JsonNode a_json, Authentication a_authentication) {
+        return AppResponse.success(auditImportService.updatePreview(a_importId, a_json.toString(), a_authentication));
     }
 
     @PostMapping("/api/audit-imports/{importId}/confirm")

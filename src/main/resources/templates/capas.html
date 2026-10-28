@@ -17,7 +17,7 @@
           <h1>CAPA</h1>
           <p>Corrective actions tied to an open finding.</p>
         </div>
-        <a class="btn" href="/capas/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Add CAPA</a>
+        <a class="btn" href="/capas/new" data-perm="MANAGE_CAPA" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Add CAPA</a>
       </div>
       <div class="table-card">
         <table class="data-table"><thead><tr><th>Finding</th><th>Status</th><th>Progress</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>

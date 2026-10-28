@@ -29,35 +29,129 @@ function openedOrg() {
   }
 }
 
-function platformPath(path) {
+let currentMe = null;
+
+function hasPerm(name) {
+  return holds(currentMe, name);
+}
+
+function holds(me, name) {
+  if (!name) return false;
+  if (me && me.superAdmin) return true;
+  return !!(me && Array.isArray(me.permissions) && me.permissions.indexOf(name) >= 0);
+}
+
+function directoryAdmin(me) {
+  if (!me) return false;
+  return (me.superAdmin && !!openedOrg()) || me.roleCode === "HOSPITAL_OWNER";
+}
+
+function screenAllowed(path, me) {
+  if (!me) return false;
+  if (path === "/account/password" || path === "/account/setup" || path === "/login") return true;
+  if (isPlatform(path)) return !!me.superAdmin;
+  if (me.superAdmin && !openedOrg()) return false;
+  if (path === "/users/new" || path.indexOf("/users/new/") === 0
+      || path === "/departments/new" || path.indexOf("/departments/new/") === 0) {
+    return directoryAdmin(me);
+  }
+  if (path === "/roles" || path.indexOf("/roles/") === 0) return directoryAdmin(me);
+  if (path === "/users" || path.indexOf("/users/") === 0) {
+    return directoryAdmin(me) || holds(me, "MANAGE_USER_PERMISSION_OVERRIDES");
+  }
+  const required = permissionFor(path);
+  if (required === null) return true;
+  return holds(me, required);
+}
+
+function isPlatform(path) {
   return path === "/organizations" || path.indexOf("/organizations/") === 0
     || path === "/owners" || path.indexOf("/owners/") === 0
-    || path === "/account/password" || path === "/hospitals";
+    || path === "/hospitals" || path.indexOf("/hospitals/") === 0;
+}
+
+function permissionFor(path) {
+  if (path === "/dashboard" || path === "/dashboard/") return "VIEW_COMMAND_CENTER";
+  if (path.indexOf("/dashboard/executive") === 0) return "VIEW_EXECUTIVE_DASHBOARD";
+  if (path.indexOf("/dashboard/assessor") === 0) return "VIEW_ASSESSOR_DASHBOARD";
+  if (path.indexOf("/dashboard/quality-director") === 0) return "VIEW_QUALITY_DIRECTOR_DASHBOARD";
+  if (path.indexOf("/dashboard/") === 0) return "";
+  if (path === "/audits/new" || path.indexOf("/audits/new/") === 0) return "CONDUCT_AUDIT";
+  if (path === "/record-reviews/new" || path.indexOf("/record-reviews/new/") === 0) return "CONDUCT_AUDIT";
+  if (path === "/capas/new" || path.indexOf("/capas/new/") === 0) return "MANAGE_CAPA";
+  if (path === "/evidence/new" || path.indexOf("/evidence/new/") === 0) return "MANAGE_EVIDENCE";
+  if (path === "/imports" || path.indexOf("/imports/") === 0) return "MANAGE_IMPORT";
+  return null;
+}
+
+function listedPerms(el, attr) {
+  const raw = el.getAttribute(attr) || "";
+  return raw.split(",").map(function (name) { return name.trim(); }).filter(Boolean);
+}
+
+function firstDashboard() {
+  if (hasPerm("VIEW_COMMAND_CENTER")) return "/dashboard";
+  if (hasPerm("VIEW_EXECUTIVE_DASHBOARD")) return "/dashboard/executive";
+  if (hasPerm("VIEW_ASSESSOR_DASHBOARD")) return "/dashboard/assessor";
+  if (hasPerm("VIEW_QUALITY_DIRECTOR_DASHBOARD")) return "/dashboard/quality-director";
+  return null;
+}
+
+function applyControls() {
+  $("[data-perm]").each(function () {
+    const names = listedPerms(this, "data-perm");
+    $(this).prop("hidden", !names.some(hasPerm));
+  });
+  $("[data-perm-all]").each(function () {
+    const names = listedPerms(this, "data-perm-all");
+    $(this).prop("hidden", !(names.length && names.every(hasPerm)));
+  });
+  const homeDash = document.getElementById("home-dashboard");
+  if (homeDash) {
+    const target = firstDashboard();
+    homeDash.hidden = !target;
+    if (target) homeDash.setAttribute("href", target);
+  }
+  const dashLinks = $("#dash-group .subnav a");
+  if (dashLinks.length) {
+    const anyDash = dashLinks.filter(function () { return !this.hidden; }).length > 0;
+    $("#dash-group").prop("hidden", !anyDash);
+  }
+}
+
+function actingOrganizationId(me) {
+  if (me.superAdmin) {
+    const opened = openedOrg();
+    return opened && opened.id != null ? opened.id : null;
+  }
+  return me.organizationId;
 }
 
 function showNav(me) {
+  currentMe = me || null;
   const opened = openedOrg();
   const path = window.location.pathname;
+  document.body.classList.remove("is-super", "is-org");
+  $(".directory-nav").prop("hidden", !directoryAdmin(me));
+  $(".users-nav").prop("hidden", !(directoryAdmin(me) || hasPerm("MANAGE_USER_PERMISSION_OVERRIDES")));
   if (me.superAdmin && opened) {
     document.body.classList.add("is-super", "is-org");
     $("#brand-org, #org-banner-name, #org-line").text(opened.name);
     $(".brand").attr("href", "/");
-    return;
-  }
-  if (me.superAdmin) {
+  } else if (me.superAdmin) {
     document.body.classList.add("is-super");
     $("#brand-org").text("Quality platform");
     $("#org-line").text("Quality platform for hospitals");
     $(".brand").attr("href", "/organizations");
-    if (!platformPath(path)) window.location.href = "/organizations";
-    return;
+  } else {
+    document.body.classList.add("is-org");
+    $("#brand-org").text(me.organizationName || "Quality platform");
+    $("#org-line").text(me.organizationName || "Quality platform for hospitals");
   }
-  document.body.classList.add("is-org");
-  $("#brand-org").text(me.organizationName || "Quality platform");
-  $("#org-line").text(me.organizationName || "Quality platform for hospitals");
-  if (path === "/organizations" || path.indexOf("/organizations/") === 0
-      || path === "/owners" || path.indexOf("/owners/") === 0 || path === "/hospitals") {
-    window.location.href = "/";
+  applyControls();
+  if (!screenAllowed(path, me)) {
+    const target = me.superAdmin && !opened ? "/organizations" : "/";
+    if (path !== target) window.location.href = target;
   }
 }
 
@@ -76,7 +170,7 @@ function markNav() {
 }
 
 $(function () {
-  if ($("body").data("page") !== "login") {
+  if ($("body").data("page") !== "login" && $("body").data("page") !== "setup") {
     requireAuth();
     markNav();
     const today = new Date();
@@ -92,6 +186,9 @@ $(function () {
         return;
       }
       showNav(res.data);
+      $(document).trigger("mq-ready");
+    }).fail(function (xhr) {
+      if (xhr.status !== 401) window.location.href = "/login";
     });
   }
   $("#logout").on("click", function () {

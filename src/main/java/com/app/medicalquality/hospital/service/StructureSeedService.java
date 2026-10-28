@@ -9,6 +9,7 @@ import com.app.medicalquality.hospital.repository.DepartmentTypeRepository;
 import com.app.medicalquality.organization.FacilityType;
 import com.app.medicalquality.organization.entity.Organization;
 import com.app.medicalquality.organization.repository.OrganizationRepository;
+import com.app.medicalquality.role.service.RoleCloneService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -54,6 +55,7 @@ public class StructureSeedService implements ApplicationRunner {
     private final DepartmentRepository departmentRepository;
     private final DepartmentTypeRepository departmentTypeRepository;
     private final OrganizationRepository organizationRepository;
+    private final RoleCloneService roleCloneService;
     private final ObjectMapper objectMapper;
 
     public StructureSeedService(
@@ -61,11 +63,13 @@ public class StructureSeedService implements ApplicationRunner {
             DepartmentRepository a_departmentRepository,
             DepartmentTypeRepository a_departmentTypeRepository,
             OrganizationRepository a_organizationRepository,
+            RoleCloneService a_roleCloneService,
             ObjectMapper a_objectMapper) {
         this.assessorRepository = a_assessorRepository;
         this.departmentRepository = a_departmentRepository;
         this.departmentTypeRepository = a_departmentTypeRepository;
         this.organizationRepository = a_organizationRepository;
+        this.roleCloneService = a_roleCloneService;
         this.objectMapper = a_objectMapper;
     }
 
@@ -77,6 +81,7 @@ public class StructureSeedService implements ApplicationRunner {
         }
         JsonNode root = read();
         Organization organization = hospital(root.get("hospital"));
+        roleCloneService.ensureCopies(organization);
         Map<String, Assessor> assessors = seedAssessors(root.get("assessors"), organization);
         seedDepartments(root.get("departments"), assessors, organization);
     }
