@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF import</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.import">PDF import</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,10 +15,10 @@
     <main class="page">
       <div class="page-head">
         <div>
-          <h1>PDF import</h1>
-          <p>Read a filled GSR checklist from a text PDF, review the extraction, then create the audit.</p>
+          <h1 data-i18n="page.import">PDF import</h1>
+          <p data-i18n="page.importLead">Read a filled GSR checklist from a text PDF, review the extraction, then create the audit.</p>
         </div>
-        <a class="btn" href="/imports/new" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Import PDF</a>
+        <a class="btn" href="/imports/new" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.importNew">Import PDF</span></a>
       </div>
     </main>
   </div>

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Medical record reviews</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.recordsTitle">Medical record reviews</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,14 +15,14 @@
       <main class="page">
         <div class="page-head">
           <div>
-            <h1>Medical records</h1>
-            <p>Legible, accurate, and complete. A record counts only when all three are met.</p>
+            <h1 data-i18n="page.records">Medical records</h1>
+            <p data-i18n="page.recordsLead">Legible, accurate, and complete. A record counts only when all three are met.</p>
           </div>
-          <a class="btn" href="/record-reviews/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New review</a>
+          <a class="btn" href="/record-reviews/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.reviewNew">New review</span></a>
         </div>
         <div class="table-card">
           <table class="data-table">
-            <thead><tr><th>Date</th><th>Hospital</th><th>Reviewer</th><th>Department</th></tr></thead>
+            <thead><tr><th data-i18n="col.date">Date</th><th data-i18n="col.hospital">Hospital</th><th data-i18n="col.reviewer">Reviewer</th><th data-i18n="col.department">Department</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
         </div>
@@ -41,9 +42,10 @@
         $("#rows").html(res.data.map(function (row) {
           return "<tr><td>" + row.reviewDate + "</td><td><a href='/record-reviews/" + row.id + "'>" +
             esc(row.hospitalName) + "</a></td><td>" + esc(row.reviewerName) + "</td><td>" + esc(row.departmentName) + "</td></tr>";
-        }).join("") || "<tr><td colspan='4'>No reviews yet</td></tr>");
+        }).join("") || "<tr><td colspan='4'>" + esc(mqText("No reviews yet", "لا توجد مراجعات بعد")) + "</td></tr>");
       });
     }
+    document.addEventListener("mq-lang", load);
     load();
   </script>
 </body>

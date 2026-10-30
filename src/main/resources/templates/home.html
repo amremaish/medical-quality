@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Medical quality</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="login.brand">Medical quality</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,15 +15,15 @@
       <main class="page">
         <section class="hero home-hero">
           <div>
-            <p id="home-greet">Welcome</p>
-            <h1 id="org-line">Quality workspace</h1>
+            <p id="home-greet" data-i18n="home.welcome">Welcome</p>
+            <h1 id="org-line" data-i18n="nav.workspace">Quality workspace</h1>
             <div class="pills" id="home-status" hidden></div>
           </div>
         </section>
         <div class="home-links">
-          <a class="kpi" href="/audits" data-perm="CONDUCT_AUDIT" hidden><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b>GSR audits</b><span id="home-audits">Audits in this hospital</span></div></a>
-          <a class="kpi" href="/record-reviews" data-perm="CONDUCT_AUDIT" hidden><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b>Medical records</b><span id="home-records">Reviews in this hospital</span></div></a>
-          <a class="kpi" id="home-dashboard" href="/dashboard" data-perm="VIEW_COMMAND_CENTER,VIEW_EXECUTIVE_DASHBOARD,VIEW_ASSESSOR_DASHBOARD,VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden><span class="disc orange"><svg th:replace="~{fragments/shell :: i('chart')}"></svg></span><div><b id="home-dashboard-name">Command center</b><span id="home-compliance">Compliance for this hospital</span></div></a>
+          <a class="kpi" href="/audits" data-perm="CONDUCT_AUDIT" hidden><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b data-i18n="nav.audits">GSR audits</b><span id="home-audits" data-i18n="home.auditsHint">Audits in this hospital</span></div></a>
+          <a class="kpi" href="/record-reviews" data-perm="CONDUCT_AUDIT" hidden><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b data-i18n="nav.records">Medical records</b><span id="home-records" data-i18n="home.recordsHint">Reviews in this hospital</span></div></a>
+          <a class="kpi" id="home-dashboard" href="/dashboard" data-perm="VIEW_COMMAND_CENTER,VIEW_EXECUTIVE_DASHBOARD,VIEW_ASSESSOR_DASHBOARD,VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden><span class="disc orange"><svg th:replace="~{fragments/shell :: i('chart')}"></svg></span><div><b id="home-dashboard-name" data-i18n="nav.command">Command center</b><span id="home-compliance" data-i18n="home.complianceHint">Compliance for this hospital</span></div></a>
         </div>
       </main>
     </div>
@@ -30,10 +31,12 @@
   <script th:src="@{/js/jquery.min.js}"></script>
   <script th:src="@{/js/api.js}"></script>
   <script>
-    $(function () {
+    function greet() {
       const hour = new Date().getHours();
-      $("#home-greet").text(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
-    });
+      $("#home-greet").text(hour < 12 ? mqText("Good morning", "صباح الخير") : hour < 17 ? mqText("Good afternoon", "مساء الخير") : mqText("Good evening", "مساء الخير"));
+    }
+    document.addEventListener("mq-lang", greet);
+    $(function () { greet(); });
   </script>
 </body>
 </html>

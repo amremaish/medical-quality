@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Organizations</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.orgs">Organizations</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,15 +15,15 @@
     <main class="page">
       <div class="page-head">
         <div>
-          <h1>Organizations</h1>
-          <p id="org-count">Hospitals and other facilities on the platform. Choose a name to work in that hospital.</p>
+          <h1 data-i18n="page.orgs">Organizations</h1>
+          <p id="org-count" data-i18n="page.orgsLead">Hospitals and other facilities on the platform. Choose a name to work in that hospital.</p>
         </div>
-        <a class="btn" href="/organizations/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New organization</a>
+        <a class="btn" href="/organizations/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="action.newOrg">New organization</span></a>
       </div>
       <p class="err" id="form-error"></p>
       <div class="table-card">
         <table class="data-table">
-          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Owner</th><th>Email</th></tr></thead>
+          <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.type">Type</th><th data-i18n="col.status">Status</th><th data-i18n="col.owner">Owner</th><th data-i18n="col.email">Email</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -37,25 +38,31 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
-  api("GET", "/api/organizations").done(function (res) {
+  let orgRows = null;
+  function paintOrgs() {
+    if (!orgRows) return;
     const opened = openedOrg();
-    const count = res.data.length;
+    const count = orgRows.length;
     $("#org-count").text(count === 1
-      ? "1 organization on the platform. Choose its name to work in that hospital."
-      : count + " organizations on the platform. Choose a name to work in that hospital.");
-    $("#rows").html(res.data.map(function (row) {
+      ? mqText("1 organization on the platform. Choose its name to work in that hospital.", "مؤسسة واحدة على المنصة. اختر اسمها للعمل داخل ذلك المستشفى.")
+      : mqText(count + " organizations on the platform. Choose a name to work in that hospital.", count + " مؤسسات على المنصة. اختر اسماً للعمل داخل ذلك المستشفى."));
+    $("#rows").html(orgRows.map(function (row) {
       const current = opened && String(opened.id) === String(row.id);
-      const type = String(row.orgType || "").toLowerCase();
-      const typeLabel = type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
+      const typeLabel = mqStatus(row.orgType || "");
       const active = row.status === "Active";
       return "<tr class='" + (current ? "is-current" : "") + "'><td><button type='button' class='org-name open-org' data-id='" +
         row.id + "' data-name='" + esc(row.name) + "'><strong>" + esc(row.name) + "</strong><small>" +
-        (current ? "Open now" : "Open hospital") + "</small></button></td><td><span class='pill quiet'>" +
+        esc(current ? mqText("Open now", "مفتوح الآن") : mqText("Open hospital", "فتح المستشفى")) + "</small></button></td><td><span class='pill quiet'>" +
         esc(typeLabel) + "</span></td><td><span class='status " + (active ? "ok" : "off") + "'>" +
-        esc(row.status) + "</span></td><td>" + esc(row.ownerName) + "</td><td>" + esc(row.ownerEmail) + "</td></tr>";
-    }).join("") || "<tr><td colspan='5' class='empty'>No organizations yet</td></tr>");
+        esc(mqStatus(row.status)) + "</span></td><td>" + esc(row.ownerName) + "</td><td>" + esc(row.ownerEmail) + "</td></tr>";
+    }).join("") || "<tr><td colspan='5' class='empty'>" + esc(mqText("No organizations yet", "لا توجد مؤسسات بعد")) + "</td></tr>");
+  }
+  document.addEventListener("mq-lang", paintOrgs);
+  api("GET", "/api/organizations").done(function (res) {
+    orgRows = res.data || [];
+    paintOrgs();
   }).fail(function (xhr) {
-    $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Organizations are limited to the platform super admin");
+    $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Organizations are limited to the platform super admin", "المؤسسات متاحة لمدير المنصة فقط"));
   });
   $(document).on("click", ".open-org", function () {
     sessionStorage.setItem("mq_org", JSON.stringify({ id: $(this).data("id"), name: $(this).attr("data-name") }));

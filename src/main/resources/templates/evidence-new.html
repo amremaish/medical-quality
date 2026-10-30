@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Upload evidence</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.uploadTitle">Upload evidence</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,17 +13,17 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/evidence">Evidence</a>
+      <a class="back" href="/evidence" data-i18n="page.evidence">Evidence</a>
       <section class="panel form-card">
-        <h1>Upload evidence</h1>
-        <p>Attach a file to an audit in this hospital.</p>
+        <h1 data-i18n="page.uploadTitle">Upload evidence</h1>
+        <p data-i18n="page.uploadLead">Attach a file to an audit in this hospital.</p>
         <form id="upload" class="stack">
-          <div><label for="file">File</label><input id="file" type="file" required></div>
-          <div><label for="auditId">Audit id</label><input id="auditId" required inputmode="numeric"></div>
+          <div><label for="file" data-i18n="field.file">File</label><input id="file" type="file" required></div>
+          <div><label for="auditId" data-i18n="field.auditId">Audit id</label><input id="auditId" required inputmode="numeric"></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/evidence">Cancel</a>
-            <button type="submit">Upload</button>
+            <a class="btn ghost" href="/evidence" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.upload">Upload</button>
           </div>
         </form>
       </section>
@@ -47,7 +48,7 @@
     }).done(function () {
       window.location.href = "/evidence";
     }).fail(function (xhr) {
-      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Upload failed");
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Upload failed", "تعذر الرفع"));
     });
   });
 </script>

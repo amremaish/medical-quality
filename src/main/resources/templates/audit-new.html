@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New audit</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.auditNew">New audit</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,19 +13,19 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/audits">GSR audits</a>
+      <a class="back" href="/audits" data-i18n="page.audits">GSR audits</a>
       <section class="panel form-card">
-        <h1>New audit</h1>
-        <p>Name the round and the person scoring it. Link a department when it already exists.</p>
+        <h1 data-i18n="page.auditNew">New audit</h1>
+        <p data-i18n="page.auditNewLead">Name the round and the person scoring it. Link a department when it already exists.</p>
         <form id="create-audit" class="stack">
-          <div><label for="departmentName">Department</label><input id="departmentName" required></div>
-          <div><label for="auditorName">Auditor</label><input id="auditorName" required></div>
-          <div><label for="auditDate">Date</label><input id="auditDate" type="date" required></div>
-          <div><label for="departmentId">Linked department</label><select id="departmentId"><option value="">None</option></select></div>
+          <div><label for="departmentName" data-i18n="field.department">Department</label><input id="departmentName" required></div>
+          <div><label for="auditorName" data-i18n="field.auditor">Auditor</label><input id="auditorName" required></div>
+          <div><label for="auditDate" data-i18n="field.date">Date</label><input id="auditDate" type="date" required></div>
+          <div><label for="departmentId" data-i18n="field.linked">Linked department</label><select id="departmentId"><option value="" data-i18n="field.none">None</option></select></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/audits">Cancel</a>
-            <button type="submit">Create audit</button>
+            <a class="btn ghost" href="/audits" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.createAudit">Create audit</button>
           </div>
         </form>
       </section>

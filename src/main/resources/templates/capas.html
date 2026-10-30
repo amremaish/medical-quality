@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CAPA</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.capa">CAPA</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,13 +15,13 @@
     <main class="page">
       <div class="page-head">
         <div>
-          <h1>CAPA</h1>
-          <p>Corrective actions tied to an open finding.</p>
+          <h1 data-i18n="page.capa">CAPA</h1>
+          <p data-i18n="page.capaLead">Corrective actions tied to an open finding.</p>
         </div>
-        <a class="btn" href="/capas/new" data-perm="MANAGE_CAPA" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Add CAPA</a>
+        <a class="btn" href="/capas/new" data-perm="MANAGE_CAPA" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="action.addCapa">Add CAPA</span></a>
       </div>
       <div class="table-card">
-        <table class="data-table"><thead><tr><th>Finding</th><th>Status</th><th>Progress</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+        <table class="data-table"><thead><tr><th data-i18n="col.finding">Finding</th><th data-i18n="col.status">Status</th><th data-i18n="col.progress">Progress</th><th data-i18n="col.action">Action</th></tr></thead><tbody id="rows"></tbody></table>
       </div>
     </main>
   </div>
@@ -28,14 +29,17 @@
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/js/api.js}"></script>
 <script>
-  function load() {
-    api("GET", "/api/capas").done(function (res) {
-      $("#rows").html(res.data.map(function (row) {
-        return "<tr><td>" + row.findingId + "</td><td><span class='pill'>" + row.status + "</span></td><td>" + row.progress + "%</td><td>" + row.correctiveAction + "</td></tr>";
-      }).join("") || "<tr><td colspan='4' class='empty'>No CAPA</td></tr>");
-    });
+  let capaRows = [];
+  function paint() {
+    $("#rows").html(capaRows.map(function (row) {
+      return "<tr><td>" + row.findingId + "</td><td><span class='pill'>" + mqStatus(row.status) + "</span></td><td>" + row.progress + "%</td><td>" + row.correctiveAction + "</td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>" + mqText("No CAPA", "لا توجد إجراءات") + "</td></tr>");
   }
-  load();
+  document.addEventListener("mq-lang", paint);
+  api("GET", "/api/capas").done(function (res) {
+    capaRows = res.data || [];
+    paint();
+  });
 </script>
 </body>
 </html>

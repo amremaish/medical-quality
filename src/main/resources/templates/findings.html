@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Findings</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.findings">Findings</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,8 +13,8 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <div class="page-head"><div><h1>Findings</h1><p>Gaps recorded against a standard, with risk and status.</p></div></div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>GSR</th><th>Risk</th><th>Status</th><th>Description</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="page-head"><div><h1 data-i18n="page.findings">Findings</h1><p data-i18n="page.findingsLead">Gaps recorded against a standard, with risk and status.</p></div></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.gsr">GSR</th><th data-i18n="col.risk">Risk</th><th data-i18n="col.status">Status</th><th data-i18n="col.description">Description</th></tr></thead><tbody id="rows"></tbody></table></div>
     </main>
   </div>
 </div>
@@ -25,10 +26,16 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
+  let findingRows = [];
+  function paint() {
+    $("#rows").html(findingRows.map(function (row) {
+      return "<tr><td>" + esc(row.gsrCode) + "</td><td><span class='pill'>" + esc(mqStatus(row.riskLevel)) + "</span></td><td><span class='pill'>" + esc(mqStatus(row.status)) + "</span></td><td>" + esc(row.description) + "</td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>" + esc(mqText("No findings", "لا توجد ملاحظات")) + "</td></tr>");
+  }
+  document.addEventListener("mq-lang", paint);
   api("GET", "/api/findings").done(function (res) {
-    $("#rows").html(res.data.map(function (row) {
-      return "<tr><td>" + esc(row.gsrCode) + "</td><td><span class='pill'>" + esc(row.riskLevel) + "</span></td><td><span class='pill'>" + esc(row.status) + "</span></td><td>" + esc(row.description) + "</td></tr>";
-    }).join("") || "<tr><td colspan='4' class='empty'>No findings</td></tr>");
+    findingRows = res.data || [];
+    paint();
   });
 </script>
 </body>

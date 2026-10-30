@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New organization</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.orgNew">New organization</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,28 +13,28 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/organizations">Organizations</a>
+      <a class="back" href="/organizations" data-i18n="page.orgs">Organizations</a>
       <section class="panel form-card">
-        <h1>New organization</h1>
-        <p>Choose a type and invite the first owner. Hospital is available now.</p>
+        <h1 data-i18n="page.orgNew">New organization</h1>
+        <p data-i18n="page.orgLead">Choose a type and invite the first owner. Hospital is available now.</p>
         <form id="create-organization" class="stack">
-          <div><label for="org-name">Name</label><input id="org-name" required maxlength="255"></div>
-          <div><label for="org-type">Type</label><select id="org-type" required></select></div>
-          <div><label for="owner-first">Owner first name</label><input id="owner-first" required maxlength="128"></div>
-          <div><label for="owner-last">Owner last name</label><input id="owner-last" maxlength="128"></div>
-          <div><label for="owner-email">Owner email</label><input id="owner-email" type="email" required maxlength="320"></div>
+          <div><label for="org-name" data-i18n="field.orgName">Name</label><input id="org-name" required maxlength="255"></div>
+          <div><label for="org-type" data-i18n="field.type">Type</label><select id="org-type" required></select></div>
+          <div><label for="owner-first" data-i18n="field.ownerFirst">Owner first name</label><input id="owner-first" required maxlength="128"></div>
+          <div><label for="owner-last" data-i18n="field.ownerLast">Owner last name</label><input id="owner-last" maxlength="128"></div>
+          <div><label for="owner-email" data-i18n="field.ownerEmail">Owner email</label><input id="owner-email" type="email" required maxlength="320"></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/organizations">Cancel</a>
-            <button type="submit">Create and invite owner</button>
+            <a class="btn ghost" href="/organizations" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.createInvite">Create and invite owner</button>
           </div>
         </form>
         <section id="invite" hidden>
-          <h2>Owner invitation</h2>
+          <h2 data-i18n="invite.title">Owner invitation</h2>
           <p id="invite-text"></p>
-          <p><strong>Email</strong> <span id="invite-email"></span></p>
+          <p><strong data-i18n="field.email">Email</strong> <span id="invite-email"></span></p>
           <div class="url-line"><code id="invite-url"></code></div>
-          <button type="button" id="copy-invite" class="ghost">Copy invitation</button>
+          <button type="button" id="copy-invite" class="ghost" data-i18n="action.copyInvite">Copy invitation</button>
         </section>
       </section>
     </main>
@@ -42,10 +43,22 @@
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/js/api.js}"></script>
 <script>
-  api("GET", "/api/organizations/types").done(function (res) {
-    $("#org-type").html(res.data.map(function (type) {
-      return "<option value='" + type + "'>" + type.charAt(0) + type.slice(1).toLowerCase() + "</option>";
+  let orgTypes = [];
+  function paintTypes() {
+    const selected = $("#org-type").val();
+    $("#org-type").html(orgTypes.map(function (type) {
+      return "<option value='" + type + "'>" + mqStatus(type) + "</option>";
     }).join(""));
+    if (selected) $("#org-type").val(selected);
+  }
+  document.addEventListener("mq-lang", function () {
+    if (orgTypes.length) paintTypes();
+    const invite = $("#invite-text").data("org");
+    if (invite) $("#invite-text").text(mqText(invite + " is ready. Send the owner this one-time setup link.", invite + " جاهزة. أرسل للمالك رابط الإعداد لمرة واحدة."));
+  });
+  api("GET", "/api/organizations/types").done(function (res) {
+    orgTypes = res.data || [];
+    paintTypes();
   });
   $("#create-organization").on("submit", function (event) {
     event.preventDefault();
@@ -58,17 +71,17 @@
       ownerEmail: $("#owner-email").val()
     }).done(function (res) {
       const invite = res.data;
-      $("#invite-text").text(invite.organizationName + " is ready. Send the owner this one-time setup link.");
+      $("#invite-text").data("org", invite.organizationName).text(mqText(invite.organizationName + " is ready. Send the owner this one-time setup link.", invite.organizationName + " جاهزة. أرسل للمالك رابط الإعداد لمرة واحدة."));
       $("#invite-email").text(invite.ownerEmail);
       $("#invite-url").text(invite.setupUrl);
       $("#invite").prop("hidden", false);
       $("#create-organization").hide();
     }).fail(function (xhr) {
-      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not create the organization");
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not create the organization", "تعذر إنشاء المؤسسة"));
     });
   });
   $("#copy-invite").on("click", function () {
-    const text = "Email: " + $("#invite-email").text() + "\nOpen this link to choose a password:\n" + $("#invite-url").text();
+    const text = mqText("Email: ", "البريد: ") + $("#invite-email").text() + "\n" + mqText("Open this link to choose a password:", "افتح هذا الرابط لاختيار كلمة المرور:") + "\n" + $("#invite-url").text();
     navigator.clipboard.writeText(text);
   });
 </script>

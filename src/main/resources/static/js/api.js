@@ -1,5 +1,8 @@
 function authHeaders() {
-  const headers = { Authorization: "Bearer " + (sessionStorage.getItem("mq_token") || "") };
+  const headers = {
+    Authorization: "Bearer " + (sessionStorage.getItem("mq_token") || ""),
+    "Accept-Language": window.mqLang ? mqLang() : "en"
+  };
   const opened = openedOrg();
   if (opened && opened.id != null) headers["X-Organization-Id"] = String(opened.id);
   return headers;
@@ -113,31 +116,31 @@ function firstDashboard() {
 }
 
 function dashboardLabel(path) {
-  if (path === "/dashboard/executive") return "Executive view";
-  if (path === "/dashboard/assessor") return "Assessor view";
-  if (path === "/dashboard/quality-director") return "Quality director view";
-  return "Command center";
+  if (path === "/dashboard/executive") return mqText("Executive view", "العرض التنفيذي");
+  if (path === "/dashboard/assessor") return mqText("Assessor view", "عرض المقيّم");
+  if (path === "/dashboard/quality-director") return mqText("Quality director view", "عرض مدير الجودة");
+  return mqText("Command center", "مركز القيادة");
 }
 
 function auditAttentionNote(row) {
-  if (!row.pendingAudits) return "None pending";
-  if (!row.overdueAudits) return "None past the audit date";
-  return countLabel(row.overdueAudits, "past the audit date", "past the audit date");
+  if (!row.pendingAudits) return mqText("None pending", "لا شيء معلّق");
+  if (!row.overdueAudits) return mqText("None past the audit date", "لا شيء تجاوز تاريخ التدقيق");
+  return mqCount(row.overdueAudits, "past the audit date", "past the audit date", "تجاوز تاريخ التدقيق", "تجاوزت تاريخ التدقيق");
 }
 
 function findingAttentionNote(row) {
-  if (!row.openFindings) return "None open";
+  if (!row.openFindings) return mqText("None open", "لا شيء مفتوح");
   const count = row.findingsNeedingAction || 0;
-  if (!count) return "Each open finding has a CAPA";
+  if (!count) return mqText("Each open finding has a CAPA", "كل ملاحظة مفتوحة لها إجراء");
   return count === 1
-    ? "1 needs a CAPA or has been open more than 30 days"
-    : count + " need a CAPA or have been open more than 30 days";
+    ? mqText("1 needs a CAPA or has been open more than 30 days", "واحدة تحتاج إجراء أو مفتوحة أكثر من 30 يوماً")
+    : mqText(count + " need a CAPA or have been open more than 30 days", count + " تحتاج إجراء أو مفتوحة أكثر من 30 يوماً");
 }
 
 function capaAttentionNote(row) {
-  if (!row.openCapas) return "None open";
-  if (!row.overdueCapas) return "None past the target date";
-  return countLabel(row.overdueCapas, "past the target date", "past the target date");
+  if (!row.openCapas) return mqText("None open", "لا شيء مفتوح");
+  if (!row.overdueCapas) return mqText("None past the target date", "لا شيء تجاوز تاريخ الاستحقاق");
+  return mqCount(row.overdueCapas, "past the target date", "past the target date", "تجاوز تاريخ الاستحقاق", "تجاوزت تاريخ الاستحقاق");
 }
 
 function applyControls() {
@@ -179,7 +182,9 @@ function sprite(name) {
 }
 
 function formatAsOf(date) {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = mqLang() === "ar"
+    ? ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear();
 }
 
@@ -193,10 +198,10 @@ function pluralWord(count, singular, plural) {
 }
 
 function auditLine(row) {
-  if (!row.audits) return "No audits yet";
-  if (!row.pendingAudits) return countLabel(row.audits, "audit, none pending", "audits, none pending");
-  if (row.pendingAudits === row.audits) return countLabel(row.pendingAudits, "audit in progress", "audits in progress");
-  return row.pendingAudits + " pending of " + row.audits;
+  if (!row.audits) return mqText("No audits yet", "لا توجد تدقيقات بعد");
+  if (!row.pendingAudits) return mqCount(row.audits, "audit, none pending", "audits, none pending", "تدقيق، لا شيء معلّق", "تدقيقات، لا شيء معلّق");
+  if (row.pendingAudits === row.audits) return mqCount(row.pendingAudits, "audit in progress", "audits in progress", "تدقيق قيد التنفيذ", "تدقيقات قيد التنفيذ");
+  return mqText(row.pendingAudits + " pending of " + row.audits, row.pendingAudits + " معلّق من " + row.audits);
 }
 
 function statusPill(href, tone, icon, value, label, note, late) {
@@ -230,27 +235,30 @@ function paintHome(row) {
   if (!$("#home-status").length) return;
   const board = firstDashboard();
   const compliance = row.audits ? row.averageCompliance + "%" : "—";
-  const complianceLabel = row.audits ? "Compliance" : "No score yet";
+  const complianceLabel = row.audits ? mqText("Compliance", "الالتزام") : mqText("No score yet", "لا توجد درجة بعد");
   const pills = [];
   if (screenAllowed("/audits", currentMe)) {
-    pills.push(statusPill("/audits", "blue", "clipboard", row.pendingAudits, pluralWord(row.pendingAudits, "Pending audit", "Pending audits"), auditAttentionNote(row), row.overdueAudits > 0));
+    pills.push(statusPill("/audits", "blue", "clipboard", row.pendingAudits, pluralWord(row.pendingAudits, mqText("Pending audit", "تدقيق معلّق"), mqText("Pending audits", "تدقيقات معلّقة")), auditAttentionNote(row), row.overdueAudits > 0));
   }
   if (screenAllowed("/findings", currentMe)) {
-    pills.push(statusPill("/findings", row.findingsNeedingAction > 0 ? "red" : "orange", "alert", row.openFindings, "Open findings", findingAttentionNote(row), row.findingsNeedingAction > 0));
+    pills.push(statusPill("/findings", row.findingsNeedingAction > 0 ? "red" : "orange", "alert", row.openFindings, mqText("Open findings", "ملاحظات مفتوحة"), findingAttentionNote(row), row.findingsNeedingAction > 0));
   }
   if (screenAllowed("/capas", currentMe)) {
-    pills.push(statusPill("/capas", row.overdueCapas > 0 ? "red" : "orange", "capa", row.openCapas, "Open CAPA", capaAttentionNote(row), row.overdueCapas > 0));
+    pills.push(statusPill("/capas", row.overdueCapas > 0 ? "red" : "orange", "capa", row.openCapas, mqText("Open CAPA", "إجراءات مفتوحة"), capaAttentionNote(row), row.overdueCapas > 0));
   }
   if (board) pills.push(statusPill(board, "blue", "chart", compliance, complianceLabel));
+  const complianceLine = row.audits
+    ? mqText(row.averageCompliance + "% compliance", row.averageCompliance + "% التزام")
+    : mqText("No compliance score yet", "لا توجد درجة التزام بعد");
   if (!pills.length) {
     $("#home-status").prop("hidden", true).empty();
     $("#home-audits").text(auditLine(row));
-    $("#home-compliance").text(row.audits ? row.averageCompliance + "% compliance" : "No compliance score yet");
+    $("#home-compliance").text(complianceLine);
     return;
   }
   $("#home-status").prop("hidden", false).html(pills.join(""));
   $("#home-audits").text(auditLine(row));
-  $("#home-compliance").text(row.audits ? row.averageCompliance + "% compliance" : "No compliance score yet");
+  $("#home-compliance").text(complianceLine);
 }
 
 function loadHospitalPulse() {
@@ -261,10 +269,10 @@ function loadHospitalPulse() {
       const findingsUrgent = row.findingsNeedingAction || 0;
       const capasLate = row.overdueCapas || 0;
       setShellCount("#findings-link", "#findings-count", findingsUrgent,
-        findingsUrgent ? countLabel(findingsUrgent, "finding needs action", "findings need action") : "Findings",
+        findingsUrgent ? mqCount(findingsUrgent, "finding needs action", "findings need action", "ملاحظة تحتاج متابعة", "ملاحظات تحتاج متابعة") : mqText("Findings", "الملاحظات"),
         "warning");
       setShellCount("#capa-link", "#capa-count", capasLate,
-        capasLate ? countLabel(capasLate, "CAPA past its target date", "CAPAs past their target date") : "CAPA",
+        capasLate ? mqCount(capasLate, "CAPA past its target date", "CAPAs past their target date", "إجراء تجاوز تاريخه", "إجراءات تجاوزت تاريخها") : mqText("CAPA", "الإجراءات التصحيحية"),
         "danger");
       paintHome(row);
     });
@@ -272,7 +280,7 @@ function loadHospitalPulse() {
   if ($("#home-records").length) {
     api("GET", "/api/record-reviews").done(function (res) {
       const count = (res.data || []).length;
-      $("#home-records").text(count ? countLabel(count, "review", "reviews") : "No reviews yet");
+      $("#home-records").text(count ? mqCount(count, "review", "reviews", "مراجعة", "مراجعات") : mqText("No reviews yet", "لا توجد مراجعات بعد"));
     });
   }
 }
@@ -290,13 +298,13 @@ function showNav(me) {
     $(".brand").attr("href", "/");
   } else if (me.superAdmin) {
     document.body.classList.add("is-super");
-    $("#brand-org").text("Quality platform");
-    $("#org-line").text("Quality platform for hospitals");
+    $("#brand-org").text(mqText("Quality platform", "منصة الجودة"));
+    $("#org-line").text(mqText("Quality platform for hospitals", "منصة جودة للمستشفيات"));
     $(".brand").attr("href", "/organizations");
   } else {
     document.body.classList.add("is-org");
-    $("#brand-org").text(me.organizationName || "Quality platform");
-    $("#org-line").text(me.organizationName || "Quality platform for hospitals");
+    $("#brand-org").text(me.organizationName || mqText("Quality platform", "منصة الجودة"));
+    $("#org-line").text(me.organizationName || mqText("Quality platform for hospitals", "منصة جودة للمستشفيات"));
   }
   applyControls();
   if (directoryAdmin(me)) $(".side-link[href='/assessors']").prop("hidden", false);
@@ -365,7 +373,8 @@ function placeDashFlyout() {
     const rect = button.getBoundingClientRect();
     const sidebar = button.closest(".sidebar").getBoundingClientRect();
     menu.style.top = Math.max(8, rect.top) + "px";
-    menu.style.insetInlineStart = (sidebar.right + 8) + "px";
+    const rtl = document.documentElement.dir === "rtl";
+    menu.style.insetInlineStart = (rtl ? (window.innerWidth - sidebar.left + 8) : (sidebar.right + 8)) + "px";
   } else {
     menu.style.top = "";
     menu.style.insetInlineStart = "";
@@ -379,8 +388,8 @@ function setNavOpen(open) {
 }
 
 function profileRole(me) {
-  const role = me && me.roleName ? me.roleName : "";
-  if (me && me.superAdmin && openedOrg()) return role ? role + " (viewing)" : "Viewing";
+  const role = window.mqRole ? mqRole(me && me.roleCode, me && me.roleName) : (me && me.roleName ? me.roleName : "");
+  if (me && me.superAdmin && openedOrg()) return role ? role + mqText(" (viewing)", " (عرض)") : mqText("Viewing", "عرض");
   return role;
 }
 
@@ -398,9 +407,9 @@ $(function () {
     $(".side-scroll").on("scroll", placeDashFlyout);
     if (!$("main tbody").length) $(".search").attr("hidden", true);
     const today = new Date();
-    $("#today-pill").text("As of " + formatAsOf(today));
+    $("#today-pill").text(mqText("As of ", "حتى ") + formatAsOf(today));
     api("GET", "/api/auth/me").done(function (res) {
-      const name = res.data.username || "Signed in";
+      const name = res.data.username || mqText("Signed in", "تم تسجيل الدخول");
       $("#profile-name").text(name);
       $("#profile-initial").text(name.slice(0, 1).toUpperCase());
       const roleText = profileRole(res.data);
@@ -416,6 +425,18 @@ $(function () {
       if (xhr.status !== 401) window.location.href = "/login";
     });
   }
+  document.addEventListener("mq-lang", function () {
+    if ($("#today-pill").length) $("#today-pill").text(mqText("As of ", "حتى ") + formatAsOf(new Date()));
+    if (currentMe) {
+      const name = currentMe.username || mqText("Signed in", "تم تسجيل الدخول");
+      $("#profile-name").text(name);
+      const roleText = profileRole(currentMe);
+      if (roleText) $("#profile-role").text(roleText);
+      showNav(currentMe);
+    }
+    syncNavTips();
+    placeDashFlyout();
+  });
   $("#logout").on("click", function () {
     sessionStorage.removeItem("mq_token");
     sessionStorage.removeItem("mq_org");

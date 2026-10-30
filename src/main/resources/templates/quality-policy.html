@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quality policy</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.policy">Quality policy</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -13,43 +14,39 @@
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page" id="main">
       <p class="err" id="page-error" role="alert"></p>
-      <p class="policy-drift" id="drift" hidden>The group template changed after this version. Saving adopts the current template.</p>
+      <p class="policy-drift" id="drift" data-i18n="policy.drift" hidden>The group template changed after this version. Saving adopts the current template.</p>
       <div class="policy-layout">
         <section class="chart-card policy-side">
-          <label for="policy-search" id="search-label">Search settings</label>
+          <label for="policy-search" id="search-label" data-i18n="policy.search">Search settings</label>
           <input id="policy-search" type="search" autocomplete="off">
-          <nav class="policy-nav" id="policy-nav" aria-label="Policy sections"></nav>
+          <nav class="policy-nav" id="policy-nav" data-i18n-aria="policy.sections" aria-label="Policy sections"></nav>
         </section>
         <div class="policy-main">
           <section class="chart-card">
             <h2 id="group-title">Assessor assignment</h2>
             <div id="policy-fields"></div>
             <div class="policy-actions" id="save-bar">
-              <div class="row" id="edit-controls">
-                <label id="effective-label">Effective date<input id="effective-from" type="date" required></label>
-                <label id="reason-label">Reason<input id="reason" maxlength="1000" required></label>
-              </div>
               <div class="form-actions">
-                <button type="button" class="btn" id="save-policy">Review and save</button>
-                <label class="btn ghost" id="import-label">Import<input id="import-policy" type="file" accept="application/json" hidden></label>
-                <button type="button" class="btn ghost" id="export-policy">Export</button>
+                <button type="button" class="btn" id="save-policy" data-i18n="policy.reviewSave">Review and save</button>
+                <label class="btn ghost" id="import-label" data-i18n="policy.import">Import<input id="import-policy" type="file" accept="application/json" hidden></label>
+                <button type="button" class="btn ghost" id="export-policy" data-i18n="policy.export">Export</button>
               </div>
             </div>
           </section>
         </div>
       </div>
       <section class="policy-record">
-        <h2 id="history-title">History</h2>
-        <p class="quiet-text" id="history-intro">Each published version records who changed it and the old and new value.</p>
+        <h2 id="history-title" data-i18n="policy.history">History</h2>
+        <p class="quiet-text" id="history-intro" data-i18n="policy.historyLead">Each published version records who changed it and the old and new value.</p>
         <div class="table-card">
           <table class="data-table">
             <thead>
               <tr>
-                <th id="col-version">Version</th>
-                <th id="col-status">Status</th>
-                <th id="col-effective">Effective</th>
-                <th id="col-who">Who</th>
-                <th id="col-changes">Changes</th>
+                <th id="col-version" data-i18n="policy.version">Version</th>
+                <th id="col-status" data-i18n="col.status">Status</th>
+                <th id="col-effective" data-i18n="policy.when">When</th>
+                <th id="col-who" data-i18n="policy.who">Who</th>
+                <th id="col-changes" data-i18n="policy.changes">Changes</th>
               </tr>
             </thead>
             <tbody id="history"></tbody>
@@ -57,12 +54,12 @@
         </div>
       </section>
       <section class="policy-record">
-        <h2 id="violations-title">Open items that do not match</h2>
-        <p class="quiet-text" id="violations-intro">These stay on record. A new rule flags them and does not delete them.</p>
+        <h2 id="violations-title" data-i18n="policy.violations">Open items that do not match</h2>
+        <p class="quiet-text" id="violations-intro" data-i18n="policy.violationsLead">These stay on record. A new rule flags them and does not delete them.</p>
         <div class="table-card">
           <table class="data-table">
             <thead>
-              <tr><th id="col-detail">Detail</th></tr>
+              <tr><th id="col-detail" data-i18n="policy.detail">Detail</th></tr>
             </thead>
             <tbody id="violations"></tbody>
           </table>
@@ -73,11 +70,11 @@
 </div>
 <dialog id="confirm-dialog">
   <form method="dialog" class="stack">
-    <h2>Confirm policy change</h2>
+    <h2 data-i18n="policy.confirm">Confirm policy change</h2>
     <div id="confirm-body"></div>
     <div class="form-actions">
-      <button type="button" class="btn ghost" id="confirm-cancel">Back</button>
-      <button type="submit" id="confirm-save" value="save">Save</button>
+      <button type="button" class="btn ghost" id="confirm-cancel" data-i18n="action.back">Back</button>
+      <button type="submit" id="confirm-save" data-i18n="action.save" value="save">Save</button>
     </div>
   </form>
 </dialog>
@@ -85,10 +82,10 @@
 <script th:src="@{/js/api.js}"></script>
 <script th:inline="none">
   let page = null;
-  let lang = sessionStorage.getItem("mq_lang") || "en";
   let dirty = false;
   let activeGroup = "assessors";
   let violationRows = [];
+  let historyRows = [];
   let captureEditors = false;
   const overrides = {};
   const drafts = {};
@@ -160,13 +157,9 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
-  function text(en, ar) { return lang === "ar" ? ar : en; }
+  function text(en, ar) { return mqText(en, ar); }
   function applyLang() {
-    document.documentElement.lang = lang === "ar" ? "ar" : "en";
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     $("#search-label").text(text("Search settings", "بحث في الإعدادات"));
-    $("#effective-label").contents().first()[0].textContent = text("Effective date", "تاريخ السريان");
-    $("#reason-label").contents().first()[0].textContent = text("Reason", "السبب");
     $("#save-policy").text(text("Review and save", "مراجعة وحفظ"));
     $("#import-label").contents().first()[0].textContent = text("Import", "استيراد");
     $("#export-policy").text(text("Export", "تصدير"));
@@ -180,7 +173,7 @@
       "تبقى في السجل. القاعدة الجديدة تعلّمها ولا تحذفها."));
     $("#col-version").text(text("Version", "الإصدار"));
     $("#col-status").text(text("Status", "الحالة"));
-    $("#col-effective").text(text("Effective", "السريان"));
+    $("#col-effective").text(text("When", "الوقت"));
     $("#col-who").text(text("Who", "من"));
     $("#col-changes").text(text("Changes", "التغييرات"));
     $("#col-detail").text(text("Detail", "التفصيل"));
@@ -248,7 +241,7 @@
         control + (page.canEdit ? "<button type='button' class='btn ghost sm reset-setting' data-key='" + esc(setting.key) + "'>" +
           esc(text("Reset", "إعادة الضبط")) + "</button>" : "") + "</div></article>";
     }).join("") || "<p class='empty'>" + esc(text("No settings match.", "لا توجد إعدادات مطابقة.")) + "</p>");
-    $("#edit-controls, #save-policy, #import-label").prop("hidden", !page.canEdit);
+    $("#save-policy, #import-label").prop("hidden", !page.canEdit);
     $("#policy-fields input, #policy-fields textarea, #policy-fields select").prop("disabled", !page.canEdit);
     captureEditors = true;
   }
@@ -679,7 +672,7 @@
   }
   function payload(confirm, acknowledge) {
     readAllEditors();
-    const body = { overrides: overrides, effectiveFrom: $("#effective-from").val(), reason: $("#reason").val(), confirm: !!confirm };
+    const body = { overrides: overrides, confirm: !!confirm };
     if (acknowledge) body.acknowledgeWarnings = true;
     return body;
   }
@@ -693,34 +686,53 @@
       });
       dirty = false;
       captureEditors = false;
-      if (page.language === "ar" || page.language === "en") {
-        lang = sessionStorage.getItem("mq_lang") || page.language;
+      if (!mqHasChoice() && (page.language === "ar" || page.language === "en") && mqLang() !== page.language) {
+        mqSetLang(page.language);
       }
-      const today = new Date();
-      const iso = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
-      $("#effective-from").val(iso);
       render();
-    }).fail(function (xhr) { showError(xhr, "Could not load the policy"); });
+      paintHistory();
+    }).fail(function (xhr) { showError(xhr, text("Could not load the policy", "تعذر تحميل السياسة")); });
     api("GET", "/api/quality-policy/versions").done(function (res) {
-      const rows = res.data || [];
-      $("#history").html(rows.length ? rows.map(function (row) {
-        const tone = row.status === "ACTIVE" ? "ok" : row.status === "PENDING_APPROVAL" || row.status === "SCHEDULED" ? "wait" : "off";
-        const changes = (row.changes || []).map(function (change) {
-          return "<li><code>" + esc(change.key) + "</code> " + esc(JSON.stringify(change.oldValue)) + " → " +
-            esc(JSON.stringify(change.newValue)) + "</li>";
-        }).join("");
-        return "<tr><td><strong>v" + row.versionNumber + "</strong><small class='quiet-text'> " + esc(row.reason) +
-          "</small></td><td><span class='status " + tone + "'>" + esc(row.status) + "</span></td><td class='nowrap'>" +
-          esc(row.effectiveFrom) + "</td><td>" + esc(row.actor) + "</td><td>" +
-          (changes ? "<ul class='policy-changes'>" + changes + "</ul>" : "—") + "</td></tr>";
-      }).join("") : "<tr><td colspan='5' class='empty'>" + esc(text("No published versions yet.", "لا توجد إصدارات منشورة بعد.")) + "</td></tr>");
+      historyRows = res.data || [];
+      paintHistory();
     });
     api("GET", "/api/quality-policy/violations").done(function (res) {
       violationRows = res.data || [];
-      $("#violations").html(violationRows.length ? violationRows.map(function (row) {
-        return "<tr><td>" + esc(row.detail) + "</td></tr>";
-      }).join("") : "<tr><td class='empty'>" + esc(text("None.", "لا يوجد.")) + "</td></tr>");
+      paintViolations();
     });
+  }
+  function versionStatus(status) {
+    if (status === "ACTIVE") return text("Active", "ساري");
+    if (status === "PENDING_APPROVAL") return text("Pending approval", "بانتظار الاعتماد");
+    if (status === "SCHEDULED") return text("Scheduled", "مجدول");
+    return status || "";
+  }
+  function whenText(value) {
+    if (!value) return "";
+    if (Array.isArray(value)) {
+      const parts = value.map(function (part, index) {
+        return index > 0 && index < 6 ? String(part).padStart(2, "0") : String(part);
+      });
+      return parts[0] + "-" + parts[1] + "-" + parts[2] + (parts.length > 3 ? " " + parts[3] + ":" + (parts[4] || "00") : "");
+    }
+    return String(value).replace("T", " ").slice(0, 16);
+  }
+  function paintHistory() {
+    $("#history").html(historyRows.length ? historyRows.map(function (row) {
+      const tone = row.status === "ACTIVE" ? "ok" : row.status === "PENDING_APPROVAL" || row.status === "SCHEDULED" ? "wait" : "off";
+      const changes = (row.changes || []).map(function (change) {
+        return "<li>" + esc(changeSentence(change)) + "</li>";
+      }).join("");
+      return "<tr><td><strong>v" + row.versionNumber + "</strong></td><td><span class='status " + tone + "'>" +
+        esc(versionStatus(row.status)) + "</span></td><td class='nowrap' dir='ltr'>" + esc(whenText(row.changedAt)) +
+        "</td><td>" + esc(row.actor) + "</td><td>" +
+        (changes ? "<ul class='policy-changes'>" + changes + "</ul>" : "—") + "</td></tr>";
+    }).join("") : "<tr><td colspan='5' class='empty'>" + esc(text("No published versions yet.", "لا توجد إصدارات منشورة بعد.")) + "</td></tr>");
+  }
+  function paintViolations() {
+    $("#violations").html(violationRows.length ? violationRows.map(function (row) {
+      return "<tr><td>" + esc(plainNote(row.detail)) + "</td></tr>";
+    }).join("") : "<tr><td class='empty'>" + esc(text("None.", "لا يوجد.")) + "</td></tr>");
   }
   $("#policy-search").on("input", render);
   $("#policy-nav").on("click", "button", function () {
@@ -779,24 +791,101 @@
     captureEditors = false;
     render();
   });
+  function namedThing(token) {
+    const needle = String(token || "").trim().toLowerCase();
+    const dept = ((page && page.departments) || []).filter(function (row) {
+      return [row.code, row.nameEn, row.nameAr].some(function (part) {
+        return part && String(part).trim().toLowerCase() === needle;
+      });
+    })[0];
+    if (dept) return text(dept.nameEn || dept.code, dept.nameAr || dept.nameEn || dept.code);
+    const words = {
+      critical: ["critical", "حرج"], major: ["major", "جسيم"], minor: ["minor", "بسيط"], observation: ["observation", "ملاحظة"],
+      high: ["high", "عالٍ"], medium: ["medium", "متوسط"], low: ["low", "منخفض"],
+      true: ["On", "مفعّل"], false: ["Off", "موقوف"]
+    };
+    const pair = words[needle];
+    return pair ? text(pair[0], pair[1]) : String(token);
+  }
+  function plainValue(value) {
+    if (value == null || value === "") return text("none", "لا يوجد");
+    if (typeof value === "boolean") return value ? text("On", "مفعّل") : text("Off", "موقوف");
+    if (typeof value === "number") return String(value);
+    if (typeof value === "string") return namedThing(value);
+    if (Array.isArray(value)) {
+      if (!value.length) return text("none", "لا يوجد");
+      return value.map(plainValue).join(text(", ", "، "));
+    }
+    const keys = Object.keys(value);
+    if (!keys.length) return text("none", "لا يوجد");
+    return keys.map(function (key) { return namedThing(key) + ": " + plainValue(value[key]); }).join(text("; ", "؛ "));
+  }
+  function settingLabel(key) {
+    const setting = ((page && page.settings) || []).filter(function (row) { return row.key === key; })[0];
+    return setting ? text(setting.labelEn, setting.labelAr) : key;
+  }
+  function plainNote(note) {
+    let match = /^CAPA (\d+) is dated (\d{4}-\d{2}-\d{2}), after the (\w+) deadline (\d{4}-\d{2}-\d{2})\. It is kept and flagged\.$/.exec(note);
+    if (match) {
+      return text(
+        "Action " + match[1] + " is due " + match[2] + ", later than the " + namedThing(match[3]) + " deadline " + match[4] + ". It stays.",
+        "الإجراء " + match[1] + " تاريخه " + match[2] + "، بعد الموعد (" + namedThing(match[3]) + ") في " + match[4] + ". يبقى كما هو.");
+    }
+    match = /^CAPA (\d+) uses a severity this policy does not recognize\. It is kept and flagged\.$/.exec(note);
+    if (match) {
+      return text(
+        "Action " + match[1] + " uses a severity this policy does not recognize. It stays.",
+        "الإجراء " + match[1] + " يستخدم شدة لا تعرفها هذه السياسة. يبقى كما هو.");
+    }
+    match = /^Audit (\d+) in (.+) has (\d+) assessors\. The policy maximum is (\d+)\. Assignments are kept and flagged\.$/.exec(note);
+    if (match) {
+      return text(
+        "Audit " + match[1] + " in " + namedThing(match[2]) + " has " + match[3] + " assessors. The maximum is " + match[4] + ". Those assignments stay.",
+        "التدقيق " + match[1] + " في " + namedThing(match[2]) + " فيه " + match[3] + " مقيّمين. الحد الأقصى " + match[4] + ". التعيينات تبقى.");
+    }
+    if (note === "GAHAR floor used by this product: a critical CAPA deadline above 7 days is more lenient than the floor.") {
+      return text(
+        "A critical action is allowed more than 7 days. That is looser than the GAHAR floor used here.",
+        "الإجراء الحرج مسموح بأكثر من 7 أيام. هذا أوسع من حد GAHAR المستخدم هنا.");
+    }
+    if (note === "GAHAR floor used by this product: required coverage is below 100%.") {
+      return text("Required coverage is below 100%.", "التغطية المطلوبة أقل من 100%.");
+    }
+    if (note === "JCI floor used by this product: a critical CAPA deadline above 45 days is more lenient than the floor.") {
+      return text(
+        "A critical action is allowed more than 45 days. That is looser than the JCI floor used here.",
+        "الإجراء الحرج مسموح بأكثر من 45 يوماً. هذا أوسع من حد JCI المستخدم هنا.");
+    }
+    return note;
+  }
+  function changeSentence(change) {
+    return settingLabel(change.key) + ": " + text("from ", "من ") + plainValue(change.oldValue) + text(" to ", " إلى ") + plainValue(change.newValue);
+  }
+  function confirmHtml(data) {
+    const changes = (data.changes || []).map(changeSentence);
+    const notes = (data.flags || []).concat(data.warnings || []).map(plainNote);
+    let html = "<p>" + esc(text(
+      "Open work stays as it is: " + data.openAudits + " audits, " + data.openFindings + " findings, " + data.openCapas + " actions.",
+      "العمل المفتوح يبقى كما هو: " + data.openAudits + " تدقيقات، " + data.openFindings + " ملاحظات، " + data.openCapas + " إجراءات."
+    )) + "</p>";
+    if (changes.length) {
+      html += "<p><strong>" + esc(text("What will change", "ما الذي سيتغير")) + "</strong></p><ul>" +
+        changes.map(function (line) { return "<li>" + esc(line) + "</li>"; }).join("") + "</ul>";
+    }
+    if (notes.length) {
+      html += "<p><strong>" + esc(text("Already on record", "موجود في السجل")) + "</strong></p><ul>" +
+        notes.map(function (line) { return "<li>" + esc(line) + "</li>"; }).join("") + "</ul>";
+    }
+    return html;
+  }
   $("#save-policy").on("click", function () {
     $("#page-error").text("");
     api("POST", "/api/quality-policy/versions", payload(false)).done(function (res) {
       const data = res.data;
-      const lines = [
-        text("Open audits", "تدقيقات مفتوحة") + ": " + data.openAudits,
-        text("Open findings", "ملاحظات مفتوحة") + ": " + data.openFindings,
-        text("Open CAPA", "إجراءات مفتوحة") + ": " + data.openCapas
-      ];
-      (data.changes || []).forEach(function (change) {
-        lines.push(change.key + ": " + JSON.stringify(change.oldValue) + " → " + JSON.stringify(change.newValue));
-      });
-      (data.flags || []).forEach(function (flag) { lines.push(flag); });
-      (data.warnings || []).forEach(function (warning) { lines.push(warning); });
-      $("#confirm-body").html("<ul>" + lines.map(function (line) { return "<li>" + esc(line) + "</li>"; }).join("") + "</ul>");
+      $("#confirm-body").html(confirmHtml(data));
       $("#confirm-save").data("acknowledge", (data.warnings || []).length > 0);
       document.getElementById("confirm-dialog").showModal();
-    }).fail(function (xhr) { showError(xhr, "Could not review the policy"); });
+    }).fail(function (xhr) { showError(xhr, text("Could not review the policy", "تعذرت مراجعة السياسة")); });
   });
   $("#confirm-cancel").on("click", function () { document.getElementById("confirm-dialog").close(); });
   $("#confirm-dialog form").on("submit", function () {
@@ -804,7 +893,7 @@
       dirty = false;
       Object.keys(overrides).forEach(function (key) { delete overrides[key]; });
       load();
-    }).fail(function (xhr) { showError(xhr, "Could not save the policy"); });
+    }).fail(function (xhr) { showError(xhr, text("Could not save the policy", "تعذر حفظ السياسة")); });
   });
   $("#export-policy").on("click", function () {
     api("GET", "/api/quality-policy/export").done(function (res) {
@@ -813,7 +902,7 @@
       link.href = URL.createObjectURL(blob);
       link.download = "quality-policy.json";
       link.click();
-    }).fail(function (xhr) { showError(xhr, "Could not export"); });
+    }).fail(function (xhr) { showError(xhr, text("Could not export", "تعذر التصدير")); });
   });
   $("#import-policy").on("change", function () {
     const file = this.files && this.files[0];
@@ -828,9 +917,8 @@
         dirty = true;
         captureEditors = false;
         render();
-        $("#reason").val($("#reason").val() || "Imported policy");
       } catch (e) {
-        $("#page-error").text("The file is not valid JSON");
+        $("#page-error").text(text("The file is not valid JSON", "الملف ليس JSON صالحاً"));
       }
     };
     reader.readAsText(file);
@@ -839,6 +927,11 @@
     if (!dirty) return;
     event.preventDefault();
     event.returnValue = "";
+  });
+  document.addEventListener("mq-lang", function () {
+    if (page) render();
+    paintHistory();
+    paintViolations();
   });
   load();
 </script>

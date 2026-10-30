@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Assessors</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.assessors">Assessors</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -13,9 +14,9 @@
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
       <div class="page-head">
-        <div><h1>Assessors</h1><p id="assessor-count">People assigned to score departments.</p></div>
+        <div><h1 data-i18n="page.assessors">Assessors</h1><p id="assessor-count" data-i18n="page.assessorsLead">People assigned to score departments.</p></div>
       </div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>Person</th><th>Arabic</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.person">Person</th><th id="col-other-name" data-i18n="col.otherName">Arabic</th><th data-i18n="col.status">Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
       <p class="err" id="list-error"></p>
     </main>
   </div>
@@ -28,27 +29,38 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
+  let assessorRows = null;
+  let assessorCanEdit = false;
   function fail(xhr) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load assessors";
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not load assessors", "تعذر تحميل المقيّمين");
     $("#list-error").text(message);
   }
+  function paintAssessors() {
+    if (!assessorRows) return;
+    const count = assessorRows.length;
+    $("#assessor-count").text(count === 1
+      ? mqText("1 person assigned to score departments.", "شخص واحد معيّن لتقييم الأقسام.")
+      : mqText(count + " people assigned to score departments.", count + " أشخاص معيّنون لتقييم الأقسام."));
+    $("#rows").html(assessorRows.map(function (row) {
+      const primary = mqLang() === "ar" ? (row.nameAr || row.nameEn || row.code) : (row.nameEn || row.code);
+      const other = mqLang() === "ar" ? (row.nameEn || "") : (row.nameAr || "");
+      const initial = String(primary || "?").slice(0, 1).toUpperCase();
+      const status = row.active ? mqStatus("Active") : mqStatus("Inactive");
+      const action = assessorCanEdit
+        ? "<a class='btn ghost sm' href='/assessors/" + row.id + "'>" + esc(mqText("Edit", "تعديل")) + "</a>"
+        : "";
+      return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong dir='auto'>" +
+        esc(primary) + "</strong><small>" + esc(row.code) + "</small></div></div></td><td dir='auto'>" + esc(other) +
+        "</td><td><span class='status " + (row.active ? "ok" : "off") + "'>" + esc(status) +
+        "</span></td><td class='actions'>" + action + "</td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>" + esc(mqText("No assessors", "لا يوجد مقيّمون")) + "</td></tr>");
+  }
+  document.addEventListener("mq-lang", paintAssessors);
   api("GET", "/api/auth/me").done(function (me) {
-    const canEdit = directoryAdmin(me.data) || holds(me.data, "MANAGE_ASSESSORS");
+    assessorCanEdit = directoryAdmin(me.data) || holds(me.data, "MANAGE_ASSESSORS");
     api("GET", "/api/assessors").done(function (res) {
-      const count = res.data.length;
-      $("#assessor-count").text(count === 1 ? "1 person assigned to score departments." : count + " people assigned to score departments.");
-      $("#rows").html(res.data.map(function (row) {
-        const name = row.nameEn || row.code;
-        const initial = String(name || "?").slice(0, 1).toUpperCase();
-        const status = row.active ? "Active" : "Inactive";
-        const action = canEdit
-          ? "<a class='btn ghost sm' href='/assessors/" + row.id + "'>Edit</a>"
-          : "";
-        return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong>" +
-          esc(name) + "</strong><small>" + esc(row.code) + "</small></div></div></td><td>" + esc(row.nameAr) +
-          "</td><td><span class='status " + (row.active ? "ok" : "off") + "'>" + status +
-          "</span></td><td class='actions'>" + action + "</td></tr>";
-      }).join("") || "<tr><td colspan='4' class='empty'>No assessors</td></tr>");
+      assessorRows = res.data || [];
+      paintAssessors();
     }).fail(fail);
   });
 </script>

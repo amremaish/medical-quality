@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Import PDF</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.importNew">Import PDF</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,21 +13,21 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/imports">PDF import</a>
+      <a class="back" href="/imports" data-i18n="page.import">PDF import</a>
       <section class="panel form-card">
-        <h1>Import PDF</h1>
-        <p>Upload a text PDF. Correct the preview, then confirm to create the audit.</p>
+        <h1 data-i18n="page.importNew">Import PDF</h1>
+        <p data-i18n="page.importNewLead">Upload a text PDF. Correct the preview, then confirm to create the audit.</p>
         <form id="upload" class="stack">
-          <div><label for="file">PDF</label><input id="file" type="file" accept="application/pdf" required></div>
+          <div><label for="file" data-i18n="field.pdf">PDF</label><input id="file" type="file" accept="application/pdf" required></div>
           <div class="form-actions">
-            <a class="btn ghost" href="/imports">Cancel</a>
-            <button type="submit">Parse PDF</button>
+            <a class="btn ghost" href="/imports" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.parse">Parse PDF</button>
           </div>
         </form>
         <textarea id="preview" rows="16" hidden></textarea>
         <p class="no-print">
-          <button type="button" id="save-preview" class="ghost" hidden>Save preview</button>
-          <button type="button" id="confirm" data-perm-all="MANAGE_IMPORT,CONDUCT_AUDIT" hidden>Confirm and create audit</button>
+          <button type="button" id="save-preview" class="ghost" data-i18n="action.savePreview" hidden>Save preview</button>
+          <button type="button" id="confirm" data-perm-all="MANAGE_IMPORT,CONDUCT_AUDIT" data-i18n="action.confirmAudit" hidden>Confirm and create audit</button>
         </p>
         <p class="err" id="err"></p>
       </section>
@@ -54,13 +55,13 @@
       $("#save-preview").prop("hidden", false);
       $("#confirm").prop("hidden", !(hasPerm("MANAGE_IMPORT") && hasPerm("CONDUCT_AUDIT")));
     }).fail(function (xhr) {
-      $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Import failed");
+      $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Import failed", "تعذر الاستيراد"));
     });
   });
   $("#save-preview").on("click", function () {
     let parsed;
-    try { parsed = JSON.parse($("#preview").val()); } catch (error) { $("#err").text("Preview is not valid JSON"); return; }
-    api("PUT", "/api/audit-imports/" + importId, parsed).done(function () { $("#err").text("Preview saved"); });
+    try { parsed = JSON.parse($("#preview").val()); } catch (error) { $("#err").text(mqText("Preview is not valid JSON", "المعاينة ليست JSON صالحاً")); return; }
+    api("PUT", "/api/audit-imports/" + importId, parsed).done(function () { $("#err").text(mqText("Preview saved", "حُفظت المعاينة")); });
   });
   $(document).on("mq-ready", function () {
     if (importId) $("#confirm").prop("hidden", !(hasPerm("MANAGE_IMPORT") && hasPerm("CONDUCT_AUDIT")));

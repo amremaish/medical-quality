@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Evidence</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.evidence">Evidence</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,13 +15,13 @@
     <main class="page">
       <div class="page-head">
         <div>
-          <h1>Evidence</h1>
-          <p>Files collected for an audit.</p>
+          <h1 data-i18n="page.evidence">Evidence</h1>
+          <p data-i18n="page.evidenceLead">Files collected for an audit.</p>
         </div>
-        <a class="btn" href="/evidence/new" data-perm="MANAGE_EVIDENCE" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Upload</a>
+        <a class="btn" href="/evidence/new" data-perm="MANAGE_EVIDENCE" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.upload">Upload</span></a>
       </div>
       <div class="table-card">
-        <table class="data-table"><thead><tr><th>File</th><th>Size</th><th>Audit</th></tr></thead><tbody id="rows"></tbody></table>
+        <table class="data-table"><thead><tr><th data-i18n="col.file">File</th><th data-i18n="col.size">Size</th><th data-i18n="col.audit">Audit</th></tr></thead><tbody id="rows"></tbody></table>
       </div>
     </main>
   </div>
@@ -28,14 +29,17 @@
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/js/api.js}"></script>
 <script>
-  function load() {
+  let evidenceRows = [];
+  function paint() {
     api("GET", "/api/evidence").done(function (res) {
-      $("#rows").html(res.data.map(function (row) {
+      evidenceRows = res.data || [];
+      $("#rows").html(evidenceRows.map(function (row) {
         return "<tr><td><a href='/api/files/" + row.documentId + "'>" + row.originalName + "</a></td><td>" + row.sizeBytes + "</td><td>" + (row.auditId || "") + "</td></tr>";
-      }).join("") || "<tr><td colspan='3' class='empty'>No evidence</td></tr>");
+      }).join("") || "<tr><td colspan='3' class='empty'>" + mqText("No evidence", "لا توجد أدلة") + "</td></tr>");
     });
   }
-  load();
+  document.addEventListener("mq-lang", paint);
+  paint();
 </script>
 </body>
 </html>

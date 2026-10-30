@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New record review</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.reviewNewTitle">New record review</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,19 +13,19 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/record-reviews">Medical records</a>
+      <a class="back" href="/record-reviews" data-i18n="page.records">Medical records</a>
       <section class="panel form-card">
-        <h1>New record review</h1>
-        <p>Start a review for one hospital, reviewer, and ward.</p>
+        <h1 data-i18n="page.reviewNewTitle">New record review</h1>
+        <p data-i18n="page.reviewLead">Start a review for one hospital, reviewer, and ward.</p>
         <form id="create-review" class="stack">
-          <div><label for="hospitalName">Hospital</label><input id="hospitalName" required></div>
-          <div><label for="reviewerName">Reviewer</label><input id="reviewerName" required></div>
-          <div><label for="reviewDate">Date</label><input id="reviewDate" type="date" required></div>
-          <div><label for="departmentName">Department / ward</label><input id="departmentName" required></div>
+          <div><label for="hospitalName" data-i18n="field.hospital">Hospital</label><input id="hospitalName" required></div>
+          <div><label for="reviewerName" data-i18n="field.reviewer">Reviewer</label><input id="reviewerName" required></div>
+          <div><label for="reviewDate" data-i18n="field.date">Date</label><input id="reviewDate" type="date" required></div>
+          <div><label for="departmentName" data-i18n="field.ward">Department / ward</label><input id="departmentName" required></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/record-reviews">Cancel</a>
-            <button type="submit">Create review</button>
+            <a class="btn ghost" href="/record-reviews" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.createReview">Create review</button>
           </div>
         </form>
       </section>
@@ -45,7 +46,7 @@
     }).done(function (res) {
       window.location.href = "/record-reviews/" + res.data.id;
     }).fail(function (xhr) {
-      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not create review");
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not create review", "تعذر إنشاء المراجعة"));
     });
   });
 </script>

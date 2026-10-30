@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Roles</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.roles">Roles</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -13,12 +14,12 @@
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
       <div class="page-head">
-        <div><h1>Roles</h1><p>Built-in roles for this hospital, plus roles you add.</p></div>
-        <a class="btn" href="/roles/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New role</a>
+        <div><h1 data-i18n="page.roles">Roles</h1><p data-i18n="page.rolesLead">Built-in roles for this hospital, plus roles you add.</p></div>
+        <a class="btn" href="/roles/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="action.newRole">New role</span></a>
       </div>
       <div class="table-card">
         <table class="data-table">
-          <thead><tr><th>Role</th><th>Sees</th><th>Permissions</th><th>People</th><th></th></tr></thead>
+          <thead><tr><th data-i18n="col.role">Role</th><th data-i18n="col.sees">Sees</th><th data-i18n="col.permissions">Permissions</th><th data-i18n="col.people">People</th><th></th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -29,11 +30,22 @@
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/js/api.js}"></script>
 <script>
-  const scopes = {
-    HOSPITAL: "Whole hospital",
-    ASSESSOR: "Own assessments",
-    DEPARTMENT: "One department",
-    DEPARTMENT_LIST: "Assigned departments"
+  function scopeLabel(mode) {
+    if (mode === "HOSPITAL") return mqText("Whole hospital", "المستشفى كله");
+    if (mode === "ASSESSOR") return mqText("Own assessments", "تقييماته فقط");
+    if (mode === "DEPARTMENT") return mqText("One department", "قسم واحد");
+    if (mode === "DEPARTMENT_LIST") return mqText("Assigned departments", "الأقسام المعيّنة");
+    return mqText("Limited", "محدود");
+  }
+  const groupTitles = {
+    Audits: "group.audits",
+    "Findings and CAPA": "group.findings",
+    Evidence: "group.evidence",
+    Dashboards: "group.dashboards",
+    "Import and archive": "group.import",
+    Hospital: "group.hospital",
+    Reports: "group.reports",
+    System: "group.system"
   };
   const groups = [
     ["Audits", [
@@ -86,6 +98,7 @@
     ]]
   ];
   let roles = [];
+  let lastUsers = [];
   let counts = {};
   let openId = null;
 
@@ -94,11 +107,10 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
-  function scopeLabel(mode) { return scopes[mode] || "Limited"; }
-  function permLabel(count) { return count === 1 ? "1 permission" : count + " permissions"; }
+  function permLabel(count) { return mqCount(count, "permission", "permissions", "صلاحية", "صلاحيات"); }
   function peopleText(count) {
-    if (!count) return "No one is assigned";
-    return count === 1 ? "1 person" : count + " people";
+    if (!count) return mqText("No one is assigned", "لا أحد معيّن");
+    return mqCount(count, "person", "people", "شخص", "أشخاص");
   }
   function humanize(code) {
     const text = String(code || "").toLowerCase().replace(/_/g, " ");
@@ -106,26 +118,27 @@
   }
   function render(list, users) {
     roles = list || [];
+    if (users) lastUsers = users;
     counts = {};
-    (users || []).forEach(function (user) {
+    (lastUsers || []).forEach(function (user) {
       if (user.roleId == null) return;
       counts[user.roleId] = (counts[user.roleId] || 0) + 1;
     });
     $("#rows").html(roles.map(function (row) {
       const people = counts[row.id] || 0;
       const action = row.builtIn
-        ? "<span class='pill quiet'>Built-in</span>"
-        : "<button type='button' class='ghost remove' data-id='" + row.id + "'>Delete</button>";
-      const peopleCell = people ? esc(peopleText(people)) : "<span class='quiet-text'>No one</span>";
+        ? "<span class='pill quiet'>" + esc(mqText("Built-in", "جاهز")) + "</span>"
+        : "<button type='button' class='ghost remove' data-id='" + row.id + "'>" + esc(mqText("Delete", "حذف")) + "</button>";
+      const peopleCell = people ? esc(peopleText(people)) : "<span class='quiet-text'>" + esc(mqText("No one", "لا أحد")) + "</span>";
       const open = openId === row.id;
-      return "<tr data-role-id='" + row.id + "'" + (open ? " class='role-open'" : "") + "><td><div class='person'><div><strong>" + esc(row.name) +
+      return "<tr data-role-id='" + row.id + "'" + (open ? " class='role-open'" : "") + "><td><div class='person'><div><strong>" + esc(mqRole(row.roleCode, row.name)) +
         "</strong><small>" + esc(row.roleCode) + "</small></div></div></td><td class='nowrap'>" +
         esc(scopeLabel(row.scopeMode)) + "</td><td class='nowrap'><button type='button' class='quiet view-role' data-id='" +
         row.id + "' aria-expanded='" + open + "'><i class='caret'></i>" + esc(permLabel((row.permissions || []).length)) +
         "</button></td><td class='nowrap'>" + peopleCell + "</td><td class='actions'>" + action + "</td></tr>" +
         "<tr class='role-detail' data-for='" + row.id + "'" + (open ? "" : " hidden") + "><td colspan='5'><div class='perm-groups'>" +
         permissionHtml(row) + "</div></td></tr>";
-    }).join("") || "<tr><td colspan='5' class='empty'>No roles yet</td></tr>");
+    }).join("") || "<tr><td colspan='5' class='empty'>" + esc(mqText("No roles yet", "لا توجد أدوار بعد")) + "</td></tr>");
   }
   function permissionHtml(role) {
     const held = {};
@@ -136,15 +149,15 @@
       const items = group[1].filter(function (item) { return held[item[0]]; });
       items.forEach(function (item) { used[item[0]] = true; });
       if (!items.length) return;
-      html += "<section><h3>" + esc(group[0]) + "<span>" + items.length + "</span></h3><ul>" +
-        items.map(function (item) { return "<li>" + esc(item[1]) + "</li>"; }).join("") + "</ul></section>";
+      html += "<section><h3>" + esc(mqT(groupTitles[group[0]]) || group[0]) + "<span>" + items.length + "</span></h3><ul>" +
+        items.map(function (item) { return "<li>" + esc(mqPerm(item[0], item[1])) + "</li>"; }).join("") + "</ul></section>";
     });
     const extra = (role.permissions || []).filter(function (name) { return !used[name]; });
     if (extra.length) {
-      html += "<section><h3>Other<span>" + extra.length + "</span></h3><ul>" +
-        extra.map(function (name) { return "<li>" + esc(humanize(name)) + "</li>"; }).join("") + "</ul></section>";
+      html += "<section><h3>" + esc(mqText("Other", "أخرى")) + "<span>" + extra.length + "</span></h3><ul>" +
+        extra.map(function (name) { return "<li>" + esc(mqPerm(name, humanize(name))) + "</li>"; }).join("") + "</ul></section>";
     }
-    return html || "<p class='quiet-text'>This role has no permissions.</p>";
+    return html || "<p class='quiet-text'>" + esc(mqText("This role has no permissions.", "هذا الدور بلا صلاحيات.")) + "</p>";
   }
   function toggleRole(id) {
     id = Number(id);
@@ -161,7 +174,7 @@
   api("GET", "/api/auth/me").done(function (me) {
     const orgId = actingOrganizationId(me.data);
     if (!orgId) {
-      $("#rows").html("<tr><td colspan='5' class='empty'>Open a hospital first</td></tr>");
+      $("#rows").html("<tr><td colspan='5' class='empty'>" + esc(mqText("Open a hospital first", "افتح مستشفى أولاً")) + "</td></tr>");
       return;
     }
     const base = "/api/organizations/" + orgId + "/roles";
@@ -172,11 +185,14 @@
         usersReq.done(function (users) { render(res.data, users.data); })
           .fail(function () { render(res.data, []); });
       }).fail(function (xhr) {
-        const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load roles";
+        const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not load roles", "تعذر تحميل الأدوار");
         $("#rows").html("<tr><td colspan='5' class='empty'>" + esc(message) + "</td></tr>");
       });
     }
     load();
+    document.addEventListener("mq-lang", function () {
+      if (roles.length || lastUsers.length) render(roles, lastUsers);
+    });
     $("#rows").on("click", "tr[data-role-id]", function (event) {
       if ($(event.target).closest(".remove").length) return;
       toggleRole($(this).data("roleId"));
@@ -185,13 +201,13 @@
       event.stopPropagation();
       const id = Number($(this).data("id"));
       const role = roles.filter(function (row) { return row.id === id; })[0];
-      if (!window.confirm("Delete " + (role ? role.name : "this role") + "?")) return;
+      if (!window.confirm(mqText("Delete " + (role ? role.name : "this role") + "?", "حذف " + (role ? mqRole(role.roleCode, role.name) : "هذا الدور") + "؟"))) return;
       $("#form-error").text("");
       api("DELETE", base + "/" + id).done(function () {
         if (openId === id) openId = null;
         load();
       }).fail(function (xhr) {
-        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not delete the role");
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not delete the role", "تعذر حذف الدور"));
       });
     });
     $(document).on("keydown", function (event) {

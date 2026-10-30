@@ -6,85 +6,86 @@
 </svg>
 
 <th:block th:fragment="sidebar">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="nav.skip">Skip to content</a>
 <aside id="primary-nav" class="sidebar" aria-label="Primary">
   <a class="brand" href="/">
     <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg></span>
-    <span class="brand-name">Medical quality<small id="brand-org">Quality platform</small></span>
+    <span class="brand-name"><span data-i18n="login.brand">Medical quality</span><small id="brand-org" data-i18n="nav.platform">Quality platform</small></span>
   </a>
   <div class="side-scroll">
     <nav class="side-nav platform-nav">
-      <a class="side-link" href="/organizations"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg><span class="label">Organizations</span></a>
-      <a class="side-link" href="/owners"><svg th:replace="~{fragments/shell :: i('key')}"></svg><span class="label">Owners</span></a>
+      <a class="side-link" href="/organizations"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg><span class="label" data-i18n="nav.organizations">Organizations</span></a>
+      <a class="side-link" href="/owners"><svg th:replace="~{fragments/shell :: i('key')}"></svg><span class="label" data-i18n="nav.owners">Owners</span></a>
     </nav>
     <nav class="side-nav org-nav">
-      <a class="side-link" href="/"><svg th:replace="~{fragments/shell :: i('house')}"></svg><span class="label">Home</span></a>
+      <a class="side-link" href="/"><svg th:replace="~{fragments/shell :: i('house')}"></svg><span class="label" data-i18n="nav.home">Home</span></a>
       <div class="nav-group" id="dash-group" hidden>
         <button type="button" class="nav-toggle" id="dash-toggle">
-          <svg th:replace="~{fragments/shell :: i('chart')}"></svg><span class="label">Dashboards</span>
+          <svg th:replace="~{fragments/shell :: i('chart')}"></svg><span class="label" data-i18n="nav.dashboards">Dashboards</span>
         </button>
         <div class="subnav">
-          <a href="/dashboard" data-perm="VIEW_COMMAND_CENTER" hidden>Command center</a>
-          <a href="/dashboard/executive" data-perm="VIEW_EXECUTIVE_DASHBOARD" hidden>Executive</a>
-          <a href="/dashboard/assessor" data-perm="VIEW_ASSESSOR_DASHBOARD" hidden>Assessor</a>
-          <a href="/dashboard/quality-director" data-perm="VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden>Quality director</a>
+          <a href="/dashboard" data-perm="VIEW_COMMAND_CENTER" data-i18n="nav.command" hidden>Command center</a>
+          <a href="/dashboard/executive" data-perm="VIEW_EXECUTIVE_DASHBOARD" data-i18n="nav.executive" hidden>Executive</a>
+          <a href="/dashboard/assessor" data-perm="VIEW_ASSESSOR_DASHBOARD" data-i18n="nav.assessor" hidden>Assessor</a>
+          <a href="/dashboard/quality-director" data-perm="VIEW_QUALITY_DIRECTOR_DASHBOARD" data-i18n="nav.director" hidden>Quality director</a>
         </div>
       </div>
       <div class="nav-section">
-        <p class="nav-label">Work</p>
-        <a class="side-link" href="/audits" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg><span class="label">GSR audits</span></a>
-        <a class="side-link" href="/record-reviews" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('file')}"></svg><span class="label">Medical records</span></a>
-        <a class="side-link" href="/findings" data-perm="MANAGE_FINDINGS" hidden><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="label">Findings</span></a>
-        <a class="side-link" href="/capas" title="Corrective and preventive action" data-perm="MANAGE_CAPA" hidden><svg th:replace="~{fragments/shell :: i('capa')}"></svg><span class="label">CAPA</span></a>
-        <a class="side-link" href="/evidence" data-perm="MANAGE_EVIDENCE" hidden><svg th:replace="~{fragments/shell :: i('folder')}"></svg><span class="label">Evidence</span></a>
+        <p class="nav-label" data-i18n="nav.work">Work</p>
+        <a class="side-link" href="/audits" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg><span class="label" data-i18n="nav.audits">GSR audits</span></a>
+        <a class="side-link" href="/record-reviews" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('file')}"></svg><span class="label" data-i18n="nav.records">Medical records</span></a>
+        <a class="side-link" href="/findings" data-perm="MANAGE_FINDINGS" hidden><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="label" data-i18n="nav.findings">Findings</span></a>
+        <a class="side-link" href="/capas" data-i18n-title="nav.capaTip" title="Corrective and preventive action" data-perm="MANAGE_CAPA" hidden><svg th:replace="~{fragments/shell :: i('capa')}"></svg><span class="label" data-i18n="nav.capa">CAPA</span></a>
+        <a class="side-link" href="/evidence" data-perm="MANAGE_EVIDENCE" hidden><svg th:replace="~{fragments/shell :: i('folder')}"></svg><span class="label" data-i18n="nav.evidence">Evidence</span></a>
       </div>
       <div class="nav-section">
-        <p class="nav-label">Organization</p>
-        <a class="side-link" href="/departments" data-perm="MANAGE_DEPARTMENTS" hidden><svg th:replace="~{fragments/shell :: i('grid')}"></svg><span class="label">Departments</span></a>
-        <a class="side-link" href="/assessors" data-perm="MANAGE_ASSESSORS" hidden><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Assessors</span></a>
-        <a class="side-link" href="/quality-policy" data-perm="QUALITY_POLICY_VIEW,QUALITY_POLICY_EDIT" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">Quality policy</span></a>
-        <a class="side-link users-nav" href="/users" hidden><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Users</span></a>
-        <a class="side-link directory-nav" href="/roles" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">Roles</span></a>
+        <p class="nav-label" data-i18n="nav.organization">Organization</p>
+        <a class="side-link" href="/departments" data-perm="MANAGE_DEPARTMENTS" hidden><svg th:replace="~{fragments/shell :: i('grid')}"></svg><span class="label" data-i18n="nav.departments">Departments</span></a>
+        <a class="side-link" href="/assessors" data-perm="MANAGE_ASSESSORS" hidden><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label" data-i18n="nav.assessors">Assessors</span></a>
+        <a class="side-link" href="/quality-policy" data-perm="QUALITY_POLICY_VIEW,QUALITY_POLICY_EDIT" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label" data-i18n="nav.policy">Quality policy</span></a>
+        <a class="side-link users-nav" href="/users" hidden><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label" data-i18n="nav.users">Users</span></a>
+        <a class="side-link directory-nav" href="/roles" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label" data-i18n="nav.roles">Roles</span></a>
       </div>
       <div class="nav-section">
-        <p class="nav-label">Tools</p>
-        <a class="side-link" href="/imports" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('import')}"></svg><span class="label">PDF import</span></a>
+        <p class="nav-label" data-i18n="nav.tools">Tools</p>
+        <a class="side-link" href="/imports" data-perm="MANAGE_IMPORT" hidden><svg th:replace="~{fragments/shell :: i('import')}"></svg><span class="label" data-i18n="nav.import">PDF import</span></a>
       </div>
     </nav>
   </div>
   <div class="side-foot">
     <div class="profile">
       <span class="avatar" id="profile-initial">A</span>
-      <span class="profile-text"><strong id="profile-name">Signed in</strong><small id="profile-role">Quality</small></span>
+      <span class="profile-text"><strong id="profile-name" data-i18n="nav.signedIn">Signed in</strong><small id="profile-role" data-i18n="nav.quality">Quality</small></span>
     </div>
     <button type="button" id="logout" class="side-link logout">
-      <svg th:replace="~{fragments/shell :: i('logout')}"></svg><span class="label">Log out</span>
+      <svg th:replace="~{fragments/shell :: i('logout')}"></svg><span class="label" data-i18n="nav.logout">Log out</span>
     </button>
   </div>
 </aside>
 </th:block>
 
 <div th:fragment="topbar" class="shell-head">
-<button type="button" id="nav-scrim" class="nav-scrim" hidden aria-label="Close menu"></button>
+<button type="button" id="nav-scrim" class="nav-scrim" data-i18n-aria="nav.close" hidden aria-label="Close menu"></button>
 <div id="org-banner" class="org-banner" role="status">
   <span class="org-banner-copy">
     <svg th:replace="~{fragments/shell :: i('shield')}"></svg>
-    <span>Viewing <bdi id="org-banner-name"></bdi> as platform admin</span>
+    <span><span data-i18n="nav.viewing">Viewing</span> <bdi id="org-banner-name"></bdi> <span data-i18n="nav.asAdmin">as platform admin</span></span>
   </span>
-  <button type="button" id="leave-org">Return to platform</button>
+  <button type="button" id="leave-org" data-i18n="nav.return">Return to platform</button>
 </div>
 <header class="topbar">
-  <button type="button" id="menu-toggle" class="icon-btn menu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="primary-nav">
+  <button type="button" id="menu-toggle" class="icon-btn menu-toggle" data-i18n-aria="nav.menu" aria-label="Menu" aria-expanded="false" aria-controls="primary-nav">
     <svg th:replace="~{fragments/shell :: i('menu')}"></svg>
   </button>
   <h1 class="topbar-title" id="topbar-title" hidden></h1>
   <label class="search">
     <svg th:replace="~{fragments/shell :: i('search')}"></svg>
-    <input id="global-search" placeholder="Search this page" autocomplete="off">
+    <input id="global-search" data-i18n-placeholder="nav.search" placeholder="Search this page" autocomplete="off">
   </label>
-  <a class="icon-btn hospital-tools" id="findings-link" href="/findings" data-perm="MANAGE_FINDINGS" hidden aria-label="Findings needing attention" title="Findings needing attention"><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="shell-tool-label">Findings</span><span class="nav-count" id="findings-count" hidden></span></a>
-  <a class="icon-btn hospital-tools" id="capa-link" href="/capas" data-perm="MANAGE_CAPA" hidden aria-label="CAPA needing attention" title="CAPA needing attention"><svg th:replace="~{fragments/shell :: i('capa')}"></svg><span class="shell-tool-label">CAPA</span><span class="nav-count" id="capa-count" hidden></span></a>
-  <a class="btn hospital-tools" href="/audits/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New audit</a>
+  <a class="icon-btn hospital-tools" id="findings-link" href="/findings" data-perm="MANAGE_FINDINGS" hidden data-i18n-aria="nav.findingsTip" data-i18n-title="nav.findingsTip" aria-label="Findings needing attention" title="Findings needing attention"><svg th:replace="~{fragments/shell :: i('alert')}"></svg><span class="shell-tool-label" data-i18n="nav.findings">Findings</span><span class="nav-count" id="findings-count" hidden></span></a>
+  <a class="icon-btn hospital-tools" id="capa-link" href="/capas" data-perm="MANAGE_CAPA" hidden data-i18n-aria="nav.capaAttention" data-i18n-title="nav.capaAttention" aria-label="CAPA needing attention" title="CAPA needing attention"><svg th:replace="~{fragments/shell :: i('capa')}"></svg><span class="shell-tool-label" data-i18n="nav.capa">CAPA</span><span class="nav-count" id="capa-count" hidden></span></a>
+  <a class="btn hospital-tools" href="/audits/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="nav.newAudit">New audit</span></a>
+  <button type="button" class="btn ghost lang-toggle" data-lang-toggle>العربية</button>
   <span class="today-pill" id="today-pill">Today</span>
 </header>
 </div>

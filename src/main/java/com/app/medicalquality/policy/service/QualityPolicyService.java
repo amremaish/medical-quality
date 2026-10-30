@@ -758,15 +758,22 @@ public class QualityPolicyService {
     }
 
     private String reason(String a_reason) {
-        if (a_reason == null || a_reason.isBlank() || a_reason.trim().length() > 1000) {
+        if (a_reason == null || a_reason.isBlank()) {
+            return "";
+        }
+        String trimmed = a_reason.trim();
+        if (trimmed.length() > 1000) {
             throw new AppException("error.policy.reason");
         }
-        return a_reason.trim();
+        return trimmed;
     }
 
     private LocalDate effectiveFrom(LocalDate a_date) {
+        if (a_date == null) {
+            return LocalDate.now();
+        }
         LocalDate today = LocalDate.now();
-        if (a_date == null || a_date.isBefore(today) || a_date.isAfter(today.plusYears(5))) {
+        if (a_date.isBefore(today) || a_date.isAfter(today.plusYears(5))) {
             throw new AppException("error.policy.effective_date");
         }
         return a_date;

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Users</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.users">Users</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -13,10 +14,10 @@
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
       <div class="page-head">
-        <div><h1>Users</h1><p id="user-count">People who can sign in to this hospital.</p></div>
-        <a class="btn" id="invite-user" href="/users/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>Invite user</a>
+        <div><h1 data-i18n="page.users">Users</h1><p id="user-count" data-i18n="page.usersLead">People who can sign in to this hospital.</p></div>
+        <a class="btn" id="invite-user" href="/users/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="action.inviteUser">Invite user</span></a>
       </div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>Person</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.person">Person</th><th data-i18n="col.role">Role</th><th data-i18n="col.status">Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
       <p class="err" id="list-error"></p>
     </main>
   </div>
@@ -32,32 +33,48 @@
   function statusClass(status) {
     return status === "Active" ? "ok" : "off";
   }
+  let userRows = null;
+  let userCanEdit = false;
+  let userMissingOrg = false;
   function fail(xhr) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load users";
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not load users", "تعذر تحميل المستخدمين");
     $("#list-error").text(message);
   }
+  function paintUsers() {
+    if (userMissingOrg) {
+      $("#rows").html("<tr><td colspan='4' class='empty'>" + esc(mqText("Open a hospital first", "افتح مستشفى أولاً")) + "</td></tr>");
+      return;
+    }
+    if (!userRows) return;
+    const count = userRows.length;
+    const label = userCanEdit ? mqText("Edit", "تعديل") : mqText("Exceptional permissions", "صلاحيات استثنائية");
+    $("#user-count").text(count === 1
+      ? mqText("1 person in this hospital.", "شخص واحد في هذا المستشفى.")
+      : mqText(count + " people in this hospital.", count + " أشخاص في هذا المستشفى."));
+    $("#rows").html(userRows.map(function (row) {
+      const name = ((row.firstName || "") + (row.lastName ? " " + row.lastName : "")).trim() || row.email;
+      const initial = name.slice(0, 1).toUpperCase();
+      return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong>" +
+        esc(name) + "</strong><small>" + esc(row.email) + "</small></div></div></td><td><span class='pill'>" +
+        esc(mqRole(row.roleCode, row.roleName)) + "</span></td><td><span class='status " + statusClass(row.status) + "'>" +
+        esc(mqStatus(row.status)) + "</span></td><td class='actions'><a class='btn ghost sm' href='/users/" +
+        row.id + "'>" + esc(label) + "</a></td></tr>";
+    }).join("") || "<tr><td colspan='4' class='empty'>" + esc(mqText("No users yet", "لا يوجد مستخدمون بعد")) + "</td></tr>");
+  }
+  document.addEventListener("mq-lang", paintUsers);
   api("GET", "/api/auth/me").done(function (me) {
     const viewer = me.data;
     const orgId = actingOrganizationId(viewer);
-    const canEditProfile = directoryAdmin(viewer);
-    $("#invite-user").prop("hidden", !canEditProfile);
+    userCanEdit = directoryAdmin(viewer);
+    $("#invite-user").prop("hidden", !userCanEdit);
     if (!orgId) {
-      $("#rows").html("<tr><td colspan='4' class='empty'>Open a hospital first</td></tr>");
+      userMissingOrg = true;
+      paintUsers();
       return;
     }
-    const label = canEditProfile ? "Edit" : "Exceptional permissions";
     api("GET", "/api/organizations/" + orgId + "/users").done(function (res) {
-      const count = res.data.length;
-      $("#user-count").text(count === 1 ? "1 person in this hospital." : count + " people in this hospital.");
-      $("#rows").html(res.data.map(function (row) {
-        const name = ((row.firstName || "") + (row.lastName ? " " + row.lastName : "")).trim() || row.email;
-        const initial = name.slice(0, 1).toUpperCase();
-        return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong>" +
-          esc(name) + "</strong><small>" + esc(row.email) + "</small></div></div></td><td><span class='pill'>" +
-          esc(row.roleName) + "</span></td><td><span class='status " + statusClass(row.status) + "'>" +
-          esc(row.status) + "</span></td><td class='actions'><a class='btn ghost sm' href='/users/" +
-          row.id + "'>" + label + "</a></td></tr>";
-      }).join("") || "<tr><td colspan='4' class='empty'>No users yet</td></tr>");
+      userRows = res.data || [];
+      paintUsers();
     }).fail(fail);
   });
 </script>

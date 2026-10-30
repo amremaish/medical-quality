@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -331,12 +333,21 @@ public class DashboardService {
         return "/findings";
     }
 
+    private static boolean arabicRequest() {
+        Locale locale = LocaleContextHolder.getLocale();
+        return locale != null && "ar".equalsIgnoreCase(locale.getLanguage());
+    }
+
     private static String departmentName(Department a_department, String a_fallback) {
-        if (a_department != null && !blank(a_department.getNameEn()).isEmpty()) {
-            return a_department.getNameEn().trim();
-        }
-        if (a_department != null && !blank(a_department.getNameAr()).isEmpty()) {
-            return a_department.getNameAr().trim();
+        if (a_department != null) {
+            String preferred = arabicRequest() ? a_department.getNameAr() : a_department.getNameEn();
+            String other = arabicRequest() ? a_department.getNameEn() : a_department.getNameAr();
+            if (!blank(preferred).isEmpty()) {
+                return preferred.trim();
+            }
+            if (!blank(other).isEmpty()) {
+                return other.trim();
+            }
         }
         String fallback = blank(a_fallback).trim();
         return fallback.isEmpty() ? "—" : fallback;

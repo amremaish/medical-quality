@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title th:text="${title}">Dashboard</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title th:text="${title}" data-i18n="page.dash">Dashboard</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,21 +15,21 @@
       <main class="page" id="board" th:attr="data-title=${title}">
         <header class="page-head">
           <div>
-            <p class="quiet-text" id="board-scope">All audits on record.</p>
+            <p class="quiet-text" id="board-scope" data-i18n="dash.scope">All audits on record.</p>
           </div>
         </header>
         <section class="attention-board" aria-labelledby="attention-heading">
-          <h2 id="attention-heading">Needs attention</h2>
-          <p class="quiet-text attention-rule" id="attention-definition">Audits past their date or due today, CAPAs past their target date, findings with no CAPA, and findings open more than 30 days.</p>
+          <h2 id="attention-heading" data-i18n="dash.attention">Needs attention</h2>
+          <p class="quiet-text attention-rule" id="attention-definition" data-i18n="dash.attentionRule">Audits past their date or due today, CAPAs past their target date, findings with no CAPA, and findings open more than 30 days.</p>
           <div class="pills" id="attention-pills"></div>
           <div class="table-card">
             <table class="data-table" aria-labelledby="attention-heading">
               <thead>
                 <tr>
-                  <th>Item</th>
-                  <th>Department</th>
-                  <th>Owner</th>
-                  <th>Age</th>
+                  <th data-i18n="col.item">Item</th>
+                  <th data-i18n="col.department">Department</th>
+                  <th data-i18n="col.owner">Owner</th>
+                  <th data-i18n="col.age">Age</th>
                 </tr>
               </thead>
               <tbody id="attention-rows"></tbody>

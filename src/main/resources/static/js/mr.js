@@ -49,24 +49,27 @@ function canReview() {
 
 function render() {
   const record = recordByCode(current);
-  let html = "<h1>Patient medical record review</h1>";
+  let html = "<h1>" + esc(mqText("Patient medical record review", "مراجعة السجل الطبي للمريض")) + "</h1>";
   html += "<p>" + esc(review.hospitalName) + " · " + esc(review.reviewerName) + " · " + review.reviewDate + " · " + esc(review.departmentName) + "</p>";
   html += "<div class='row'>";
   review.records.forEach(function (row) {
     html += "<div class='rec-card" + (row.code === current ? " on" : "") + "' data-code='" + row.code + "'><div>" + row.code + "</div><b>" + row.stats.overall + "%</b></div>";
   });
   html += "</div>";
-  html += "<p>" + record.stats.compliant + "/" + record.stats.applicable + " fully compliant · Legible " +
-    record.stats.percentLegible + "% · Accurate " + record.stats.percentAccurate + "% · Complete " + record.stats.percentComplete + "%</p>";
+  html += "<p>" + record.stats.compliant + "/" + record.stats.applicable + " " + esc(mqText("fully compliant", "مطابق بالكامل")) + " · " +
+    esc(mqText("Legible", "مقروء")) + " " + record.stats.percentLegible + "% · " + esc(mqText("Accurate", "دقيق")) + " " +
+    record.stats.percentAccurate + "% · " + esc(mqText("Complete", "مكتمل")) + " " + record.stats.percentComplete + "%</p>";
   if (canReview()) {
-    html += "<p class='no-print'>Patient identifier <input id='patient-id' value='" + esc(record.patientIdentifier || "") + "'></p>";
+    html += "<p class='no-print'>" + esc(mqText("Patient identifier", "معرّف المريض")) + " <input id='patient-id' value='" + esc(record.patientIdentifier || "") + "'></p>";
   } else if (record.patientIdentifier) {
-    html += "<p>Patient identifier " + esc(record.patientIdentifier) + "</p>";
+    html += "<p>" + esc(mqText("Patient identifier", "معرّف المريض")) + " " + esc(record.patientIdentifier) + "</p>";
   }
-  html += "<p class='no-print'><button type='button' id='export-csv' class='ghost'>Export CSV</button> <button type='button' id='print-review' class='ghost'>Print</button>";
-  if (canReview()) html += " <button type='button' id='reset-review' class='danger'>Reset</button>";
+  html += "<p class='no-print'><button type='button' id='export-csv' class='ghost'>" + esc(mqText("Export CSV", "تصدير CSV")) + "</button> <button type='button' id='print-review' class='ghost'>" + esc(mqText("Print", "طباعة")) + "</button>";
+  if (canReview()) html += " <button type='button' id='reset-review' class='danger'>" + esc(mqText("Reset", "إعادة ضبط")) + "</button>";
   html += "</p>";
-  html += "<table><thead><tr><th>Standard</th><th>Evidence</th><th>Legible</th><th>Accurate</th><th>Complete</th></tr></thead><tbody>";
+  html += "<table><thead><tr><th>" + esc(mqText("Standard", "المعيار")) + "</th><th>" + esc(mqText("Evidence", "الدليل")) +
+    "</th><th>" + esc(mqText("Legible", "مقروء")) + "</th><th>" + esc(mqText("Accurate", "دقيق")) + "</th><th>" +
+    esc(mqText("Complete", "مكتمل")) + "</th></tr></thead><tbody>";
   let section = "";
   review.items.forEach(function (item) {
     if (item.section !== section) {
@@ -76,7 +79,7 @@ function render() {
     const answer = answerFor(record, item.id);
     html += "<tr class='" + answer.tone + "'><td>" + esc(item.standardCode) + "<br>EOC " + esc(item.eocNo) + "</td><td>" + esc(item.text);
     if (canReview()) {
-      html += "<div><button type='button' class='ghost na' data-item='" + item.id + "'>" + (answer.na ? "Marked N/A" : "Mark N/A") + "</button></div>";
+      html += "<div><button type='button' class='ghost na' data-item='" + item.id + "'>" + esc(answer.na ? mqText("Marked N/A", "مُعلَّم لا ينطبق") : mqText("Mark N/A", "تعليم لا ينطبق")) + "</button></div>";
     }
     html += "</td>";
     ["legible", "accurate", "complete"].forEach(function (key) {
@@ -84,7 +87,10 @@ function render() {
     });
     html += "</tr><tr><td colspan='5'><textarea data-comment='" + item.id + "'" + (canReview() ? "" : " readonly") + ">" + esc(answer.comment || "") + "</textarea></td></tr>";
   });
-  html += "</tbody></table><h2>Overall</h2><table><thead><tr><th>Record</th><th>Identifier</th><th>Legible</th><th>Accurate</th><th>Complete</th><th>Score</th></tr></thead><tbody>";
+  html += "</tbody></table><h2>" + esc(mqText("Overall", "الإجمالي")) + "</h2><table><thead><tr><th>" +
+    esc(mqText("Record", "السجل")) + "</th><th>" + esc(mqText("Identifier", "المعرّف")) + "</th><th>" +
+    esc(mqText("Legible", "مقروء")) + "</th><th>" + esc(mqText("Accurate", "دقيق")) + "</th><th>" +
+    esc(mqText("Complete", "مكتمل")) + "</th><th>" + esc(mqText("Score", "الدرجة")) + "</th></tr></thead><tbody>";
   review.records.forEach(function (row) {
     html += "<tr><td>" + row.code + "</td><td>" + esc(row.patientIdentifier || "") + "</td><td>" + row.stats.percentLegible +
       "%</td><td>" + row.stats.percentAccurate + "%</td><td>" + row.stats.percentComplete + "%</td><td>" + row.stats.overall + "%</td></tr>";
@@ -119,19 +125,25 @@ $(document).on("change", "#patient-id", function () {
 $(document).on("click", "#print-review", function () { window.print(); });
 $(document).on("click", "#reset-review", function () {
   if (!canReview()) return;
-  if (confirm("Reset all ten records?")) api("POST", "/api/record-reviews/" + reviewId() + "/reset").done(function (res) {
+  if (confirm(mqText("Reset all ten records?", "إعادة ضبط السجلات العشرة؟"))) api("POST", "/api/record-reviews/" + reviewId() + "/reset").done(function (res) {
     review = res.data;
     render();
   });
 });
 $(document).on("click", "#export-csv", function () {
-  const lines = [["Record", "Identifier", "Standard", "EOC", "Evidence", "Legible", "Accurate", "Complete", "N/A", "Comment"]];
+  const lines = [[
+    mqText("Record", "السجل"), mqText("Identifier", "المعرّف"), mqText("Standard", "المعيار"), "EOC",
+    mqText("Evidence", "الدليل"), mqText("Legible", "مقروء"), mqText("Accurate", "دقيق"),
+    mqText("Complete", "مكتمل"), mqText("N/A", "لا ينطبق"), mqText("Comment", "تعليق")
+  ]];
   review.records.forEach(function (record) {
     review.items.forEach(function (item) {
       const answer = answerFor(record, item.id);
       lines.push([record.code, record.patientIdentifier || "", item.standardCode, item.eocNo, item.text,
-        answer.legible ? "Yes" : "No", answer.accurate ? "Yes" : "No", answer.complete ? "Yes" : "No",
-        answer.na ? "Yes" : "No", answer.comment || ""]);
+        answer.legible ? mqText("Yes", "نعم") : mqText("No", "لا"),
+        answer.accurate ? mqText("Yes", "نعم") : mqText("No", "لا"),
+        answer.complete ? mqText("Yes", "نعم") : mqText("No", "لا"),
+        answer.na ? mqText("Yes", "نعم") : mqText("No", "لا"), answer.comment || ""]);
     });
   });
   const csv = lines.map(function (row) { return row.map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(","); }).join("\n");
@@ -143,4 +155,5 @@ $(document).on("click", "#export-csv", function () {
 });
 
 $(document).on("mq-ready", function () { if (review) render(); });
+document.addEventListener("mq-lang", function () { if (review) render(); });
 $(function () { loadReview(); });

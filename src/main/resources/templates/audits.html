@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GSR audits</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.audits">GSR audits</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -14,15 +15,15 @@
       <main class="page">
         <div class="page-head">
           <div>
-            <h1>GSR audits</h1>
-            <p>Standards scored with half credit. Open an audit to mark elements.</p>
+            <h1 data-i18n="page.audits">GSR audits</h1>
+            <p data-i18n="page.auditsLead">Standards scored with half credit. Open an audit to mark elements.</p>
           </div>
-          <a class="btn" href="/audits/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New audit</a>
+          <a class="btn" href="/audits/new" data-perm="CONDUCT_AUDIT" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.auditNew">New audit</span></a>
         </div>
         <p class="quiet-text" id="audit-filter" hidden></p>
         <div class="table-card">
           <table class="data-table">
-            <thead><tr><th>Date</th><th>Department</th><th>Auditor</th><th>Status</th><th>Compliance</th></tr></thead>
+            <thead><tr><th data-i18n="col.date">Date</th><th data-i18n="col.department">Department</th><th data-i18n="col.auditor">Auditor</th><th data-i18n="col.status">Status</th><th data-i18n="col.compliance">Compliance</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
         </div>

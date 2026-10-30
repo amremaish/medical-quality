@@ -3,25 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Choose a password</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="setup.title">Choose a password</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body class="login-page" data-page="setup">
+  <button type="button" class="btn ghost lang-toggle login-lang" data-lang-toggle>العربية</button>
   <main class="login-split card">
     <section class="login-brand">
       <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg></span>
-      <h1>Medical quality</h1>
-      <p>Choose a password for your hospital account. This link works once.</p>
+      <h1 data-i18n="login.brand">Medical quality</h1>
+      <p data-i18n="setup.lead">Choose a password for your hospital account. This link works once.</p>
     </section>
     <section class="login-panel">
-      <h1>Choose a password</h1>
+      <h1 data-i18n="setup.title">Choose a password</h1>
       <form id="setup-form" class="stack">
         <div>
-          <label for="new-password">New password</label>
+          <label for="new-password" data-i18n="setup.new">New password</label>
           <input id="new-password" type="password" autocomplete="new-password" required minlength="8" maxlength="128">
         </div>
         <p class="err" id="form-error"></p>
-        <button type="submit">Save password</button>
+        <button type="submit" data-i18n="setup.save">Save password</button>
       </form>
     </section>
   </main>
@@ -29,7 +31,11 @@
   <script th:src="@{/js/api.js}"></script>
   <script>
     const token = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token");
-    if (!token) $("#form-error").text("This invitation link is invalid or has already been used");
+    function invalidLink() {
+      if (!token) $("#form-error").text(mqText("This invitation link is invalid or has already been used", "رابط الدعوة غير صالح أو استُخدم من قبل"));
+    }
+    invalidLink();
+    document.addEventListener("mq-lang", invalidLink);
     $("#setup-form").on("submit", function (event) {
       event.preventDefault();
       if (!token) return;
@@ -42,7 +48,7 @@
       }).done(function () {
         window.location.href = "/login";
       }).fail(function (xhr) {
-        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not save the password");
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not save the password", "تعذر حفظ كلمة المرور"));
       });
     });
   </script>

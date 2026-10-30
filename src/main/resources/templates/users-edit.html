@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Edit user</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.userEdit">Edit user</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body th:attr="data-user-id=${userId}">
@@ -12,77 +13,77 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/users">Users</a>
+      <a class="back" href="/users" data-i18n="page.users">Users</a>
       <section class="panel form-screen">
         <div class="form-intro">
           <span class="avatar lg" id="form-avatar">?</span>
           <div>
-            <h1 id="page-title">Edit user</h1>
+            <h1 id="page-title" data-i18n="page.userEdit">Edit user</h1>
             <p id="form-who">Loading…</p>
             <span id="form-status" class="status" hidden></span>
           </div>
         </div>
         <form id="edit-user" class="stack">
           <div class="row">
-            <div><label for="first">First name</label><input id="first" required maxlength="128"></div>
-            <div><label for="last">Last name</label><input id="last" maxlength="128"></div>
+            <div><label for="first" data-i18n="field.first">First name</label><input id="first" required maxlength="128"></div>
+            <div><label for="last" data-i18n="field.last">Last name</label><input id="last" maxlength="128"></div>
           </div>
-          <div><label for="email">Email</label><input id="email" type="email" required maxlength="320"></div>
-          <div><label for="role">Role</label><select id="role" required></select></div>
-          <div id="assessor-field" hidden><label for="assessor">Assessor</label><select id="assessor"></select></div>
-          <div id="department-field" hidden><label for="department">Department</label><select id="department"></select></div>
-          <div id="departments-field" hidden><label>Departments</label><div id="departments" class="check-list"></div></div>
+          <div><label for="email" data-i18n="field.email">Email</label><input id="email" type="email" required maxlength="320"></div>
+          <div><label for="role" data-i18n="field.role">Role</label><select id="role" required></select></div>
+          <div id="assessor-field" hidden><label for="assessor" data-i18n="field.assessor">Assessor</label><select id="assessor"></select></div>
+          <div id="department-field" hidden><label for="department" data-i18n="field.department">Department</label><select id="department"></select></div>
+          <div id="departments-field" hidden><label data-i18n="field.departments">Departments</label><div id="departments" class="check-list"></div></div>
           <fieldset class="option-group">
             <label class="choice" for="enabled">
               <input id="enabled" type="checkbox">
-              <span>Account can sign in<small>Turn this off to mark them Inactive. They stay in the directory and cannot sign in.</small></span>
+              <span><span data-i18n="field.signIn">Account can sign in</span><small data-i18n="field.signInHint">Turn this off to mark them Inactive. They stay in the directory and cannot sign in.</small></span>
             </label>
             <label class="choice" for="reissue">
               <input id="reissue" type="checkbox">
-              <span>Send a new setup link<small>The account stays off until they open the link and choose a password.</small></span>
+              <span><span data-i18n="field.reissue">Send a new setup link</span><small data-i18n="field.reissueHint">The account stays off until they open the link and choose a password.</small></span>
             </label>
           </fieldset>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/users">Cancel</a>
-            <button type="submit" class="btn" id="save-user">Save profile</button>
+            <a class="btn ghost" href="/users" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" class="btn" id="save-user" data-i18n="action.saveProfile">Save profile</button>
           </div>
         </form>
         <section id="profile-summary" hidden>
           <p id="summary-line"></p>
         </section>
         <section id="invite" class="link-result" hidden>
-          <h2>Setup link</h2>
-          <p>Send this once. The account stays off until they open it and choose a password.</p>
+          <h2 data-i18n="user.setupTitle">Setup link</h2>
+          <p data-i18n="user.setupLead">Send this once. The account stays off until they open it and choose a password.</p>
           <div class="url-line">
             <code id="invite-url"></code>
-            <button type="button" id="copy-invite" class="btn sm">Copy</button>
+            <button type="button" id="copy-invite" class="btn sm" data-i18n="action.copy">Copy</button>
           </div>
-          <div class="form-actions"><a class="btn" href="/users">Done</a></div>
+          <div class="form-actions"><a class="btn" href="/users" data-i18n="action.done">Done</a></div>
         </section>
         <section id="exceptional" class="exceptional" hidden>
           <button type="button" class="exceptional-toggle" id="exceptional-toggle" aria-expanded="false" aria-controls="exceptional-body">
             <i class="caret" aria-hidden="true"></i>
             <span class="exceptional-copy">
               <span class="exceptional-title">
-                <h2>Exceptional permissions</h2>
-                <span class="exception-count" id="exception-count">No exceptions</span>
-                <span class="unsaved" id="exception-unsaved" hidden>Unsaved</span>
+                <h2 data-i18n="user.exceptional">Exceptional permissions</h2>
+                <span class="exception-count" id="exception-count" data-i18n="user.noExceptions">No exceptions</span>
+                <span class="unsaved" id="exception-unsaved" data-i18n="user.unsaved" hidden>Unsaved</span>
               </span>
-              <p>These choices apply only to this person. They do not change the shared role, and they do not change anyone else who has that role.</p>
+              <p data-i18n="user.exceptionLead">These choices apply only to this person. They do not change the shared role, and they do not change anyone else who has that role.</p>
             </span>
           </button>
           <div id="exceptional-body" hidden>
             <div class="override-head">
-              <span>Permission</span>
-              <span>Role</span>
-              <span>Exception</span>
+              <span data-i18n="user.permission">Permission</span>
+              <span data-i18n="field.role">Role</span>
+              <span data-i18n="user.exception">Exception</span>
             </div>
             <div id="exceptional-rows"></div>
             <p class="err" id="exceptional-error"></p>
-            <p class="saved-note" id="exceptional-saved" hidden>Permissions saved.</p>
+            <p class="saved-note" id="exceptional-saved" data-i18n="user.saved" hidden>Permissions saved.</p>
             <div class="form-actions">
-              <button type="button" class="btn" id="save-exceptional" hidden>Save permissions</button>
+              <button type="button" class="btn" id="save-exceptional" data-i18n="action.savePerms" hidden>Save permissions</button>
             </div>
           </div>
         </section>
@@ -111,7 +112,7 @@
     return status === "Active" ? "ok" : "off";
   }
   function fail(xhr, target) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the user";
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not update the user", "تعذر تحديث المستخدم");
     $(target).text(message);
   }
   const userId = Number($("body").attr("data-user-id"));
@@ -121,17 +122,22 @@
     const canEditProfile = directoryAdmin(viewer);
     const canOverrides = holds(viewer, "MANAGE_USER_PERMISSION_OVERRIDES");
     if (!orgId) {
-      $("#form-error").text("Open a hospital first");
+      $("#form-error").text(mqText("Open a hospital first", "افتح مستشفى أولاً"));
       return;
     }
     const base = "/api/organizations/" + orgId + "/users/" + userId;
     $("#edit-user").prop("hidden", !canEditProfile);
     $("#profile-summary").prop("hidden", canEditProfile);
-    $("#page-title").text(canEditProfile ? "Edit user" : "Exceptional permissions");
+    function paintTitle() {
+      const title = canEditProfile ? mqText("Edit user", "تعديل المستخدم") : mqText("Exceptional permissions", "صلاحيات استثنائية");
+      $("#page-title").text(title);
+      document.title = title;
+    }
+    paintTitle();
 
     function exceptionNote(roleGranted, effect) {
-      if (effect === "DENY" && roleGranted) return "Explicit denial. The role grants this, and this person does not.";
-      if (effect === "ALLOW" && !roleGranted) return "Explicit grant. The role does not include this, and this person does.";
+      if (effect === "DENY" && roleGranted) return mqText("Explicit denial. The role grants this, and this person does not.", "منع صريح. الدور يمنح هذا، وهذا الشخص لا يملكه.");
+      if (effect === "ALLOW" && !roleGranted) return mqText("Explicit grant. The role does not include this, and this person does.", "منح صريح. الدور لا يشمل هذا، وهذا الشخص يملكه.");
       return "";
     }
     function effectButton(effect, value, label) {
@@ -149,16 +155,16 @@
         const note = row.note || exceptionNote(roleGranted, effect);
         return "<div class='override-row" + mark + "' data-permission='" + esc(row.permission) +
           "' data-saved='" + esc(effect) + "' data-role-granted='" + (roleGranted ? "1" : "0") + "'>" +
-          "<div><strong>" + esc(row.label) + "</strong><small>" + esc(row.description) + "</small>" +
+          "<div><strong>" + esc(mqPerm(row.permission, row.label)) + "</strong><small>" + esc(mqPermHelp(row.permission, row.description)) + "</small>" +
           "<small class='override-note'" + (note ? "" : " hidden") + ">" + esc(note) + "</small></div>" +
           "<div class='role-state" + (roleGranted ? " granted" : "") + "'>" +
-          (roleGranted ? "Granted" : "Not granted") + "</div>" +
-          "<div class='effect-choice' role='group' aria-label='Exception for " + esc(row.label) + "'>" +
-          effectButton(effect, "INHERIT", "Inherit") +
-          effectButton(effect, "ALLOW", "Allow") +
-          effectButton(effect, "DENY", "Deny") +
+          esc(roleGranted ? mqText("Granted", "ممنوح") : mqText("Not granted", "غير ممنوح")) + "</div>" +
+          "<div class='effect-choice' role='group' aria-label='" + esc(mqText("Exception for ", "استثناء لـ ") + mqPerm(row.permission, row.label)) + "'>" +
+          effectButton(effect, "INHERIT", esc(mqText("Inherit", "وراثة"))) +
+          effectButton(effect, "ALLOW", esc(mqText("Allow", "سماح"))) +
+          effectButton(effect, "DENY", esc(mqText("Deny", "منع"))) +
           "</div></div>";
-      }).join("") || "<p>No permissions can be overridden for one person.</p>");
+      }).join("") || "<p>" + esc(mqText("No permissions can be overridden for one person.", "لا يمكن استثناء صلاحيات لشخص واحد.")) + "</p>");
       showExceptional(false);
       refreshExceptionChrome();
     }
@@ -177,7 +183,7 @@
       }).length;
       const dirty = permissionsDirty();
       $("#exception-count")
-        .text(count === 0 ? "No exceptions" : count === 1 ? "1 exception" : count + " exceptions")
+        .text(count === 0 ? mqText("No exceptions", "لا استثناءات") : mqCount(count, "exception", "exceptions", "استثناء", "استثناءات"))
         .toggleClass("has-some", count > 0);
       $("#exception-unsaved").prop("hidden", !dirty);
       $("#exceptional").toggleClass("is-dirty", dirty);
@@ -207,6 +213,34 @@
       });
     }
 
+    let profileUser = null;
+    let roleRows = [];
+    let assessorRows = [];
+    let departmentRows = [];
+    function paintChoices() {
+      if (!canEditProfile || !roleRows.length) return;
+      const roleId = $("#role").val();
+      const assessorId = $("#assessor").val();
+      const departmentId = $("#department").val();
+      const selected = $("#departments input:checked").map(function () { return Number(this.value); }).get();
+      $("#role").html(roleRows.map(function (row) {
+        return "<option value='" + row.id + "' data-scope='" + esc(row.scopeMode) + "'>" + esc(mqRole(row.roleCode, row.name)) + "</option>";
+      }).join("")).val(roleId);
+      $("#assessor").html(assessorRows.map(function (row) {
+        const name = mqLang() === "ar" ? (row.nameAr || row.nameEn || row.code) : (row.nameEn || row.code);
+        return "<option value='" + row.id + "'>" + esc(name) + "</option>";
+      }).join("")).val(assessorId);
+      $("#department").html(departmentRows.map(function (row) {
+        const name = mqLang() === "ar" ? (row.nameAr || row.nameEn) : (row.nameEn || row.nameAr);
+        return "<option value='" + row.id + "'>" + esc(row.code) + " " + esc(name) + "</option>";
+      }).join("")).val(departmentId);
+      $("#departments").html(departmentRows.map(function (row) {
+        const checked = selected.indexOf(row.id) >= 0 ? " checked" : "";
+        return "<label class='choice'><input type='checkbox' value='" + row.id + "'" + checked + "><span>" +
+          esc(row.code) + " " + esc(mqLang() === "ar" ? (row.nameAr || row.nameEn) : (row.nameEn || row.nameAr)) + "</span></label>";
+      }).join(""));
+      showScope();
+    }
     const ready = canEditProfile ? $.when(
       api("GET", "/api/organizations/" + orgId + "/roles"),
       api("GET", "/api/assessors"),
@@ -216,39 +250,32 @@
 
     ready.done(function (userRes, assessorRes, departmentRes, personRes) {
       const user = canEditProfile ? personRes[0].data : userRes.data;
+      profileUser = user;
       const display = ((user.firstName || "") + (user.lastName ? " " + user.lastName : "")).trim() || user.email;
       $("#form-avatar").text((display || "?").slice(0, 1).toUpperCase());
       $("#form-who").text(display);
-      $("#form-status").text(user.status || "").attr("class", "status " + statusClass(user.status)).prop("hidden", !user.status);
+      $("#form-status").text(mqStatus(user.status || "")).attr("class", "status " + statusClass(user.status)).prop("hidden", !user.status);
       if (!canEditProfile) {
-        $("#summary-line").text((user.roleName || "No role") + " · " + (user.email || ""));
+        $("#summary-line").text((mqRole(user.roleCode, user.roleName) || mqText("No role", "بدون دور")) + " · " + (user.email || ""));
         loadExceptional();
         return;
       }
-      const roles = userRes[0].data;
-      const assessors = assessorRes[0].data;
-      const departments = departmentRes[0].data;
+      roleRows = userRes[0].data || [];
+      assessorRows = assessorRes[0].data || [];
+      departmentRows = departmentRes[0].data || [];
       $("#first").val(user.firstName || "");
       $("#last").val(user.lastName || "");
       $("#email").val(user.email || "");
       $("#enabled").prop("checked", user.enabled);
-      $("#role").html(roles.map(function (row) {
-        return "<option value='" + row.id + "' data-scope='" + esc(row.scopeMode) + "'>" + esc(row.name) + "</option>";
-      }).join("")).val(String(user.roleId));
-      $("#assessor").html(assessors.map(function (row) {
-        return "<option value='" + row.id + "'>" + esc(row.nameEn || row.code) + "</option>";
-      }).join(""));
-      if (user.assessorId) $("#assessor").val(String(user.assessorId));
-      $("#department").html(departments.map(function (row) {
-        return "<option value='" + row.id + "'>" + esc(row.code) + " " + esc(row.nameAr) + "</option>";
-      }).join(""));
-      if (user.departmentId) $("#department").val(String(user.departmentId));
       const selected = user.departmentIds || [];
-      $("#departments").html(departments.map(function (row) {
+      $("#departments").html(departmentRows.map(function (row) {
         const checked = selected.indexOf(row.id) >= 0 ? " checked" : "";
-        return "<label class='choice'><input type='checkbox' value='" + row.id + "'" + checked + "><span>" +
-          esc(row.code) + " " + esc(row.nameAr) + "</span></label>";
+        return "<label class='choice'><input type='checkbox' value='" + row.id + "'" + checked + "><span></span></label>";
       }).join(""));
+      paintChoices();
+      $("#role").val(String(user.roleId));
+      if (user.assessorId) $("#assessor").val(String(user.assessorId));
+      if (user.departmentId) $("#department").val(String(user.departmentId));
       showScope();
       loadExceptional();
       $("#first").trigger("focus");
@@ -324,10 +351,34 @@
         fail(xhr, "#exceptional-error");
       });
     });
+    document.addEventListener("mq-lang", function () {
+      paintTitle();
+      if (profileUser && profileUser.status) $("#form-status").text(mqStatus(profileUser.status));
+      if (!canEditProfile && profileUser) {
+        $("#summary-line").text((mqRole(profileUser.roleCode, profileUser.roleName) || mqText("No role", "بدون دور")) + " · " + (profileUser.email || ""));
+      }
+      paintChoices();
+      $("#exceptional-rows .override-row").each(function () {
+        const row = $(this);
+        const code = row.attr("data-permission");
+        const granted = row.attr("data-role-granted") === "1";
+        row.find("strong").first().text(mqPerm(code, row.find("strong").first().text()));
+        row.find("small").not(".override-note").first().text(mqPermHelp(code, row.find("small").not(".override-note").first().text()));
+        row.find(".role-state").text(granted ? mqText("Granted", "ممنوح") : mqText("Not granted", "غير ممنوح"));
+        row.find(".effect-option").each(function () {
+          const effect = $(this).attr("data-effect");
+          $(this).text(effect === "ALLOW" ? mqText("Allow", "سماح") : effect === "DENY" ? mqText("Deny", "منع") : mqText("Inherit", "وراثة"));
+        });
+        const effect = row.find(".effect-option.on").attr("data-effect");
+        const note = exceptionNote(granted, effect);
+        row.find(".override-note").text(note).prop("hidden", !note);
+      });
+      refreshExceptionChrome();
+    });
     $("#copy-invite").on("click", function () {
       const button = $(this);
       navigator.clipboard.writeText($("#invite-url").text()).then(function () {
-        button.text("Copied");
+        button.attr("data-i18n", "action.copied").text(mqT("action.copied"));
       });
     });
   });

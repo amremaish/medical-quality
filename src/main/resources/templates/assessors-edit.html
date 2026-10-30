@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Edit assessor</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.assessorEdit">Edit assessor</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body th:attr="data-assessor-id=${assessorId}">
@@ -12,25 +13,25 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/assessors">Assessors</a>
+      <a class="back" href="/assessors" data-i18n="page.assessors">Assessors</a>
       <section class="panel form-screen">
         <div class="form-intro">
           <span class="avatar lg" id="form-avatar">?</span>
           <div>
-            <h1>Edit assessor</h1>
-            <p id="form-who">Loading…</p>
+            <h1 data-i18n="page.assessorEdit">Edit assessor</h1>
+            <p id="form-who" data-i18n="page.loading">Loading…</p>
             <span id="form-status" class="status" hidden></span>
           </div>
         </div>
         <form id="edit-assessor" class="stack">
-          <div><label for="code">Code</label><input id="code" required maxlength="20"></div>
-          <div><label for="name-en">English name</label><input id="name-en" required maxlength="200"></div>
-          <div id="name-ar-field"><label for="name-ar">Arabic name</label><input id="name-ar" required maxlength="200" dir="rtl"></div>
-          <div id="note-field"><label for="note">Note</label><input id="note" maxlength="300"></div>
+          <div><label for="code" data-i18n="field.code">Code</label><input id="code" required maxlength="20"></div>
+          <div><label for="name-en" data-i18n="field.nameEn">English name</label><input id="name-en" required maxlength="200" dir="ltr"></div>
+          <div id="name-ar-field"><label for="name-ar" data-i18n="field.nameAr">Arabic name</label><input id="name-ar" required maxlength="200" dir="rtl"></div>
+          <div id="note-field"><label for="note" data-i18n="field.note">Note</label><input id="note" maxlength="300"></div>
           <fieldset class="option-group">
             <label class="choice" for="active">
               <input id="active" type="checkbox">
-              <span>Active<small>Inactive assessors stay in the list and cannot be chosen for new work.</small></span>
+              <span><span data-i18n="field.active">Active</span><small data-i18n="field.activeHint">Inactive assessors stay in the list and cannot be chosen for new work.</small></span>
             </label>
           </fieldset>
           <section id="departments" class="exceptional">
@@ -38,26 +39,26 @@
               <i class="caret" aria-hidden="true"></i>
               <span class="exceptional-copy">
                 <span class="exceptional-title">
-                  <h2>Departments</h2>
-                  <span class="exception-count" id="department-count">No departments</span>
+                  <h2 data-i18n="assessor.departments">Departments</h2>
+                  <span class="exception-count" id="department-count" data-i18n="assessor.none">No departments</span>
                 </span>
-                <p>Add or remove departments here. Save stores the profile and these departments together. A department has one assessor, so adding one replaces the person already there.</p>
+                <p data-i18n="assessor.deptLead">Add or remove departments here. Save stores the profile and these departments together. A department has one assessor, so adding one replaces the person already there.</p>
               </span>
             </button>
             <div id="departments-body" hidden>
               <div id="department-rows"></div>
               <div class="assign-department">
-                <label for="add-department">Department</label>
-                <select id="add-department"><option value="">Select a department</option></select>
-                <button type="button" class="btn" id="add-department-btn">Add</button>
+                <label for="add-department" data-i18n="field.department">Department</label>
+                <select id="add-department"><option value="" data-i18n="field.selectDept">Select a department</option></select>
+                <button type="button" class="btn" id="add-department-btn" data-i18n="action.add">Add</button>
               </div>
               <p class="err" id="department-error"></p>
             </div>
           </section>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/assessors">Cancel</a>
-            <button type="submit" class="btn" id="save-assessor">Save</button>
+            <a class="btn ghost" href="/assessors" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" class="btn" id="save-assessor" data-i18n="action.save">Save</button>
           </div>
         </form>
       </section>
@@ -73,7 +74,7 @@
     });
   }
   function fail(xhr) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the assessor";
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not update the assessor", "تعذر تحديث المقيّم");
     $("#form-error").text(message);
   }
   const assessorId = Number($("body").attr("data-assessor-id"));
@@ -85,7 +86,7 @@
     $("#departments-body").prop("hidden", !open);
   }
   function departmentFail(xhr) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the department";
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not update the department", "تعذر تحديث القسم");
     $("#department-error").text(message);
   }
   function showDepartments() {
@@ -96,19 +97,21 @@
     const assigned = {};
     list.forEach(function (row) { assigned[row.id] = true; });
     $("#department-count")
-      .text(count === 0 ? "No departments" : count === 1 ? "1 department" : count + " departments")
+      .text(count === 0 ? mqText("No departments", "لا أقسام") : mqCount(count, "department", "departments", "قسم", "أقسام"))
       .toggleClass("has-some", count > 0);
     $("#department-rows").html(list.map(function (row) {
       const status = row.status || "";
-      return "<div class='department-row'><div><strong>" + esc(row.code) + " " + esc(row.nameAr) +
-        "</strong><small>" + esc(row.nameEn) + "</small></div><div class='role-state" +
-        (status === "Active" ? " granted" : "") + "'>" + esc(status) + "</div>" +
-        "<button type='button' class='btn ghost sm' data-remove='" + row.id + "'>Remove</button></div>";
-    }).join("") || "<p>No departments are assigned to this assessor.</p>");
+      const primary = mqLang() === "ar" ? (row.nameAr || row.nameEn) : (row.nameEn || row.nameAr);
+      const other = mqLang() === "ar" ? row.nameEn : row.nameAr;
+      return "<div class='department-row'><div><strong>" + esc(row.code) + " " + esc(primary) +
+        "</strong><small>" + esc(other || "") + "</small></div><div class='role-state" +
+        (status === "Active" ? " granted" : "") + "'>" + esc(mqStatus(status)) + "</div>" +
+        "<button type='button' class='btn ghost sm' data-remove='" + row.id + "'>" + esc(mqText("Remove", "إزالة")) + "</button></div>";
+    }).join("") || "<p>" + esc(mqText("No departments are assigned to this assessor.", "لا توجد أقسام معيّنة لهذا المقيّم.")) + "</p>");
     const choices = hospitalDepartments.filter(function (row) { return !assigned[row.id]; });
-    $("#add-department").html("<option value=''>Select a department</option>" + choices.map(function (row) {
-      const name = row.nameEn || row.nameAr || row.code;
-      const current = row.assessorName ? " — currently " + row.assessorName : "";
+    $("#add-department").html("<option value=''>" + esc(mqText("Select a department", "اختر قسماً")) + "</option>" + choices.map(function (row) {
+      const name = mqLang() === "ar" ? (row.nameAr || row.nameEn || row.code) : (row.nameEn || row.nameAr || row.code);
+      const current = row.assessorName ? mqText(" — currently ", " — حالياً ") + row.assessorName : "";
       return "<option value='" + row.id + "' data-current='" + esc(row.assessorName || "") + "'>" +
         esc(row.code + " " + name + current) + "</option>";
     }).join(""));
@@ -116,10 +119,10 @@
   }
   api("GET", "/api/assessors/" + assessorId).done(function (res) {
     const row = res.data;
-    const name = row.nameEn || row.code;
+    const name = mqLang() === "ar" ? (row.nameAr || row.nameEn || row.code) : (row.nameEn || row.code);
     $("#form-avatar").text(String(name || "?").slice(0, 1).toUpperCase());
-    $("#form-who").text(name);
-    $("#form-status").text(row.active ? "Active" : "Inactive")
+    $("#form-who").removeAttr("data-i18n").text(name);
+    $("#form-status").text(row.active ? mqStatus("Active") : mqStatus("Inactive"))
       .attr("class", "status " + (row.active ? "ok" : "off")).prop("hidden", false);
     $("#code").val(row.code || "");
     $("#name-en").val(row.nameEn || "");
@@ -134,6 +137,18 @@
     }).fail(departmentFail);
     $("#code").trigger("focus");
   }).fail(fail);
+  document.addEventListener("mq-lang", function () {
+    const typed = mqLang() === "ar" ? ($("#name-ar").val() || $("#name-en").val()) : ($("#name-en").val() || $("#name-ar").val());
+    if (typed) {
+      $("#form-who").text(typed);
+      $("#form-avatar").text(String(typed).slice(0, 1).toUpperCase());
+    }
+    if ($("#form-status").text()) {
+      const active = $("#active").prop("checked");
+      $("#form-status").text(active ? mqStatus("Active") : mqStatus("Inactive"));
+    }
+    if (hospitalDepartments.length || assignedDepartments.length) showDepartments();
+  });
   $("#department-rows").on("click", "[data-remove]", function () {
     const departmentId = $(this).attr("data-remove");
     assignedDepartments = assignedDepartments.filter(function (row) {
@@ -148,7 +163,9 @@
     if (!source) return;
     const current = $("#add-department option:selected").attr("data-current");
     const mine = $("#name-en").val();
-    if (current && current !== mine && !window.confirm("This department is assigned to " + current + ". Assign it to this assessor instead?")) return;
+    if (current && current !== mine && !window.confirm(mqText(
+      "This department is assigned to " + current + ". Assign it to this assessor instead?",
+      "هذا القسم معيّن إلى " + current + ". هل يُعيَّن لهذا المقيّم بدلاً منه؟"))) return;
     assignedDepartments.push({
       id: source.id,
       code: source.code,

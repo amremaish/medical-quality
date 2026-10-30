@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New role</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.roleNew">New role</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,25 +13,25 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/roles">Roles</a>
+      <a class="back" href="/roles" data-i18n="page.roles">Roles</a>
       <section class="panel form-card">
-        <h1>New role</h1>
-        <p>A custom role can receive only the permissions you already hold, and only ones this hospital can assign.</p>
+        <h1 data-i18n="page.roleNew">New role</h1>
+        <p data-i18n="page.roleLead">A custom role can receive only the permissions you already hold, and only ones this hospital can assign.</p>
         <form id="create-role" class="stack">
-          <div><label for="name">Name</label><input id="name" required maxlength="100"></div>
-          <div><label for="scope">What this role can see</label>
+          <div><label for="name" data-i18n="field.orgName">Name</label><input id="name" required maxlength="100"></div>
+          <div><label for="scope" data-i18n="field.scope">What this role can see</label>
             <select id="scope" required>
-              <option value="HOSPITAL">Whole hospital</option>
-              <option value="ASSESSOR">Own assessments</option>
-              <option value="DEPARTMENT">One department</option>
-              <option value="DEPARTMENT_LIST">Assigned departments</option>
+              <option value="HOSPITAL" data-i18n="scope.hospital">Whole hospital</option>
+              <option value="ASSESSOR" data-i18n="scope.assessor">Own assessments</option>
+              <option value="DEPARTMENT" data-i18n="scope.department">One department</option>
+              <option value="DEPARTMENT_LIST" data-i18n="scope.list">Assigned departments</option>
             </select>
           </div>
-          <div><label>Permissions</label><div id="permissions" class="stack"></div></div>
+          <div><label data-i18n="field.permissions">Permissions</label><div id="permissions" class="stack"></div></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/roles">Cancel</a>
-            <button type="submit">Save role</button>
+            <a class="btn ghost" href="/roles" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.saveRole">Save role</button>
           </div>
         </form>
       </section>
@@ -56,21 +57,30 @@
     ["DELETE_AUDIT_ONLY", "Delete an audit"],
     ["DELETE_AUDIT_EVERYTHING", "Delete an audit and related records"]
   ];
-  $("#permissions").html(permissions.map(function (row) {
-    return "<label><input type='checkbox' value='" + row[0] + "'> " + row[1] + "</label>";
-  }).join(""));
+  let allowOverrides = false;
+  function paintPermissions() {
+    const selected = {};
+    $("#permissions input:checked").each(function () { selected[this.value] = true; });
+    const rows = permissions.slice();
+    if (allowOverrides) rows.push(["MANAGE_USER_PERMISSION_OVERRIDES", "Manage exceptional permissions"]);
+    $("#permissions").html(rows.map(function (row) {
+      const on = selected[row[0]] ? " checked" : "";
+      return "<label><input type='checkbox' value='" + row[0] + "'" + on + "> " + mqPerm(row[0], row[1]) + "</label>";
+    }).join(""));
+  }
+  document.addEventListener("mq-lang", paintPermissions);
+  paintPermissions();
   api("GET", "/api/auth/me").done(function (me) {
     if (me.data && me.data.superAdmin) {
-      $("#permissions").append(
-        "<label><input type='checkbox' value='MANAGE_USER_PERMISSION_OVERRIDES'> Manage exceptional permissions</label>"
-      );
+      allowOverrides = true;
+      paintPermissions();
     }
     const orgId = actingOrganizationId(me.data);
     $("#create-role").on("submit", function (event) {
       event.preventDefault();
       $("#form-error").text("");
       if (!orgId) {
-        $("#form-error").text("Open a hospital first");
+        $("#form-error").text(mqText("Open a hospital first", "افتح مستشفى أولاً"));
         return;
       }
       const selected = $("#permissions input:checked").map(function () { return this.value; }).get();
@@ -81,7 +91,7 @@
       }).done(function () {
         window.location.href = "/roles";
       }).fail(function (xhr) {
-        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not save the role");
+        $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not save the role", "تعذر حفظ الدور"));
       });
     });
   });

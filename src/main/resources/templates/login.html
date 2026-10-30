@@ -3,30 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="login.title">Sign in</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body class="login-page" data-page="login">
+  <button type="button" class="btn ghost lang-toggle login-lang" data-lang-toggle>العربية</button>
   <main class="login-split card">
     <section class="login-brand">
       <span class="brand-mark"><svg th:replace="~{fragments/shell :: i('hospital')}"></svg></span>
-      <h1>Medical quality</h1>
-      <p>One platform for every hospital. Standards, records, findings, and follow-up in the same workspace.</p>
+      <h1 data-i18n="login.brand">Medical quality</h1>
+      <p data-i18n="login.lead">One platform for every hospital. Standards, records, findings, and follow-up in the same workspace.</p>
     </section>
     <section class="login-panel">
-      <h1>Sign in</h1>
-      <p>Use your email and the password from your invitation.</p>
+      <h1 data-i18n="login.title">Sign in</h1>
+      <p data-i18n="login.hint">Use your email and the password from your invitation.</p>
       <form id="login-form" class="stack">
         <div>
-          <label for="username">Email or username</label>
+          <label for="username" data-i18n="login.user">Email or username</label>
           <input id="username" autocomplete="username" required>
         </div>
         <div>
-          <label for="password">Password</label>
+          <label for="password" data-i18n="login.password">Password</label>
           <input id="password" type="password" autocomplete="current-password" required>
         </div>
         <p class="err" id="login-error"></p>
-        <button type="submit">Sign in</button>
+        <button type="submit" data-i18n="login.submit">Sign in</button>
       </form>
     </section>
   </main>
@@ -46,7 +48,7 @@
         sessionStorage.setItem("mq_token", res.data.token);
         window.location.href = "/";
       }).fail(function (xhr) {
-        $("#login-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Login failed");
+        $("#login-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Login failed", "تعذر تسجيل الدخول"));
       });
     });
   </script>

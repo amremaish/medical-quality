@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Departments</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.departments">Departments</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -13,10 +14,10 @@
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
       <div class="page-head">
-        <div><h1>Departments</h1><p>Clinical areas this hospital works with. Each hospital keeps its own list.</p></div>
-        <a class="btn" id="new-department" href="/departments/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New department</a>
+        <div><h1 data-i18n="page.departments">Departments</h1><p data-i18n="page.departmentsLead">Clinical areas this hospital works with. Each hospital keeps its own list.</p></div>
+        <a class="btn" id="new-department" href="/departments/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.departmentNew">New department</span></a>
       </div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Head</th><th>Assessor</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.code">Code</th><th data-i18n="col.name">Name</th><th data-i18n="col.type">Type</th><th data-i18n="col.head">Head</th><th data-i18n="col.assessor">Assessor</th><th data-i18n="col.status">Status</th></tr></thead><tbody id="rows"></tbody></table></div>
     </main>
   </div>
 </div>
@@ -31,14 +32,27 @@
   api("GET", "/api/auth/me").done(function (res) {
     if (res.data.superAdmin || res.data.roleCode === "HOSPITAL_OWNER") $("#new-department").prop("hidden", false);
   });
+  let departmentRows = null;
+  let departmentError = "";
+  function paintDepartments() {
+    if (departmentError) {
+      $("#rows").html("<tr><td colspan='6' class='empty'>" + esc(departmentError) + "</td></tr>");
+      return;
+    }
+    if (!departmentRows) return;
+    $("#rows").html(departmentRows.map(function (row) {
+      const name = mqLang() === "ar" ? (row.nameAr || row.nameEn) : (row.nameEn || row.nameAr);
+      return "<tr><td>" + esc(row.code) + "</td><td dir='auto'>" + esc(name) + "</td><td><span class='pill'>" + esc(row.deptType) + "</span></td><td>" +
+        esc(row.headName) + "</td><td>" + esc(row.assessorName) + "</td><td>" + esc(mqStatus(row.status)) + "</td></tr>";
+    }).join("") || "<tr><td colspan='6' class='empty'>" + esc(mqText("This hospital has no departments yet", "لا توجد أقسام في هذا المستشفى بعد")) + "</td></tr>");
+  }
+  document.addEventListener("mq-lang", paintDepartments);
   api("GET", "/api/departments").done(function (res) {
-    $("#rows").html(res.data.map(function (row) {
-      return "<tr><td>" + esc(row.code) + "</td><td>" + esc(row.nameAr) + "</td><td><span class='pill'>" + esc(row.deptType) + "</span></td><td>" +
-        esc(row.headName) + "</td><td>" + esc(row.assessorName) + "</td><td>" + esc(row.status) + "</td></tr>";
-    }).join("") || "<tr><td colspan='6' class='empty'>This hospital has no departments yet</td></tr>");
+    departmentRows = res.data || [];
+    paintDepartments();
   }).fail(function (xhr) {
-    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load departments";
-    $("#rows").html("<tr><td colspan='6' class='empty'>" + esc(message) + "</td></tr>");
+    departmentError = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not load departments", "تعذر تحميل الأقسام");
+    paintDepartments();
   });
 </script>
 </body>

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New department</title>
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.departmentNew">New department</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -12,28 +13,28 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <a class="back" href="/departments">Departments</a>
+      <a class="back" href="/departments" data-i18n="page.departments">Departments</a>
       <section class="panel form-card">
-        <h1>New department</h1>
-        <p>Add a clinical area this hospital knows. The code must be unique across the whole platform.</p>
+        <h1 data-i18n="page.departmentNew">New department</h1>
+        <p data-i18n="page.departmentLead">Add a clinical area this hospital knows. The code must be unique across the whole platform.</p>
         <form id="create-department" class="stack">
-          <div><label for="code">Code</label><input id="code" maxlength="20" required></div>
-          <div><label for="nameAr">Arabic name</label><input id="nameAr" maxlength="200" required></div>
-          <div><label for="nameEn">English name</label><input id="nameEn" maxlength="200" required></div>
-          <div><label for="deptType">Type</label>
-            <select id="deptType" required><option value="">Select a type</option></select>
+          <div><label for="code" data-i18n="field.code">Code</label><input id="code" maxlength="20" required></div>
+          <div><label for="nameAr" data-i18n="field.nameAr">Arabic name</label><input id="nameAr" maxlength="200" required dir="rtl"></div>
+          <div><label for="nameEn" data-i18n="field.nameEn">English name</label><input id="nameEn" maxlength="200" required dir="ltr"></div>
+          <div><label for="deptType" data-i18n="field.type">Type</label>
+            <select id="deptType" required><option value="" data-i18n="field.selectType">Select a type</option></select>
           </div>
-          <div><label for="headName">Head</label><input id="headName" maxlength="200"></div>
-          <div><label for="coordinatorName">Coordinator</label><input id="coordinatorName" maxlength="200"></div>
-          <div><label for="assessorId">Assessor</label><select id="assessorId"><option value="">None</option></select></div>
-          <div><label for="status">Status</label>
-            <select id="status"><option>Active</option><option>Inactive</option></select>
+          <div><label for="headName" data-i18n="field.head">Head</label><input id="headName" maxlength="200"></div>
+          <div><label for="coordinatorName" data-i18n="field.coordinator">Coordinator</label><input id="coordinatorName" maxlength="200"></div>
+          <div><label for="assessorId" data-i18n="field.assessor">Assessor</label><select id="assessorId"><option value="" data-i18n="field.none">None</option></select></div>
+          <div><label for="status" data-i18n="field.status">Status</label>
+            <select id="status"><option value="Active" data-i18n="field.active">Active</option><option value="Inactive" data-i18n="field.inactive">Inactive</option></select>
           </div>
-          <div><label for="units">Units</label><textarea id="units" rows="4" placeholder="One unit name per line"></textarea></div>
+          <div><label for="units" data-i18n="field.units">Units</label><textarea id="units" rows="4" data-i18n-placeholder="field.unitsHint" placeholder="One unit name per line"></textarea></div>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
-            <a class="btn ghost" href="/departments">Cancel</a>
-            <button type="submit">Create department</button>
+            <a class="btn ghost" href="/departments" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" data-i18n="action.createDept">Create department</button>
           </div>
         </form>
       </section>
@@ -48,17 +49,35 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
+  let departmentTypes = [];
+  let assessorChoices = [];
+  function paintDepartmentChoices() {
+    const type = $("#deptType").val();
+    const assessorId = $("#assessorId").val();
+    const blank = "<option value=''>" + esc(mqT("field.none")) + "</option>";
+    $("#deptType").html("<option value=''>" + esc(mqT("field.selectType")) + "</option>" + departmentTypes.map(function (row) {
+      const name = row.nameEn || row.code;
+      const extra = row.examplesAr || "";
+      const label = extra ? name + " — " + extra : name;
+      return "<option value='" + esc(row.code) + "'>" + esc(label) + "</option>";
+    }).join(""));
+    if (type) $("#deptType").val(type);
+    $("#assessorId").html(blank + assessorChoices.map(function (assessor) {
+      const name = mqLang() === "ar" ? (assessor.nameAr || assessor.nameEn || assessor.code) : (assessor.nameEn || assessor.code);
+      return "<option value='" + assessor.id + "'>" + esc(name) + "</option>";
+    }).join(""));
+    if (assessorId) $("#assessorId").val(assessorId);
+  }
+  document.addEventListener("mq-lang", function () {
+    if (departmentTypes.length || assessorChoices.length) paintDepartmentChoices();
+  });
   api("GET", "/api/department-types").done(function (res) {
-    res.data.forEach(function (type) {
-      $("#deptType").append(
-        "<option value='" + esc(type.code) + "'>" + esc(type.nameEn) + " — " + esc(type.examplesAr) + "</option>"
-      );
-    });
+    departmentTypes = res.data || [];
+    paintDepartmentChoices();
   });
   api("GET", "/api/assessors").done(function (res) {
-    res.data.forEach(function (assessor) {
-      $("#assessorId").append("<option value='" + assessor.id + "'>" + esc(assessor.nameEn) + "</option>");
-    });
+    assessorChoices = res.data || [];
+    paintDepartmentChoices();
   });
   $("#create-department").on("submit", function (event) {
     event.preventDefault();
@@ -77,7 +96,7 @@
     }).done(function () {
       window.location.href = "/departments";
     }).fail(function (xhr) {
-      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not create department");
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not create department", "تعذر إنشاء القسم"));
     });
   });
 </script>
