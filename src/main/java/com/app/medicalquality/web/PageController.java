@@ -79,6 +79,12 @@ public class PageController {
         return "assessors";
     }
 
+    @GetMapping("/assessors/{id}")
+    public String editAssessor(@PathVariable("id") Long a_id, Model a_model) {
+        a_model.addAttribute("assessorId", a_id);
+        return "assessors-edit";
+    }
+
     @GetMapping("/findings")
     public String findings() {
         return "findings";

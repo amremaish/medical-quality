@@ -15,5 +15,7 @@ public interface AssessorRepository extends JpaRepository<Assessor, Long> {
 
     Optional<Assessor> findByIdAndOrganizationIdAndDeletedAtIsNull(Long a_id, Long a_organizationId);
 
+    boolean existsByCodeAndIdNot(String a_code, Long a_id);
+
     long countByDeletedAtIsNull();
 }

@@ -15,14 +15,14 @@
       <div class="page-head">
         <div>
           <h1>Organizations</h1>
-          <p>Hospitals and other facilities on the platform. Open one to work inside its dashboard.</p>
+          <p id="org-count">Hospitals and other facilities on the platform. Choose a name to work in that hospital.</p>
         </div>
         <a class="btn" href="/organizations/new"><svg th:replace="~{fragments/shell :: i('plus')}"></svg>New organization</a>
       </div>
       <p class="err" id="form-error"></p>
       <div class="table-card">
         <table class="data-table">
-          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Owner</th><th>Email</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Owner</th><th>Email</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -38,12 +38,22 @@
     });
   }
   api("GET", "/api/organizations").done(function (res) {
+    const opened = openedOrg();
+    const count = res.data.length;
+    $("#org-count").text(count === 1
+      ? "1 organization on the platform. Choose its name to work in that hospital."
+      : count + " organizations on the platform. Choose a name to work in that hospital.");
     $("#rows").html(res.data.map(function (row) {
-      return "<tr><td>" + esc(row.name) + "</td><td><span class='pill'>" + esc(row.orgType) +
-        "</span></td><td>" + esc(row.status) + "</td><td>" + esc(row.ownerName) + "</td><td>" + esc(row.ownerEmail) +
-        "</td><td><button type='button' class='ghost open-org' data-id='" + row.id + "' data-name='" + esc(row.name) +
-        "'>Open dashboard</button></td></tr>";
-    }).join("") || "<tr><td colspan='6' class='empty'>No organizations yet</td></tr>");
+      const current = opened && String(opened.id) === String(row.id);
+      const type = String(row.orgType || "").toLowerCase();
+      const typeLabel = type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
+      const active = row.status === "Active";
+      return "<tr class='" + (current ? "is-current" : "") + "'><td><button type='button' class='org-name open-org' data-id='" +
+        row.id + "' data-name='" + esc(row.name) + "'><strong>" + esc(row.name) + "</strong><small>" +
+        (current ? "Open now" : "Open hospital") + "</small></button></td><td><span class='pill quiet'>" +
+        esc(typeLabel) + "</span></td><td><span class='status " + (active ? "ok" : "off") + "'>" +
+        esc(row.status) + "</span></td><td>" + esc(row.ownerName) + "</td><td>" + esc(row.ownerEmail) + "</td></tr>";
+    }).join("") || "<tr><td colspan='5' class='empty'>No organizations yet</td></tr>");
   }).fail(function (xhr) {
     $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Organizations are limited to the platform super admin");
   });

@@ -26,14 +26,14 @@ function paint(row) {
   $("#hero").html(
     "<div><p>Good morning</p><h1>" + name + "</h1><p>" + title + ". Your quality work is ready.</p>" +
     "<div class='pills'>" +
-    pill("blue", "calendar", row.pendingAudits, "Pending audits") +
+    pill("blue", "clipboard", row.pendingAudits, "Pending audits") +
     pill("orange", "alert", row.openFindings, "Open findings") +
-    pill("green", "shield", row.openCapas, "Open CAPA") +
+    pill("green", "capa", row.openCapas, "Open CAPA") +
     "</div></div><div class='hero-art'><span>" + icon("stethoscope") + "</span><span>" + icon("clipboard") +
     "</span><span>" + icon("heart") + "</span></div>"
   );
   $("#kpis").html([
-    ["users", "Departments", row.departments, "/departments"],
+    ["grid", "Departments", row.departments, "/departments"],
     ["clipboard", "Audits", row.audits, "/audits"],
     ["calendar", "Completed", row.completedAudits, "/audits"],
     ["chart", "Compliance", row.averageCompliance + "%", window.location.pathname]
@@ -44,10 +44,10 @@ function paint(row) {
   $("#icon-stats").html([
     ["clipboard", row.audits, "Audits", "/audits"],
     ["stethoscope", "View", "Assessors", "/assessors"],
-    ["users", row.departments, "Departments", "/departments"],
+    ["grid", row.departments, "Departments", "/departments"],
     ["alert", row.openFindings, "Findings", "/findings"],
-    ["shield", row.openCapas, "CAPA", "/capas"],
-    ["card", row.evidence, "Evidence", "/evidence"]
+    ["capa", row.openCapas, "CAPA", "/capas"],
+    ["folder", row.evidence, "Evidence", "/evidence"]
   ].map(function (card) {
     return "<a class='icon-stat' href='" + card[3] + "'><span class='disc'>" + icon(card[0]) +
       "</span><b>" + card[1] + "</b><span>" + card[2] + "</span></a>";
@@ -56,8 +56,8 @@ function paint(row) {
   $("#ring").html("<h2>Average compliance</h2>" + ring(row.averageCompliance));
   $("#mini").html([
     ["alert", row.openFindings, "Open findings"],
-    ["shield", row.openCapas, "Open CAPA"],
-    ["card", row.evidence, "Evidence files"]
+    ["capa", row.openCapas, "Open CAPA"],
+    ["folder", row.evidence, "Evidence files"]
   ].map(function (card) {
     return "<div class='kpi'><span class='disc orange'>" + icon(card[0]) + "</span><div><b>" + card[1] +
       "</b><span>" + card[2] + "</span></div></div>";

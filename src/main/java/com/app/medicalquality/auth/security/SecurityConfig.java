@@ -68,6 +68,7 @@ public class SecurityConfig {
                                 "/departments",
                                 "/departments/**",
                                 "/assessors",
+                                "/assessors/**",
                                 "/findings",
                                 "/capas",
                                 "/capas/**",

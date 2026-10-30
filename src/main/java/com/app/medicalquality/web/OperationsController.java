@@ -114,6 +114,21 @@ public class OperationsController {
         return AppResponse.success(hospitalQueryService.assessors(a_authentication));
     }
 
+    @GetMapping("/api/assessors/{id}")
+    public ResponseEntity<AppResponse<HospitalQueryService.AssessorDetail>> assessor(
+            @PathVariable("id") Long a_id, Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.assessor(a_id, a_authentication));
+    }
+
+    @PutMapping("/api/assessors/{id}")
+    @HasPermission(PermissionEnum.MANAGE_ASSESSORS)
+    public ResponseEntity<AppResponse<HospitalQueryService.AssessorDetail>> updateAssessor(
+            @PathVariable("id") Long a_id,
+            @RequestBody HospitalQueryService.AssessorForm a_form,
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.updateAssessor(a_id, a_form, a_authentication));
+    }
+
     @GetMapping("/api/dashboard")
     public ResponseEntity<AppResponse<DashboardService.Summary>> dashboard(Authentication a_authentication) {
         requireDashboard(a_authentication);

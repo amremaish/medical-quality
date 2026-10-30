@@ -59,13 +59,72 @@ public class HospitalQueryService {
     public List<AssessorView> assessors(Authentication a_authentication) {
         Organization organization = hospitalContext.require(a_authentication);
         return assessorRepository.findByOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(organization.getId()).stream()
-                .map(a_assessor -> new AssessorView(
-                        a_assessor.getId(),
-                        a_assessor.getCode(),
-                        a_assessor.getNameEn(),
-                        a_assessor.getNameAr(),
-                        a_assessor.isActive()))
+                .map(this::assessorView)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AssessorDetail assessor(Long a_id, Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        return assessorDetail(loadAssessor(a_id, organization.getId()), organization.getId());
+    }
+
+    @Transactional
+    public AssessorDetail updateAssessor(Long a_id, AssessorForm a_form, Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        Assessor assessor = loadAssessor(a_id, organization.getId());
+        String code = required(a_form.getCode(), 20);
+        String nameAr = required(a_form.getNameAr(), 200);
+        String nameEn = required(a_form.getNameEn(), 200);
+        if (code == null || nameAr == null || nameEn == null) {
+            throw new AppException("error.assessor.fields");
+        }
+        if (assessorRepository.existsByCodeAndIdNot(code, assessor.getId())) {
+            throw new AppException("error.assessor.code_taken");
+        }
+        assessor.setCode(code);
+        assessor.setNameAr(nameAr);
+        assessor.setNameEn(nameEn);
+        assessor.setNote(optional(a_form.getNote(), 300));
+        assessor.setActive(Boolean.TRUE.equals(a_form.getActive()));
+        assessorRepository.save(assessor);
+        return assessorDetail(assessor, organization.getId());
+    }
+
+    private Assessor loadAssessor(Long a_id, Long a_organizationId) {
+        return assessorRepository
+                .findByIdAndOrganizationIdAndDeletedAtIsNull(a_id, a_organizationId)
+                .orElseThrow(() -> new NotFoundException("error.assessor.not_found"));
+    }
+
+    private AssessorView assessorView(Assessor a_assessor) {
+        return new AssessorView(
+                a_assessor.getId(),
+                a_assessor.getCode(),
+                a_assessor.getNameEn(),
+                a_assessor.getNameAr(),
+                a_assessor.isActive());
+    }
+
+    private AssessorDetail assessorDetail(Assessor a_assessor, Long a_organizationId) {
+        List<AssignedDepartment> departments = departmentRepository
+                .findByAssessorIdAndOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(a_assessor.getId(), a_organizationId)
+                .stream()
+                .map(a_department -> new AssignedDepartment(
+                        a_department.getId(),
+                        a_department.getCode(),
+                        a_department.getNameAr(),
+                        a_department.getNameEn(),
+                        a_department.getStatus()))
+                .toList();
+        return new AssessorDetail(
+                a_assessor.getId(),
+                a_assessor.getCode(),
+                a_assessor.getNameEn(),
+                a_assessor.getNameAr(),
+                a_assessor.getNote() == null ? "" : a_assessor.getNote(),
+                a_assessor.isActive(),
+                departments);
     }
 
     @Transactional
@@ -172,6 +231,27 @@ public class HospitalQueryService {
     public record DepartmentTypeView(String code, String nameEn, String examplesAr) {}
 
     public record AssessorView(Long id, String code, String nameEn, String nameAr, boolean active) {}
+
+    public record AssignedDepartment(Long id, String code, String nameAr, String nameEn, String status) {}
+
+    public record AssessorDetail(
+            Long id,
+            String code,
+            String nameEn,
+            String nameAr,
+            String note,
+            boolean active,
+            List<AssignedDepartment> departments) {}
+
+    @Getter
+    @Setter
+    public static class AssessorForm {
+        private String code;
+        private String nameAr;
+        private String nameEn;
+        private String note;
+        private Boolean active;
+    }
 
     @Getter
     @Setter

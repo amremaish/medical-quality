@@ -12,8 +12,11 @@
   <div class="workspace">
     <header th:replace="~{fragments/shell :: topbar}"></header>
     <main class="page">
-      <div class="page-head"><div><h1>Assessors</h1><p>People assigned to score departments.</p></div></div>
-      <div class="table-card"><table class="data-table"><thead><tr><th>Code</th><th>Name</th><th>Arabic</th><th>Active</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="page-head">
+        <div><h1>Assessors</h1><p id="assessor-count">People assigned to score departments.</p></div>
+      </div>
+      <div class="table-card"><table class="data-table"><thead><tr><th>Person</th><th>Arabic</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <p class="err" id="list-error"></p>
     </main>
   </div>
 </div>
@@ -25,10 +28,28 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
   }
-  api("GET", "/api/assessors").done(function (res) {
-    $("#rows").html(res.data.map(function (row) {
-      return "<tr><td>" + esc(row.code) + "</td><td>" + esc(row.nameEn) + "</td><td>" + esc(row.nameAr) + "</td><td><span class='pill'>" + (row.active ? "Active" : "Inactive") + "</span></td></tr>";
-    }).join("") || "<tr><td colspan='4' class='empty'>No assessors</td></tr>");
+  function fail(xhr) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not load assessors";
+    $("#list-error").text(message);
+  }
+  api("GET", "/api/auth/me").done(function (me) {
+    const canEdit = directoryAdmin(me.data) || holds(me.data, "MANAGE_ASSESSORS");
+    api("GET", "/api/assessors").done(function (res) {
+      const count = res.data.length;
+      $("#assessor-count").text(count === 1 ? "1 person assigned to score departments." : count + " people assigned to score departments.");
+      $("#rows").html(res.data.map(function (row) {
+        const name = row.nameEn || row.code;
+        const initial = String(name || "?").slice(0, 1).toUpperCase();
+        const status = row.active ? "Active" : "Inactive";
+        const action = canEdit
+          ? "<a class='btn ghost sm' href='/assessors/" + row.id + "'>Edit</a>"
+          : "";
+        return "<tr><td><div class='person'><span class='avatar sm'>" + esc(initial) + "</span><div><strong>" +
+          esc(name) + "</strong><small>" + esc(row.code) + "</small></div></div></td><td>" + esc(row.nameAr) +
+          "</td><td><span class='status " + (row.active ? "ok" : "off") + "'>" + status +
+          "</span></td><td class='actions'>" + action + "</td></tr>";
+      }).join("") || "<tr><td colspan='4' class='empty'>No assessors</td></tr>");
+    }).fail(fail);
   });
 </script>
 </body>

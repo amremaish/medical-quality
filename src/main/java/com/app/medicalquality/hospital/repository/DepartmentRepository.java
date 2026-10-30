@@ -16,6 +16,9 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     List<Department> findByAssessorIdAndDeletedAtIsNull(Long a_assessorId);
 
+    List<Department> findByAssessorIdAndOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(
+            Long a_assessorId, Long a_organizationId);
+
     Optional<Department> findByIdAndDeletedAtIsNull(Long a_id);
 
     Optional<Department> findByIdAndOrganizationIdAndDeletedAtIsNull(Long a_id, Long a_organizationId);

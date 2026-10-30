@@ -39,6 +39,10 @@ public final class ScreenGate {
             return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode)
                     || holds(a_superAdmin, a_permissions, "MANAGE_USER_PERMISSION_OVERRIDES");
         }
+        if (path.startsWith("/assessors/")) {
+            return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode)
+                    || holds(a_superAdmin, a_permissions, "MANAGE_ASSESSORS");
+        }
         String required = permissionFor(path);
         if (required == null) {
             return true;

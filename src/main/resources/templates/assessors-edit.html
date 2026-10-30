@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit assessor</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-assessor-id=${assessorId}">
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/assessors">Assessors</a>
+      <section class="panel form-screen">
+        <div class="form-intro">
+          <span class="avatar lg" id="form-avatar">?</span>
+          <div>
+            <h1>Edit assessor</h1>
+            <p id="form-who">Loading…</p>
+            <span id="form-status" class="status" hidden></span>
+          </div>
+        </div>
+        <form id="edit-assessor" class="stack">
+          <div><label for="code">Code</label><input id="code" required maxlength="20"></div>
+          <div><label for="name-en">English name</label><input id="name-en" required maxlength="200"></div>
+          <div id="name-ar-field"><label for="name-ar">Arabic name</label><input id="name-ar" required maxlength="200" dir="rtl"></div>
+          <div id="note-field"><label for="note">Note</label><input id="note" maxlength="300"></div>
+          <fieldset class="option-group">
+            <label class="choice" for="active">
+              <input id="active" type="checkbox">
+              <span>Active<small>Inactive assessors stay in the list and cannot be chosen for new work.</small></span>
+            </label>
+          </fieldset>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/assessors">Cancel</a>
+            <button type="submit" class="btn" id="save-assessor">Save assessor</button>
+          </div>
+        </form>
+        <section id="departments" class="exceptional">
+          <button type="button" class="exceptional-toggle" id="departments-toggle" aria-expanded="false" aria-controls="departments-body">
+            <i class="caret" aria-hidden="true"></i>
+            <span class="exceptional-copy">
+              <span class="exceptional-title">
+                <h2>Departments</h2>
+                <span class="exception-count" id="department-count">No departments</span>
+              </span>
+              <p>Departments this assessor is assigned to score. Changing an assignment is done on the department.</p>
+            </span>
+          </button>
+          <div id="departments-body" hidden>
+            <div id="department-rows"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function fail(xhr) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the assessor";
+    $("#form-error").text(message);
+  }
+  const assessorId = Number($("body").attr("data-assessor-id"));
+  function setDepartmentsOpen(open) {
+    $("#departments").toggleClass("is-open", open);
+    $("#departments-toggle").attr("aria-expanded", open ? "true" : "false");
+    $("#departments-body").prop("hidden", !open);
+  }
+  function showDepartments(rows) {
+    const list = rows || [];
+    const count = list.length;
+    $("#department-count")
+      .text(count === 0 ? "No departments" : count === 1 ? "1 department" : count + " departments")
+      .toggleClass("has-some", count > 0);
+    $("#department-rows").html(list.map(function (row) {
+      const status = row.status || "";
+      return "<div class='department-row'><div><strong>" + esc(row.code) + " " + esc(row.nameAr) +
+        "</strong><small>" + esc(row.nameEn) + "</small></div><div class='role-state" +
+        (status === "Active" ? " granted" : "") + "'>" + esc(status) + "</div></div>";
+    }).join("") || "<p>No departments are assigned to this assessor.</p>");
+  }
+  api("GET", "/api/assessors/" + assessorId).done(function (res) {
+    const row = res.data;
+    const name = row.nameEn || row.code;
+    $("#form-avatar").text(String(name || "?").slice(0, 1).toUpperCase());
+    $("#form-who").text(name);
+    $("#form-status").text(row.active ? "Active" : "Inactive")
+      .attr("class", "status " + (row.active ? "ok" : "off")).prop("hidden", false);
+    $("#code").val(row.code || "");
+    $("#name-en").val(row.nameEn || "");
+    $("#name-ar").val(row.nameAr || "");
+    $("#note").val(row.note || "");
+    $("#active").prop("checked", !!row.active);
+    showDepartments(row.departments);
+    $("#code").trigger("focus");
+  }).fail(fail);
+  $("#departments-toggle").on("click", function () {
+    setDepartmentsOpen(!$("#departments").hasClass("is-open"));
+  });
+  $("#edit-assessor").on("submit", function (event) {
+    event.preventDefault();
+    $("#form-error").text("");
+    $("#save-assessor").prop("disabled", true);
+    api("PUT", "/api/assessors/" + assessorId, {
+      code: $("#code").val(),
+      nameEn: $("#name-en").val(),
+      nameAr: $("#name-ar").val(),
+      note: $("#note").val(),
+      active: $("#active").prop("checked")
+    }).done(function () {
+      window.location.href = "/assessors";
+    }).fail(function (xhr) {
+      $("#save-assessor").prop("disabled", false);
+      fail(xhr);
+    });
+  });
+</script>
+</body>
+</html>

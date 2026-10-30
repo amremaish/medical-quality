@@ -59,6 +59,9 @@ function screenAllowed(path, me) {
   if (path === "/users" || path.indexOf("/users/") === 0) {
     return directoryAdmin(me) || holds(me, "MANAGE_USER_PERMISSION_OVERRIDES");
   }
+  if (path.indexOf("/assessors/") === 0) {
+    return directoryAdmin(me) || holds(me, "MANAGE_ASSESSORS");
+  }
   const required = permissionFor(path);
   if (required === null) return true;
   return holds(me, required);
@@ -127,6 +130,76 @@ function actingOrganizationId(me) {
   return me.organizationId;
 }
 
+function sprite(name) {
+  return "<svg class='icon' viewBox='0 0 24 24' aria-hidden='true'><use href='/icons/sprite.svg#" + name + "'></use></svg>";
+}
+
+function countLabel(count, singular, plural) {
+  if (count === 1) return "1 " + singular;
+  return count + " " + plural;
+}
+
+function pluralWord(count, singular, plural) {
+  return count === 1 ? singular : plural;
+}
+
+function auditLine(row) {
+  if (!row.audits) return "No audits yet";
+  if (!row.pendingAudits) return countLabel(row.audits, "audit, none pending", "audits, none pending");
+  if (row.pendingAudits === row.audits) return countLabel(row.pendingAudits, "audit in progress", "audits in progress");
+  return row.pendingAudits + " pending of " + row.audits;
+}
+
+function statusPill(href, tone, icon, value, label) {
+  return "<a class='stat-pill' href='" + href + "'><span class='disc " + tone + "'>" + sprite(icon) +
+    "</span><div><b>" + value + "</b><small>" + label + "</small></div></a>";
+}
+
+function setShellCount(linkId, countId, count, label) {
+  const badge = $(countId);
+  const link = $(linkId);
+  if (count > 0) {
+    badge.text(count > 99 ? "99+" : String(count)).prop("hidden", false);
+    link.attr("aria-label", label + ", " + countLabel(count, "open", "open"));
+  } else {
+    badge.prop("hidden", true).text("");
+    link.attr("aria-label", label);
+  }
+}
+
+function paintHome(row) {
+  if (!$("#home-status").length) return;
+  const board = firstDashboard() || "/dashboard";
+  const compliance = row.audits ? row.averageCompliance + "%" : "—";
+  const complianceLabel = row.audits ? "Compliance" : "No score yet";
+  $("#home-status").prop("hidden", false).html([
+    statusPill("/audits", "blue", "clipboard", row.pendingAudits, pluralWord(row.pendingAudits, "Pending audit", "Pending audits")),
+    statusPill("/findings", "orange", "alert", row.openFindings, "Open findings"),
+    statusPill("/capas", "green", "capa", row.openCapas, "Open CAPA"),
+    statusPill(board, "blue", "chart", compliance, complianceLabel)
+  ].join(""));
+  $("#home-audits").text(auditLine(row));
+  $("#home-compliance").text(row.audits ? row.averageCompliance + "% compliance" : "No compliance score yet");
+}
+
+function loadHospitalPulse() {
+  if (!document.body.classList.contains("is-org")) return;
+  if (firstDashboard()) {
+    api("GET", "/api/dashboard").done(function (res) {
+      const row = res.data;
+      setShellCount("#findings-link", "#findings-count", row.openFindings, "Findings");
+      setShellCount("#capa-link", "#capa-count", row.openCapas, "CAPA");
+      paintHome(row);
+    });
+  }
+  if ($("#home-records").length) {
+    api("GET", "/api/record-reviews").done(function (res) {
+      const count = (res.data || []).length;
+      $("#home-records").text(count ? countLabel(count, "review", "reviews") : "No reviews yet");
+    });
+  }
+}
+
 function showNav(me) {
   currentMe = me || null;
   const opened = openedOrg();
@@ -134,7 +207,7 @@ function showNav(me) {
   document.body.classList.remove("is-super", "is-org");
   $(".directory-nav").prop("hidden", !directoryAdmin(me));
   $(".users-nav").prop("hidden", !(directoryAdmin(me) || hasPerm("MANAGE_USER_PERMISSION_OVERRIDES")));
-  if (me.superAdmin && opened) {
+  if (me.superAdmin && opened && !isPlatform(path)) {
     document.body.classList.add("is-super", "is-org");
     $("#brand-org, #org-banner-name, #org-line").text(opened.name);
     $(".brand").attr("href", "/");
@@ -149,6 +222,7 @@ function showNav(me) {
     $("#org-line").text(me.organizationName || "Quality platform for hospitals");
   }
   applyControls();
+  loadHospitalPulse();
   if (!screenAllowed(path, me)) {
     const target = me.superAdmin && !opened ? "/organizations" : "/";
     if (path !== target) window.location.href = target;
@@ -173,6 +247,7 @@ $(function () {
   if ($("body").data("page") !== "login" && $("body").data("page") !== "setup") {
     requireAuth();
     markNav();
+    if (!$("main tbody").length) $(".search").attr("hidden", true);
     const today = new Date();
     $("#today-pill").text(today.toLocaleDateString(undefined, { month: "short", day: "numeric" }));
     api("GET", "/api/auth/me").done(function (res) {

@@ -50,6 +50,14 @@ class ScreenGateTest {
     }
 
     @Test
+    void assessorEditFollowsManageAssessors() {
+        assertTrue(ScreenGate.allowed("/assessors", false, false, RoleCodes.ASSESSOR, Set.of()));
+        assertFalse(ScreenGate.allowed("/assessors/3", false, false, RoleCodes.ASSESSOR, Set.of()));
+        assertTrue(ScreenGate.allowed("/assessors/3", false, false, "CUSTOM_ROLE", Set.of("MANAGE_ASSESSORS")));
+        assertTrue(ScreenGate.allowed("/assessors/3", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
+    }
+
+    @Test
     void manageDepartmentsDoesNotOpenDepartmentCreate() {
         assertFalse(ScreenGate.allowed(
                 "/departments/new", false, false, RoleCodes.QUALITY_SUPERVISOR, SUPERVISOR));

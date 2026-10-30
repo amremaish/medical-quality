@@ -12,27 +12,28 @@
     <div class="workspace">
       <header th:replace="~{fragments/shell :: topbar}"></header>
       <main class="page">
-        <section class="hero">
+        <section class="hero home-hero">
           <div>
-            <p>Good morning</p>
-            <h1 id="who">Quality workspace</h1>
-            <p id="org-line">Quality platform for hospitals</p>
-          </div>
-          <div class="hero-art">
-            <span><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg></span>
-            <span><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span>
-            <span><svg th:replace="~{fragments/shell :: i('file')}"></svg></span>
+            <p id="home-greet">Welcome</p>
+            <h1 id="org-line">Quality workspace</h1>
+            <div class="pills" id="home-status" hidden></div>
           </div>
         </section>
-        <div class="kpis">
-          <a class="kpi" href="/audits"><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b>GSR</b><span>29 standards, half-credit score</span></div></a>
-          <a class="kpi" href="/record-reviews"><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b>Records</b><span>10 files, legible, accurate, complete</span></div></a>
-          <a class="kpi" id="home-dashboard" href="/dashboard" data-perm="VIEW_COMMAND_CENTER,VIEW_EXECUTIVE_DASHBOARD,VIEW_ASSESSOR_DASHBOARD,VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden><span class="disc orange"><svg th:replace="~{fragments/shell :: i('chart')}"></svg></span><div><b>Dashboard</b><span>Compliance and open work</span></div></a>
+        <div class="home-links">
+          <a class="kpi" href="/audits"><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b>GSR audits</b><span id="home-audits">Audits in this hospital</span></div></a>
+          <a class="kpi" href="/record-reviews"><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b>Medical records</b><span id="home-records">Reviews in this hospital</span></div></a>
+          <a class="kpi" id="home-dashboard" href="/dashboard" data-perm="VIEW_COMMAND_CENTER,VIEW_EXECUTIVE_DASHBOARD,VIEW_ASSESSOR_DASHBOARD,VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden><span class="disc orange"><svg th:replace="~{fragments/shell :: i('chart')}"></svg></span><div><b>Dashboard</b><span id="home-compliance">Compliance for this hospital</span></div></a>
         </div>
       </main>
     </div>
   </div>
   <script th:src="@{/js/jquery.min.js}"></script>
   <script th:src="@{/js/api.js}"></script>
+  <script>
+    $(function () {
+      const hour = new Date().getHours();
+      $("#home-greet").text(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+    });
+  </script>
 </body>
 </html>
