@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quality policy</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page" id="main">
+      <p class="err" id="page-error" role="alert"></p>
+      <p class="policy-drift" id="drift" hidden>The group template changed after this version. Saving adopts the current template.</p>
+      <div class="policy-layout">
+        <section class="chart-card policy-side">
+          <label for="policy-search" id="search-label">Search settings</label>
+          <input id="policy-search" type="search" autocomplete="off">
+          <nav class="policy-nav" id="policy-nav" aria-label="Policy sections"></nav>
+        </section>
+        <div class="policy-main">
+          <section class="chart-card">
+            <h2 id="group-title">Assessor assignment</h2>
+            <div id="policy-fields"></div>
+            <div class="policy-actions" id="save-bar">
+              <div class="row" id="edit-controls">
+                <label id="effective-label">Effective date<input id="effective-from" type="date" required></label>
+                <label id="reason-label">Reason<input id="reason" maxlength="1000" required></label>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn" id="save-policy">Review and save</button>
+                <label class="btn ghost" id="import-label">Import<input id="import-policy" type="file" accept="application/json" hidden></label>
+                <button type="button" class="btn ghost" id="export-policy">Export</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <section class="policy-record">
+        <h2 id="history-title">History</h2>
+        <p class="quiet-text" id="history-intro">Each published version records who changed it and the old and new value.</p>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th id="col-version">Version</th>
+                <th id="col-status">Status</th>
+                <th id="col-effective">Effective</th>
+                <th id="col-who">Who</th>
+                <th id="col-changes">Changes</th>
+              </tr>
+            </thead>
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="policy-record">
+        <h2 id="violations-title">Open items that do not match</h2>
+        <p class="quiet-text" id="violations-intro">These stay on record. A new rule flags them and does not delete them.</p>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr><th id="col-detail">Detail</th></tr>
+            </thead>
+            <tbody id="violations"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<dialog id="confirm-dialog">
+  <form method="dialog" class="stack">
+    <h2>Confirm policy change</h2>
+    <div id="confirm-body"></div>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" id="confirm-cancel">Back</button>
+      <button type="submit" id="confirm-save" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script th:inline="none">
+  let page = null;
+  let lang = sessionStorage.getItem("mq_lang") || "en";
+  let dirty = false;
+  let activeGroup = "assessors";
+  let violationRows = [];
+  let captureEditors = false;
+  const overrides = {};
+  const drafts = {};
+  const NUMBER_PAIRS = {
+    "assessors.maxPerDepartmentByName": [0, 20],
+    "planning.frequencyByDepartment": [1, 60],
+    "planning.frequencyByRisk": [1, 60],
+    "capa.deadlineBySeverity": [1, 365],
+    "incidents.riskMatrix": [1, 60]
+  };
+  const DATE_LISTS = { "planning.blackoutDates": true, "notifications.holidays": true };
+  const RECORD_TEMPLATES = {
+    "indicators.items": { code: "", name: "", target: "", warnBelow: "", department: "", frequency: "", owner: "" },
+    "notifications.reports": { code: "", frequency: "" },
+    "incidents.classes": { code: "", investigateDays: 1 },
+    "workflow.escalation": { afterDays: 0, role: "" },
+    "findings.levels": {
+      code: "", labelEn: "", labelAr: "", definitionEn: "", definitionAr: "", escalate: false, evidenceRequired: false
+    }
+  };
+  const NAME_CHOICE = {
+    "assessors.maxPerDepartmentByName": "department",
+    "planning.frequencyByDepartment": "department",
+    "planning.frequencyByRisk": "risk",
+    "capa.deadlineBySeverity": "severity",
+    "findings.legacyAliases": "legacyKey",
+    "workflow.approvalChain": "approval"
+  };
+  const VALUE_CHOICE = { "findings.legacyAliases": "severity" };
+  const ITEM_CHOICE = {
+    "scoring.naApproverRoleCodes": "role",
+    "capa.rootCauseSeverities": "severity",
+    "capa.assigneeRoleCodes": "role",
+    "capa.verifierRoleCodes": "role",
+    "capa.extensionApproverRoleCodes": "role",
+    "committees.checklistEditors": "role",
+    "standards.frameworks": "framework",
+    "standards.applicability": "department",
+    "documents.approvalLevels": "role",
+    "notifications.recipients": "role",
+    "notifications.workingDays": "weekday",
+    "security.confidentialityLevels": "confidentiality",
+    "security.reportViewerRoleCodes": "role",
+    "workflow.approvalChain": "role"
+  };
+  const FIXED_CHOICES = {
+    severity: [["critical", "Critical", "حرج"], ["major", "Major", "جسيم"], ["minor", "Minor", "بسيط"], ["observation", "Observation", "ملاحظة"]],
+    risk: [["high", "High", "عالٍ"], ["medium", "Medium", "متوسط"], ["low", "Low", "منخفض"]],
+    framework: [["GAHAR", "GAHAR", "GAHAR"], ["JCI", "JCI", "JCI"], ["ISO_9001", "ISO 9001", "ISO 9001"], ["ISO_15189", "ISO 15189", "ISO 15189"], ["OTHER", "Other", "أخرى"]],
+    weekday: [["SUN", "Sunday", "الأحد"], ["MON", "Monday", "الاثنين"], ["TUE", "Tuesday", "الثلاثاء"], ["WED", "Wednesday", "الأربعاء"], ["THU", "Thursday", "الخميس"], ["FRI", "Friday", "الجمعة"], ["SAT", "Saturday", "السبت"]],
+    confidentiality: [["internal", "Internal", "داخلي"], ["restricted", "Restricted", "مقيّد"]],
+    legacyKey: [["High", "High", "عالٍ"], ["Medium", "Medium", "متوسط"], ["Low", "Low", "منخفض"]],
+    approval: [["auditPlan", "Audit plan", "خطة التدقيق"], ["report", "Report", "التقرير"], ["capaClosure", "CAPA closure", "إغلاق الإجراء"]],
+    language: [["en", "English", "الإنجليزية"], ["ar", "Arabic", "العربية"]],
+    calendar: [["gregorian", "Gregorian", "ميلادي"], ["hijri", "Hijri", "هجري"]]
+  };
+  const ROLE_LABELS = {
+    SYSTEM_ADMINISTRATOR: ["System administrator", "مدير النظام"],
+    HOSPITAL_OWNER: ["Hospital owner", "مالك المستشفى"],
+    QUALITY_DIRECTOR: ["Quality director", "مدير الجودة"],
+    QUALITY_SUPERVISOR: ["Quality supervisor", "مشرف الجودة"],
+    ASSESSOR: ["Assessor", "مقيّم"],
+    DEPARTMENT_COORDINATOR: ["Department coordinator", "منسق القسم"],
+    VIEW_ONLY: ["View only", "اطلاع فقط"]
+  };
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  function text(en, ar) { return lang === "ar" ? ar : en; }
+  function applyLang() {
+    document.documentElement.lang = lang === "ar" ? "ar" : "en";
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    $("#search-label").text(text("Search settings", "بحث في الإعدادات"));
+    $("#effective-label").contents().first()[0].textContent = text("Effective date", "تاريخ السريان");
+    $("#reason-label").contents().first()[0].textContent = text("Reason", "السبب");
+    $("#save-policy").text(text("Review and save", "مراجعة وحفظ"));
+    $("#import-label").contents().first()[0].textContent = text("Import", "استيراد");
+    $("#export-policy").text(text("Export", "تصدير"));
+    $("#history-title").text(text("History", "السجل"));
+    $("#history-intro").text(text(
+      "Each published version records who changed it and the old and new value.",
+      "كل إصدار منشور يسجل من غيّره والقيمة القديمة والجديدة."));
+    $("#violations-title").text(text("Open items that do not match", "عناصر مفتوحة لا تطابق القاعدة"));
+    $("#violations-intro").text(text(
+      "These stay on record. A new rule flags them and does not delete them.",
+      "تبقى في السجل. القاعدة الجديدة تعلّمها ولا تحذفها."));
+    $("#col-version").text(text("Version", "الإصدار"));
+    $("#col-status").text(text("Status", "الحالة"));
+    $("#col-effective").text(text("Effective", "السريان"));
+    $("#col-who").text(text("Who", "من"));
+    $("#col-changes").text(text("Changes", "التغييرات"));
+    $("#col-detail").text(text("Detail", "التفصيل"));
+    $("#drift").text(text(
+      "The group template changed after this version. Saving adopts the current template.",
+      "تغيّر قالب المجموعة بعد هذا الإصدار. الحفظ يعتمد القالب الحالي."));
+    $("#confirm-dialog h2").text(text("Confirm policy change", "تأكيد تغيير السياسة"));
+    $("#confirm-cancel").text(text("Back", "رجوع"));
+    $("#confirm-save").text(text("Save", "حفظ"));
+  }
+  function sourceLabel(source) {
+    if (source === "HOSPITAL") return text("Customized", "معدّل");
+    if (source === "GROUP") return text("Group", "المجموعة");
+    return text("Default", "افتراضي");
+  }
+  function showError(xhr, fallback) {
+    const body = xhr && xhr.responseJSON;
+    let message = body && body.message ? body.message : fallback;
+    if (body && Array.isArray(body.data)) {
+      message += " " + body.data.map(function (row) {
+        return row.key ? row.key + ": " + (row.message || row) : row;
+      }).join(" ");
+    }
+    $("#page-error").text(message);
+  }
+  function fieldValue(setting) {
+    if (Object.prototype.hasOwnProperty.call(overrides, setting.key)) return overrides[setting.key];
+    return setting.value;
+  }
+  function render() {
+    applyLang();
+    if (!page) return;
+    if (captureEditors) readAllEditors();
+    $("#drift").prop("hidden", !page.templateChanged);
+    const query = $("#policy-search").val().trim().toLowerCase();
+    const groups = [];
+    page.settings.forEach(function (setting) {
+      if (!groups.some(function (group) { return group.id === setting.group; })) {
+        groups.push({ id: setting.group, en: setting.groupLabelEn, ar: setting.groupLabelAr });
+      }
+    });
+    const active = groups.find(function (group) { return group.id === activeGroup; }) || groups[0];
+    $("#group-title").text(query
+      ? text("Search results", "نتائج البحث")
+      : (active ? text(active.en, active.ar) : ""));
+    $("#policy-nav").html(groups.map(function (group) {
+      const on = !query && group.id === activeGroup;
+      return "<button type='button' data-group='" + esc(group.id) + "'" +
+        (on ? " class='on' aria-current='true'" : "") + ">" + esc(text(group.en, group.ar)) + "</button>";
+    }).join(""));
+    const fields = page.settings.filter(function (setting) {
+      const label = text(setting.labelEn, setting.labelAr).toLowerCase();
+      const help = text(setting.helpEn, setting.helpAr).toLowerCase();
+      const matches = !query || label.indexOf(query) >= 0 || help.indexOf(query) >= 0 || setting.key.indexOf(query) >= 0;
+      return matches && (query || setting.group === activeGroup);
+    });
+    $("#policy-fields").html(fields.map(function (setting) {
+      const value = fieldValue(setting);
+      const badge = sourceLabel(Object.prototype.hasOwnProperty.call(overrides, setting.key) ? "HOSPITAL" : setting.source);
+      const control = controlFor(setting, value);
+      return "<article class='policy-field' id='field-" + esc(setting.key) + "'><div><div class='policy-meta'><h3>" +
+        esc(text(setting.labelEn, setting.labelAr)) + "</h3><span class='pill " +
+        (badge === text("Customized", "معدّل") ? "badge-custom" : "badge-default") + "'>" + esc(badge) +
+        "</span></div><p class='policy-help'>" + esc(text(setting.helpEn, setting.helpAr)) + "</p></div><div class='policy-control'>" +
+        control + (page.canEdit ? "<button type='button' class='btn ghost sm reset-setting' data-key='" + esc(setting.key) + "'>" +
+          esc(text("Reset", "إعادة الضبط")) + "</button>" : "") + "</div></article>";
+    }).join("") || "<p class='empty'>" + esc(text("No settings match.", "لا توجد إعدادات مطابقة.")) + "</p>");
+    $("#edit-controls, #save-policy, #import-label").prop("hidden", !page.canEdit);
+    $("#policy-fields input, #policy-fields textarea, #policy-fields select").prop("disabled", !page.canEdit);
+    captureEditors = true;
+  }
+  function controlFor(setting, value) {
+    const id = "set-" + setting.key;
+    if (setting.type === "bool") {
+      return "<label class='choice'><input type='checkbox' data-key='" + esc(setting.key) + "' id='" + esc(id) + "'" +
+        (value ? " checked" : "") + "><span>" + esc(text("On", "مفعّل")) + "</span></label>";
+    }
+    if (setting.type === "int" || setting.type === "decimal") {
+      return "<input type='number' data-key='" + esc(setting.key) + "' id='" + esc(id) + "' value='" + esc(value) + "'" +
+        (setting.min != null ? " min='" + setting.min + "'" : "") + (setting.max != null ? " max='" + setting.max + "'" : "") +
+        (setting.type === "decimal" ? " step='0.1'" : " step='1'") + ">";
+    }
+    if (setting.type === "json") return editorFor(setting, value);
+    if (setting.key === "notifications.language" || setting.key === "notifications.calendar") {
+      const kind = setting.key === "notifications.language" ? "language" : "calendar";
+      return selectControl(kind, value, "data-key='" + esc(setting.key) + "' id='" + esc(id) + "'", false);
+    }
+    return "<input data-key='" + esc(setting.key) + "' id='" + esc(id) + "' value='" + esc(value) + "'>";
+  }
+  function choiceOptions(kind, selected) {
+    if (kind === "department") {
+      const needle = String(selected || "").trim().toLowerCase();
+      return (page.departments || []).map(function (dept) {
+        const matched = needle && [dept.code, dept.nameEn, dept.nameAr].some(function (part) {
+          return part && String(part).trim().toLowerCase() === needle;
+        });
+        const label = text(dept.nameEn || dept.code, dept.nameAr || dept.nameEn || dept.code);
+        return { value: matched ? String(selected).trim() : (dept.code || dept.nameEn || ""), label: label };
+      });
+    }
+    if (kind === "role") {
+      return (page.roles || []).map(function (role) {
+        const known = ROLE_LABELS[role.roleCode];
+        return { value: role.roleCode, label: known ? text(known[0], known[1]) : (role.name || role.roleCode) };
+      });
+    }
+    return (FIXED_CHOICES[kind] || []).map(function (row) {
+      return { value: row[0], label: text(row[1], row[2]) };
+    });
+  }
+  function selectControl(kind, selected, attrs, allowBlank) {
+    const current = selected == null ? "" : String(selected);
+    const options = choiceOptions(kind, current);
+    let found = false;
+    let html = "<select " + attrs + ">";
+    if (allowBlank !== false) html += "<option value=''>" + esc(text("Select", "اختر")) + "</option>";
+    options.forEach(function (option) {
+      const on = option.value === current;
+      if (on) found = true;
+      html += "<option value='" + esc(option.value) + "'" + (on ? " selected" : "") + ">" + esc(option.label) + "</option>";
+    });
+    if (current && !found) html += "<option value='" + esc(current) + "' selected>" + esc(current) + "</option>";
+    return html + "</select>";
+  }
+  function kindOf(setting, value) {
+    if (NUMBER_PAIRS[setting.key]) return "pairs";
+    if (setting.key === "standards.applicability" || setting.key === "notifications.recipients" || setting.key === "workflow.approvalChain") return "groups";
+    if (RECORD_TEMPLATES[setting.key]) return "records";
+    if (setting.shape === "array" || Array.isArray(value)) {
+      const items = Array.isArray(value) ? value : [];
+      if (items.length && items[0] && typeof items[0] === "object") return "records";
+      return "list";
+    }
+    const obj = value && typeof value === "object" ? value : {};
+    const vals = Object.keys(obj).map(function (key) { return obj[key]; });
+    if (!vals.length) return "pairs";
+    if (vals.every(function (item) { return Array.isArray(item); })) return "groups";
+    if (vals.every(function (item) { return typeof item === "boolean"; })) return "flags";
+    if (vals.every(function (item) { return item == null || typeof item === "string" || typeof item === "number"; })) return "pairs";
+    return "mixed";
+  }
+  function fieldLabel(field) {
+    const labels = {
+      code: ["Code", "الرمز"],
+      name: ["Name", "الاسم"],
+      role: ["Role", "الدور"],
+      afterDays: ["Days overdue", "أيام التأخير"],
+      labelEn: ["English name", "الاسم بالإنجليزية"],
+      labelAr: ["Arabic name", "الاسم بالعربية"],
+      definitionEn: ["English definition", "التعريف بالإنجليزية"],
+      definitionAr: ["Arabic definition", "التعريف بالعربية"],
+      escalate: ["Escalate", "تصعيد"],
+      evidenceRequired: ["Evidence required", "الدليل مطلوب"],
+      investigateDays: ["Investigation days", "أيام التحقيق"],
+      target: ["Target", "المستهدف"],
+      warnBelow: ["Warn below", "التنبيه تحت"],
+      department: ["Department", "القسم"],
+      frequency: ["Frequency", "التكرار"],
+      owner: ["Owner", "المالك"],
+      requiredRoles: ["Required roles", "الأدوار المطلوبة"],
+      meetingEveryMonths: ["Meets every (months)", "الاجتماع كل (شهر)"],
+      coordinatorRequired: ["Coordinator required", "المنسق مطلوب"],
+      inApp: ["In app", "داخل التطبيق"],
+      email: ["Email", "البريد"],
+      sms: ["SMS", "رسالة نصية"],
+      whatsapp: ["WhatsApp", "واتساب"],
+      likelihood: ["Likelihood scale", "مقياس الاحتمال"],
+      impact: ["Impact scale", "مقياس الأثر"],
+      reviewMonths: ["Review every (months)", "المراجعة كل (شهر)"],
+      high: ["High", "عالٍ"],
+      medium: ["Medium", "متوسط"],
+      low: ["Low", "منخفض"]
+    };
+    const pair = labels[field];
+    return pair ? text(pair[0], pair[1]) : field;
+  }
+  function addLabel(setting) {
+    if (setting.key === "assessors.maxPerDepartmentByName" || setting.key === "planning.frequencyByDepartment") {
+      return text("Add department", "إضافة قسم");
+    }
+    if (DATE_LISTS[setting.key]) return text("Add date", "إضافة تاريخ");
+    if (/[Rr]ole/.test(setting.key) || setting.key === "documents.approvalLevels" || setting.key === "committees.checklistEditors") {
+      return text("Add role", "إضافة دور");
+    }
+    return text("Add", "إضافة");
+  }
+  function namePlaceholder(setting) {
+    if (setting.key === "assessors.maxPerDepartmentByName" || setting.key === "planning.frequencyByDepartment") {
+      return text("Department name or code", "اسم القسم أو رمزه");
+    }
+    if (setting.key === "capa.deadlineBySeverity") return text("Severity", "الشدة");
+    if (setting.key === "planning.frequencyByRisk") return text("Risk", "الخطورة");
+    if (setting.key === "standards.applicability") return text("Standard code", "رمز المعيار");
+    if (setting.key === "notifications.recipients") return text("Event", "الحدث");
+    if (setting.key === "workflow.approvalChain") return text("Approval", "الاعتماد");
+    return text("Name", "الاسم");
+  }
+  function removeButton() {
+    if (!page.canEdit) return "";
+    return "<button type='button' class='btn ghost sm' data-act='remove'>" + esc(text("Remove", "حذف")) + "</button>";
+  }
+  function addButton(label, extra) {
+    if (!page.canEdit) return "";
+    return "<button type='button' class='btn ghost sm' data-act='add'" + (extra || "") + ">" + esc(label) + "</button>";
+  }
+  function listInputType(setting, value) {
+    if (DATE_LISTS[setting.key]) return "date";
+    if (setting.key === "workflow.reminders") return "number";
+    const items = Array.isArray(value) ? value : [];
+    if (items.length && items.every(function (item) { return typeof item === "number"; })) return "number";
+    return "text";
+  }
+  function listRow(item, inputType, choice) {
+    const control = choice
+      ? selectControl(choice, item, "data-item")
+      : "<input data-item type='" + (inputType === "number" ? "number" : inputType === "date" ? "date" : "text") + "' value='" + esc(item) + "'>";
+    return "<div class='policy-list-row'>" + control + removeButton() + "</div>";
+  }
+  function pairRow(setting, row) {
+    const range = NUMBER_PAIRS[setting.key];
+    const numeric = !!range && !VALUE_CHOICE[setting.key];
+    const shown = row.value == null ? "" : row.value;
+    const nameChoice = NAME_CHOICE[setting.key];
+    const nameControl = nameChoice
+      ? selectControl(nameChoice, row.name, "data-name")
+      : "<input data-name placeholder='" + esc(namePlaceholder(setting)) + "' value='" + esc(row.name) + "'>";
+    const valueControl = VALUE_CHOICE[setting.key]
+      ? selectControl(VALUE_CHOICE[setting.key], shown, "data-value", false)
+      : "<input data-value" + (numeric ? " type='number' min='" + range[0] + "' max='" + range[1] + "' step='1'" : " type='text'") + " value='" + esc(shown) + "'>";
+    return "<div class='policy-pair'>" + nameControl + valueControl + removeButton() + "</div>";
+  }
+  function editorFor(setting, value) {
+    const kind = kindOf(setting, value);
+    const model = drafts[setting.key] || modelFrom(kind, value);
+    let body = "";
+    if (kind === "pairs") {
+      body = "<div class='policy-rows'>" + model.map(function (row) { return pairRow(setting, row); }).join("") + "</div>" +
+        (model.length ? "" : "<p class='policy-empty'>" + esc(text("None yet.", "لا يوجد بعد.")) + "</p>") +
+        addButton(addLabel(setting));
+    } else if (kind === "list") {
+      const choice = ITEM_CHOICE[setting.key] || "";
+      const inputType = choice ? "choice" : listInputType(setting, value);
+      body = "<div class='policy-rows' data-input='" + inputType + "'>" +
+        model.map(function (item) { return listRow(item, inputType, choice); }).join("") + "</div>" +
+        (model.length ? "" : "<p class='policy-empty'>" + esc(text("None yet.", "لا يوجد بعد.")) + "</p>") +
+        addButton(addLabel(setting));
+    } else if (kind === "flags") {
+      body = Object.keys(model).map(function (field) {
+        return "<label class='policy-flag'><input type='checkbox' data-flag='" + esc(field) + "'" +
+          (model[field] ? " checked" : "") + "><span>" + esc(fieldLabel(field)) + "</span></label>";
+      }).join("");
+    } else if (kind === "groups") {
+      const itemChoice = ITEM_CHOICE[setting.key] || "";
+      const nameChoice = NAME_CHOICE[setting.key];
+      body = "<div class='policy-rows'>" + model.map(function (group) {
+        const items = group.items || [];
+        const nameControl = nameChoice
+          ? selectControl(nameChoice, group.name, "data-name")
+          : "<input data-name placeholder='" + esc(namePlaceholder(setting)) + "' value='" + esc(group.name) + "'>";
+        return "<div class='policy-group'>" + nameControl +
+          "<div class='policy-rows'>" + items.map(function (item) { return listRow(item, itemChoice ? "choice" : "text", itemChoice); }).join("") + "</div>" +
+          addButton(itemChoice === "department" ? text("Add department", "إضافة قسم") : itemChoice === "role" ? text("Add role", "إضافة دور") : text("Add", "إضافة")) +
+          removeButton() + "</div>";
+      }).join("") + "</div>" +
+        (model.length ? "" : "<p class='policy-empty'>" + esc(text("None yet.", "لا يوجد بعد.")) + "</p>") +
+        addButton(text("Add", "إضافة"));
+    } else if (kind === "records") {
+      const template = RECORD_TEMPLATES[setting.key] || model[0] || {};
+      body = "<div class='policy-rows'>" + model.map(function (row) { return recordCard(setting.key, row, template); }).join("") + "</div>" +
+        (model.length ? "" : "<p class='policy-empty'>" + esc(text("None yet.", "لا يوجد بعد.")) + "</p>") +
+        addButton(text("Add", "إضافة"));
+    } else {
+      body = mixedFields(model);
+    }
+    const itemChoice = ITEM_CHOICE[setting.key] || "";
+    return "<div class='policy-editor' data-editor='" + kind + "' data-key='" + esc(setting.key) + "' data-item-choice='" + esc(itemChoice) + "'>" + body + "</div>";
+  }
+  function recordFieldChoice(settingKey, field) {
+    if (field === "department") return "department";
+    if (field === "role") return "role";
+    if (settingKey === "findings.levels" && field === "code") return "severity";
+    return "";
+  }
+  function recordCard(settingKey, row, template) {
+    const fields = Object.keys(template || row).map(function (field) {
+      const value = row[field] == null ? "" : row[field];
+      const sample = template ? template[field] : value;
+      const choice = recordFieldChoice(settingKey, field);
+      if (choice) {
+        return "<label class='policy-mixed-field'>" + esc(fieldLabel(field)) +
+          selectControl(choice, value, "data-field='" + esc(field) + "'") + "</label>";
+      }
+      if (typeof sample === "boolean" || typeof value === "boolean") {
+        return "<label class='policy-flag'><input type='checkbox' data-field='" + esc(field) + "'" +
+          (value ? " checked" : "") + "><span>" + esc(fieldLabel(field)) + "</span></label>";
+      }
+      const numeric = typeof sample === "number" || typeof value === "number";
+      return "<label class='policy-mixed-field'>" + esc(fieldLabel(field)) +
+        "<input data-field='" + esc(field) + "' type='" + (numeric ? "number" : "text") + "' value='" + esc(value) + "'></label>";
+    }).join("");
+    return "<div class='policy-record-item'>" + fields + removeButton() + "</div>";
+  }
+  function mixedFields(model) {
+    return Object.keys(model).map(function (field) {
+      const value = model[field];
+      if (typeof value === "boolean") {
+        return "<label class='policy-flag'><input type='checkbox' data-mixed='" + esc(field) + "' data-mixed-type='bool'" +
+          (value ? " checked" : "") + "><span>" + esc(fieldLabel(field)) + "</span></label>";
+      }
+      if (Array.isArray(value)) {
+        const choice = field === "requiredRoles" ? "role" : "";
+        return "<div class='policy-group' data-mixed='" + esc(field) + "' data-mixed-type='list'><span>" + esc(fieldLabel(field)) +
+          "</span><div class='policy-rows'>" + value.map(function (item) { return listRow(item, choice ? "choice" : "text", choice); }).join("") + "</div>" +
+          addButton(choice === "role" ? text("Add role", "إضافة دور") : text("Add", "إضافة"), " data-field='" + esc(field) + "' data-choice='" + choice + "'") + "</div>";
+      }
+      const numeric = typeof value === "number";
+      return "<label class='policy-mixed-field'>" + esc(fieldLabel(field)) +
+        "<input data-mixed='" + esc(field) + "' data-mixed-type='" + (numeric ? "number" : "text") +
+        "' type='" + (numeric ? "number" : "text") + "' value='" + esc(value) + "'></label>";
+    }).join("");
+  }
+  function modelFrom(kind, value) {
+    if (kind === "pairs") {
+      const obj = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      return Object.keys(obj).map(function (name) { return { name: name, value: obj[name] }; });
+    }
+    if (kind === "list") return Array.isArray(value) ? value.slice() : [];
+    if (kind === "groups") {
+      const obj = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      return Object.keys(obj).map(function (name) {
+        return { name: name, items: Array.isArray(obj[name]) ? obj[name].slice() : [] };
+      });
+    }
+    if (kind === "records") return Array.isArray(value) ? value.map(function (row) { return Object.assign({}, row); }) : [];
+    if (kind === "flags" || kind === "mixed") return Object.assign({}, value || {});
+    return value;
+  }
+  function blankRecord(key, rows) {
+    const template = RECORD_TEMPLATES[key] || (rows[0] ? rows[0] : { code: "" });
+    const blank = {};
+    Object.keys(template).forEach(function (field) {
+      blank[field] = typeof template[field] === "boolean" ? false : "";
+    });
+    return blank;
+  }
+  function sameJson(left, right) {
+    return JSON.stringify(normalizeJson(left)) === JSON.stringify(normalizeJson(right));
+  }
+  function normalizeJson(value) {
+    if (Array.isArray(value)) return value.map(normalizeJson);
+    if (value && typeof value === "object") {
+      const sorted = {};
+      Object.keys(value).sort().forEach(function (key) { sorted[key] = normalizeJson(value[key]); });
+      return sorted;
+    }
+    return value;
+  }
+  function commitValue(key, next) {
+    const setting = page.settings.find(function (row) { return row.key === key; });
+    const baseline = setting ? setting.value : null;
+    if (sameJson(baseline, next)) {
+      if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+        delete overrides[key];
+        dirty = true;
+      }
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(overrides, key) || !sameJson(overrides[key], next)) {
+      overrides[key] = next;
+      dirty = true;
+    }
+  }
+  function valueFrom(kind, model) {
+    if (kind === "pairs") {
+      const obj = {};
+      model.forEach(function (row) {
+        const name = String(row.name || "").trim();
+        if (!name || row.value === "") return;
+        obj[name] = row.value;
+      });
+      return obj;
+    }
+    if (kind === "list") {
+      return model.filter(function (item) { return item !== "" && item != null; });
+    }
+    if (kind === "groups") {
+      const obj = {};
+      model.forEach(function (group) {
+        const name = String(group.name || "").trim();
+        if (!name) return;
+        obj[name] = (group.items || []).map(function (item) { return String(item).trim(); }).filter(Boolean);
+      });
+      return obj;
+    }
+    if (kind === "records") {
+      return model.filter(function (row) {
+        return Object.keys(row).some(function (field) {
+          const item = row[field];
+          return item !== "" && item !== false && item != null;
+        });
+      });
+    }
+    if (kind === "mixed") {
+      const obj = {};
+      Object.keys(model).forEach(function (field) {
+        const item = model[field];
+        if (Array.isArray(item)) obj[field] = item.map(function (entry) { return String(entry).trim(); }).filter(Boolean);
+        else if (item !== "") obj[field] = item;
+      });
+      return obj;
+    }
+    return model;
+  }
+  function collectEditor(box) {
+    const kind = box.getAttribute("data-editor");
+    if (kind === "pairs") {
+      return Array.from(box.querySelectorAll(".policy-pair")).map(function (row) {
+        const input = row.querySelector("[data-value]");
+        const raw = input.value;
+        return { name: row.querySelector("[data-name]").value, value: input.type === "number" ? (raw === "" ? "" : Number(raw)) : raw };
+      });
+    }
+    if (kind === "list") {
+      return Array.from(box.querySelectorAll("[data-item]")).map(function (input) {
+        return input.type === "number" ? (input.value === "" ? "" : Number(input.value)) : input.value;
+      });
+    }
+    if (kind === "flags") {
+      const obj = {};
+      box.querySelectorAll("[data-flag]").forEach(function (input) { obj[input.getAttribute("data-flag")] = input.checked; });
+      return obj;
+    }
+    if (kind === "groups") {
+      return Array.from(box.querySelectorAll(":scope > .policy-rows > .policy-group")).map(function (group) {
+        return {
+          name: group.querySelector(":scope > [data-name]").value,
+          items: Array.from(group.querySelectorAll(":scope > .policy-rows [data-item]")).map(function (input) { return input.value; })
+        };
+      });
+    }
+    if (kind === "records") {
+      return Array.from(box.querySelectorAll(".policy-record-item")).map(function (card) {
+        const obj = {};
+        card.querySelectorAll("[data-field]").forEach(function (input) {
+          const field = input.getAttribute("data-field");
+          if (input.type === "checkbox") obj[field] = input.checked;
+          else if (input.type === "number") obj[field] = input.value === "" ? "" : Number(input.value);
+          else obj[field] = input.value;
+        });
+        return obj;
+      });
+    }
+    const obj = {};
+    box.querySelectorAll("[data-mixed]").forEach(function (node) {
+      const field = node.getAttribute("data-mixed");
+      const type = node.getAttribute("data-mixed-type");
+      if (type === "bool") obj[field] = node.checked;
+      else if (type === "number") obj[field] = node.value === "" ? "" : Number(node.value);
+      else if (type === "list") obj[field] = Array.from(node.querySelectorAll("[data-item]")).map(function (input) { return input.value; });
+      else obj[field] = node.value;
+    });
+    return obj;
+  }
+  function readEditor(box) {
+    if (!box || !page) return;
+    const key = box.getAttribute("data-key");
+    const kind = box.getAttribute("data-editor");
+    const model = collectEditor(box);
+    drafts[key] = model;
+    commitValue(key, valueFrom(kind, model));
+    const article = document.getElementById("field-" + key);
+    const pill = article && article.querySelector(".pill");
+    if (pill) {
+      const setting = page.settings.find(function (row) { return row.key === key; });
+      const custom = Object.prototype.hasOwnProperty.call(overrides, key);
+      const source = custom ? "HOSPITAL" : (setting ? setting.source : "DEFAULT");
+      pill.textContent = sourceLabel(source);
+      pill.className = "pill " + (source === "HOSPITAL" ? "badge-custom" : "badge-default");
+    }
+  }
+  function readAllEditors() {
+    document.querySelectorAll("#policy-fields [data-editor]").forEach(readEditor);
+  }
+  function clearDrafts() {
+    Object.keys(drafts).forEach(function (key) { delete drafts[key]; });
+  }
+  function readControl(input) {
+    const key = input.getAttribute("data-key");
+    const setting = page.settings.find(function (row) { return row.key === key; });
+    if (!setting) return;
+    if (setting.type === "bool") overrides[key] = input.checked;
+    else if (setting.type === "int") overrides[key] = Number(input.value);
+    else if (setting.type === "decimal") overrides[key] = Number(input.value);
+    else overrides[key] = input.value;
+    dirty = true;
+  }
+  function payload(confirm, acknowledge) {
+    readAllEditors();
+    const body = { overrides: overrides, effectiveFrom: $("#effective-from").val(), reason: $("#reason").val(), confirm: !!confirm };
+    if (acknowledge) body.acknowledgeWarnings = true;
+    return body;
+  }
+  function load() {
+    api("GET", "/api/quality-policy").done(function (res) {
+      page = res.data;
+      Object.keys(overrides).forEach(function (key) { delete overrides[key]; });
+      clearDrafts();
+      (page.settings || []).forEach(function (setting) {
+        if (setting.source === "HOSPITAL") overrides[setting.key] = setting.value;
+      });
+      dirty = false;
+      captureEditors = false;
+      if (page.language === "ar" || page.language === "en") {
+        lang = sessionStorage.getItem("mq_lang") || page.language;
+      }
+      const today = new Date();
+      const iso = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+      $("#effective-from").val(iso);
+      render();
+    }).fail(function (xhr) { showError(xhr, "Could not load the policy"); });
+    api("GET", "/api/quality-policy/versions").done(function (res) {
+      const rows = res.data || [];
+      $("#history").html(rows.length ? rows.map(function (row) {
+        const tone = row.status === "ACTIVE" ? "ok" : row.status === "PENDING_APPROVAL" || row.status === "SCHEDULED" ? "wait" : "off";
+        const changes = (row.changes || []).map(function (change) {
+          return "<li><code>" + esc(change.key) + "</code> " + esc(JSON.stringify(change.oldValue)) + " → " +
+            esc(JSON.stringify(change.newValue)) + "</li>";
+        }).join("");
+        return "<tr><td><strong>v" + row.versionNumber + "</strong><small class='quiet-text'> " + esc(row.reason) +
+          "</small></td><td><span class='status " + tone + "'>" + esc(row.status) + "</span></td><td class='nowrap'>" +
+          esc(row.effectiveFrom) + "</td><td>" + esc(row.actor) + "</td><td>" +
+          (changes ? "<ul class='policy-changes'>" + changes + "</ul>" : "—") + "</td></tr>";
+      }).join("") : "<tr><td colspan='5' class='empty'>" + esc(text("No published versions yet.", "لا توجد إصدارات منشورة بعد.")) + "</td></tr>");
+    });
+    api("GET", "/api/quality-policy/violations").done(function (res) {
+      violationRows = res.data || [];
+      $("#violations").html(violationRows.length ? violationRows.map(function (row) {
+        return "<tr><td>" + esc(row.detail) + "</td></tr>";
+      }).join("") : "<tr><td class='empty'>" + esc(text("None.", "لا يوجد.")) + "</td></tr>");
+    });
+  }
+  $("#policy-search").on("input", render);
+  $("#policy-nav").on("click", "button", function () {
+    activeGroup = this.getAttribute("data-group");
+    render();
+  });
+  $("#policy-fields").on("change", "input, textarea, select", function () {
+    const box = this.closest("[data-editor]");
+    if (box) {
+      readEditor(box);
+      return;
+    }
+    readAllEditors();
+    readControl(this);
+    captureEditors = false;
+    render();
+  });
+  $("#policy-fields").on("click", "[data-act]", function () {
+    const box = this.closest("[data-editor]");
+    if (!box) return;
+    if (this.getAttribute("data-act") === "remove") {
+      const row = this.closest(".policy-pair, .policy-list-row, .policy-group, .policy-record-item");
+      if (row && row !== box) row.remove();
+      readEditor(box);
+      return;
+    }
+    const innerGroup = this.closest(".policy-group");
+    if (innerGroup && this.parentElement === innerGroup) {
+      const choice = box.getAttribute("data-item-choice") || "";
+      innerGroup.querySelector(":scope > .policy-rows").insertAdjacentHTML("beforeend", listRow("", choice ? "choice" : "text", choice));
+      readEditor(box);
+      return;
+    }
+    if (this.getAttribute("data-field")) {
+      const host = this.closest("[data-mixed]");
+      const choice = this.getAttribute("data-choice") || "";
+      host.querySelector(".policy-rows").insertAdjacentHTML("beforeend", listRow("", choice ? "choice" : "text", choice));
+      readEditor(box);
+      return;
+    }
+    readEditor(box);
+    const key = box.getAttribute("data-key");
+    const kind = box.getAttribute("data-editor");
+    if (kind === "pairs") drafts[key].push({ name: "", value: "" });
+    else if (kind === "list") drafts[key].push("");
+    else if (kind === "groups") drafts[key].push({ name: "", items: [""] });
+    else if (kind === "records") drafts[key].push(blankRecord(key, drafts[key]));
+    captureEditors = false;
+    render();
+  });
+  $("#policy-fields").on("click", ".reset-setting", function () {
+    const key = this.getAttribute("data-key");
+    delete drafts[key];
+    delete overrides[key];
+    dirty = true;
+    captureEditors = false;
+    render();
+  });
+  $("#save-policy").on("click", function () {
+    $("#page-error").text("");
+    api("POST", "/api/quality-policy/versions", payload(false)).done(function (res) {
+      const data = res.data;
+      const lines = [
+        text("Open audits", "تدقيقات مفتوحة") + ": " + data.openAudits,
+        text("Open findings", "ملاحظات مفتوحة") + ": " + data.openFindings,
+        text("Open CAPA", "إجراءات مفتوحة") + ": " + data.openCapas
+      ];
+      (data.changes || []).forEach(function (change) {
+        lines.push(change.key + ": " + JSON.stringify(change.oldValue) + " → " + JSON.stringify(change.newValue));
+      });
+      (data.flags || []).forEach(function (flag) { lines.push(flag); });
+      (data.warnings || []).forEach(function (warning) { lines.push(warning); });
+      $("#confirm-body").html("<ul>" + lines.map(function (line) { return "<li>" + esc(line) + "</li>"; }).join("") + "</ul>");
+      $("#confirm-save").data("acknowledge", (data.warnings || []).length > 0);
+      document.getElementById("confirm-dialog").showModal();
+    }).fail(function (xhr) { showError(xhr, "Could not review the policy"); });
+  });
+  $("#confirm-cancel").on("click", function () { document.getElementById("confirm-dialog").close(); });
+  $("#confirm-dialog form").on("submit", function () {
+    api("POST", "/api/quality-policy/versions", payload(true, $("#confirm-save").data("acknowledge"))).done(function () {
+      dirty = false;
+      Object.keys(overrides).forEach(function (key) { delete overrides[key]; });
+      load();
+    }).fail(function (xhr) { showError(xhr, "Could not save the policy"); });
+  });
+  $("#export-policy").on("click", function () {
+    api("GET", "/api/quality-policy/export").done(function (res) {
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "quality-policy.json";
+      link.click();
+    }).fail(function (xhr) { showError(xhr, "Could not export"); });
+  });
+  $("#import-policy").on("change", function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const data = JSON.parse(reader.result);
+        Object.keys(overrides).forEach(function (key) { delete overrides[key]; });
+        clearDrafts();
+        Object.keys(data.overrides || {}).forEach(function (key) { overrides[key] = data.overrides[key]; });
+        dirty = true;
+        captureEditors = false;
+        render();
+        $("#reason").val($("#reason").val() || "Imported policy");
+      } catch (e) {
+        $("#page-error").text("The file is not valid JSON");
+      }
+    };
+    reader.readAsText(file);
+  });
+  window.addEventListener("beforeunload", function (event) {
+    if (!dirty) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+  load();
+</script>
+</body>
+</html>

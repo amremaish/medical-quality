@@ -14,16 +14,25 @@ public final class ComplianceCalculator {
     }
 
     public static ComplianceView fromCounts(int a_met, int a_partial, int a_not, int a_na, int a_total) {
+        return fromCounts(a_met, a_partial, a_not, a_na, a_total, 0.5);
+    }
+
+    public static ComplianceView fromCounts(
+            int a_met, int a_partial, int a_not, int a_na, int a_total, double a_partialWeight) {
         int denominator = a_total - a_na;
         int scored = a_met + a_partial + a_not + a_na;
         int percent = denominator > 0
-                ? (int) Math.round(((a_met + a_partial * 0.5) / denominator) * 100)
+                ? (int) Math.round(((a_met + a_partial * a_partialWeight) / denominator) * 100)
                 : 0;
         return new ComplianceView(
                 a_met, a_partial, a_not, a_na, a_total, denominator, scored, percent, a_total - scored);
     }
 
     public static ComplianceView fromValues(int a_total, Collection<String> a_values) {
+        return fromValues(a_total, a_values, 0.5);
+    }
+
+    public static ComplianceView fromValues(int a_total, Collection<String> a_values, double a_partialWeight) {
         int met = 0;
         int partial = 0;
         int not = 0;
@@ -39,7 +48,7 @@ public final class ComplianceCalculator {
                 na++;
             }
         }
-        return fromCounts(met, partial, not, na, a_total);
+        return fromCounts(met, partial, not, na, a_total, a_partialWeight);
     }
 
     public static String standardTone(int a_met, int a_partial, int a_not, int a_na, int a_total) {

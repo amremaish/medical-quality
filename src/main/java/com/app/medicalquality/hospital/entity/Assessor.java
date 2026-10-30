@@ -41,6 +41,9 @@ public class Assessor extends BaseEntity {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(name = "external_assessor", nullable = false)
+    private boolean external;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;

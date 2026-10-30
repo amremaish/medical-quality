@@ -17,4 +17,6 @@ public interface FindingRepository extends JpaRepository<Finding, Long> {
 
     Optional<Finding> findFirstByAuditIdAndGsrCodeAndStatusAndDeletedAtIsNull(
             Long a_auditId, String a_gsrCode, String a_status);
+
+    long countByDepartment_Organization_IdAndDeletedAtIsNullAndStatus(Long a_organizationId, String a_status);
 }

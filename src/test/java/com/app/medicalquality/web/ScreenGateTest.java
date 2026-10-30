@@ -158,6 +158,7 @@ class ScreenGateTest {
         assertFalse(ScreenGate.allowed("/dashboard", false, false, RoleCodes.ASSESSOR, assessor));
         assertFalse(ScreenGate.allowed("/imports", false, false, RoleCodes.ASSESSOR, assessor));
         assertFalse(ScreenGate.allowed("/users", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/quality-policy", false, false, RoleCodes.ASSESSOR, assessor));
 
         Set<String> coordinator = Set.of("MANAGE_CAPA", "MANAGE_EVIDENCE", "VIEW_ASSESSOR_DASHBOARD");
         assertTrue(ScreenGate.allowed("/capas", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
@@ -166,6 +167,17 @@ class ScreenGateTest {
         assertFalse(ScreenGate.allowed("/findings", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
         assertFalse(ScreenGate.allowed("/departments", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
         assertFalse(ScreenGate.allowed("/assessors", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+    }
+
+    @Test
+    void qualityPolicyRequiresItsOwnPrivilege() {
+        assertFalse(ScreenGate.allowed("/quality-policy", false, false, RoleCodes.ASSESSOR, Set.of("CONDUCT_AUDIT")));
+        assertTrue(ScreenGate.allowed(
+                "/quality-policy", false, false, RoleCodes.QUALITY_DIRECTOR, Set.of("QUALITY_POLICY_VIEW")));
+        assertTrue(ScreenGate.allowed(
+                "/quality-policy", false, false, RoleCodes.HOSPITAL_OWNER, Set.of("QUALITY_POLICY_EDIT")));
+        assertFalse(ScreenGate.allowed("/quality-policy", true, false, null, Set.of("QUALITY_POLICY_VIEW")));
+        assertTrue(ScreenGate.allowed("/quality-policy", true, true, null, Set.of()));
     }
 
     @Test

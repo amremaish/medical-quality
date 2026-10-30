@@ -76,6 +76,7 @@ public class SecurityConfig {
                                 "/evidence/**",
                                 "/imports",
                                 "/imports/**",
+                                "/quality-policy",
                                 "/hospitals",
                                 "/organizations",
                                 "/organizations/**",

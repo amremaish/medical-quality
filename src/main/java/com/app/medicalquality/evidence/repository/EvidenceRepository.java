@@ -13,6 +13,8 @@ public interface EvidenceRepository extends JpaRepository<Evidence, Long> {
 
     List<Evidence> findByAuditIdAndDeletedAtIsNull(Long a_auditId);
 
+    long countByFinding_IdAndDeletedAtIsNull(Long a_findingId);
+
     @EntityGraph(attributePaths = {"document", "audit", "audit.department", "department"})
     Optional<Evidence> findByDocument_IdAndDeletedAtIsNull(Long a_documentId);
 }

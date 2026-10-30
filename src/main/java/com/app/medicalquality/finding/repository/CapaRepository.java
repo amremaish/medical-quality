@@ -16,4 +16,11 @@ public interface CapaRepository extends JpaRepository<Capa, Long> {
     Optional<Capa> findByIdAndDeletedAtIsNull(Long a_id);
 
     List<Capa> findByFinding_Audit_IdAndDeletedAtIsNull(Long a_auditId);
+
+    long countByFinding_Department_Organization_IdAndDeletedAtIsNullAndStatusNot(
+            Long a_organizationId, String a_status);
+
+    @EntityGraph(attributePaths = {"finding", "finding.department"})
+    List<Capa> findByFinding_Department_Organization_IdAndDeletedAtIsNullAndStatusNot(
+            Long a_organizationId, String a_status);
 }

@@ -69,6 +69,9 @@ function screenAllowed(path, me) {
   if (path === "/assessors" || path.indexOf("/assessors/") === 0) {
     return directoryAdmin(me) || holds(me, "MANAGE_ASSESSORS");
   }
+  if (path === "/quality-policy") {
+    return holds(me, "QUALITY_POLICY_VIEW") || holds(me, "QUALITY_POLICY_EDIT");
+  }
   const required = permissionFor(path);
   if (required === null) return true;
   return holds(me, required);

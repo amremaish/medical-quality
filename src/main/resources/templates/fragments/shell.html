@@ -42,6 +42,7 @@
         <p class="nav-label">Organization</p>
         <a class="side-link" href="/departments" data-perm="MANAGE_DEPARTMENTS" hidden><svg th:replace="~{fragments/shell :: i('grid')}"></svg><span class="label">Departments</span></a>
         <a class="side-link" href="/assessors" data-perm="MANAGE_ASSESSORS" hidden><svg th:replace="~{fragments/shell :: i('stethoscope')}"></svg><span class="label">Assessors</span></a>
+        <a class="side-link" href="/quality-policy" data-perm="QUALITY_POLICY_VIEW,QUALITY_POLICY_EDIT" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">Quality policy</span></a>
         <a class="side-link users-nav" href="/users" hidden><svg th:replace="~{fragments/shell :: i('users')}"></svg><span class="label">Users</span></a>
         <a class="side-link directory-nav" href="/roles" hidden><svg th:replace="~{fragments/shell :: i('shield')}"></svg><span class="label">Roles</span></a>
       </div>

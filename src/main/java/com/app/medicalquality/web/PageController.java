@@ -120,6 +120,11 @@ public class PageController {
         return "import-new";
     }
 
+    @GetMapping("/quality-policy")
+    public String qualityPolicy() {
+        return "quality-policy";
+    }
+
     @GetMapping("/organizations")
     public String organizations() {
         return "organizations";

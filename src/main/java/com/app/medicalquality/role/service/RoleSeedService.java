@@ -38,7 +38,7 @@ public class RoleSeedService implements ApplicationRunner {
     public void run(ApplicationArguments a_args) {
         seed(RoleCodes.SYSTEM_ADMINISTRATOR, "System Administrator", false, RoleCodes.SCOPE_HOSPITAL, EnumSet.allOf(PermissionEnum.class));
         seed(RoleCodes.QUALITY_DIRECTOR, "Quality Director", true, RoleCodes.SCOPE_HOSPITAL, except(roleKeys(PermissionEnum.MANAGE_USERS, PermissionEnum.RESET_DATA)));
-        seed(RoleCodes.QUALITY_SUPERVISOR, "Quality Supervisor", true, RoleCodes.SCOPE_HOSPITAL, except(roleKeys(PermissionEnum.RESET_DATA)));
+        seed(RoleCodes.QUALITY_SUPERVISOR, "Quality Supervisor", true, RoleCodes.SCOPE_HOSPITAL, except(supervisorDenied()));
         seed(RoleCodes.ASSESSOR, "Assessor", true, RoleCodes.SCOPE_ASSESSOR, except(assessorDenied()));
         seed(RoleCodes.DEPARTMENT_COORDINATOR, "Department Coordinator", true, RoleCodes.SCOPE_DEPARTMENT, except(coordinatorDenied()));
         seed(RoleCodes.VIEW_ONLY, "View Only", true, RoleCodes.SCOPE_DEPARTMENT_LIST, except(viewOnlyDenied()));
@@ -90,6 +90,12 @@ public class RoleSeedService implements ApplicationRunner {
         return denied;
     }
 
+    private Set<PermissionEnum> supervisorDenied() {
+        EnumSet<PermissionEnum> denied = EnumSet.copyOf(roleKeys(PermissionEnum.RESET_DATA));
+        denied.add(PermissionEnum.QUALITY_POLICY_EDIT);
+        return denied;
+    }
+
     private Set<PermissionEnum> assessorDenied() {
         EnumSet<PermissionEnum> denied = EnumSet.copyOf(roleKeys(PermissionEnum.MANAGE_USERS, PermissionEnum.RESET_DATA));
         denied.add(PermissionEnum.MANAGE_DEPARTMENTS);
@@ -100,6 +106,8 @@ public class RoleSeedService implements ApplicationRunner {
         denied.add(PermissionEnum.VIEW_ALL_ASSESSORS_DATA);
         denied.add(PermissionEnum.MANAGE_NOTIFICATIONS);
         denied.add(PermissionEnum.MANAGE_SETTINGS);
+        denied.add(PermissionEnum.QUALITY_POLICY_VIEW);
+        denied.add(PermissionEnum.QUALITY_POLICY_EDIT);
         denied.add(PermissionEnum.VIEW_SYSTEM_LOGS);
         denied.add(PermissionEnum.MANAGE_BACKUP);
         denied.add(PermissionEnum.MANAGE_RESTORE);

@@ -22,7 +22,9 @@ public final class CustomRolePolicy {
             PermissionEnum.DELETE_AUDIT_PDF,
             PermissionEnum.DELETE_AUDIT_ONLY,
             PermissionEnum.DELETE_AUDIT_EVERYTHING,
-            PermissionEnum.MANAGE_USER_PERMISSION_OVERRIDES);
+            PermissionEnum.MANAGE_USER_PERMISSION_OVERRIDES,
+            PermissionEnum.QUALITY_POLICY_VIEW,
+            PermissionEnum.QUALITY_POLICY_EDIT);
 
     private CustomRolePolicy() {}
 

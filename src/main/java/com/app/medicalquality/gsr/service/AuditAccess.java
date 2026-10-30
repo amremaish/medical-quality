@@ -41,7 +41,7 @@ public class AuditAccess {
 
     public Audit requireEditable(Long a_auditId, Authentication a_authentication) {
         Audit audit = require(a_auditId, a_authentication);
-        if (ComplianceCalculator.locked(audit.getStatus())) {
+        if (audit.getLockedAt() != null || ComplianceCalculator.locked(audit.getStatus())) {
             throw new AppException("error.audit.locked");
         }
         return audit;

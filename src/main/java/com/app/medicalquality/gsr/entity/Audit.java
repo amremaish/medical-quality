@@ -3,6 +3,7 @@ package com.app.medicalquality.gsr.entity;
 import com.app.medicalquality.auth.entity.User;
 import com.app.medicalquality.common.BaseEntity;
 import com.app.medicalquality.hospital.entity.Department;
+import com.app.medicalquality.policy.entity.QualityPolicyVersion;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -58,4 +59,11 @@ public class Audit extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitted_by_user_id")
     private User submittedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "policy_version_id")
+    private QualityPolicyVersion policyVersion;
+
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
 }

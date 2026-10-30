@@ -12,7 +12,11 @@ import com.app.medicalquality.gsr.entity.Audit;
 import com.app.medicalquality.gsr.service.AuditAccess;
 import com.app.medicalquality.gsr.service.AuditTimelineWriter;
 import com.app.medicalquality.hospital.service.DepartmentScope;
+import com.app.medicalquality.policy.CapaSchedule;
+import com.app.medicalquality.policy.ResolvedPolicy;
+import com.app.medicalquality.policy.service.QualityPolicyService;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import lombok.Getter;
@@ -30,6 +34,7 @@ public class FindingService {
     private final CurrentUserService currentUserService;
     private final AuditTimelineWriter timelineWriter;
     private final DepartmentScope departmentScope;
+    private final QualityPolicyService policyService;
 
     public FindingService(
             FindingRepository a_findingRepository,
@@ -37,13 +42,15 @@ public class FindingService {
             AuditAccess a_auditAccess,
             CurrentUserService a_currentUserService,
             AuditTimelineWriter a_timelineWriter,
-            DepartmentScope a_departmentScope) {
+            DepartmentScope a_departmentScope,
+            QualityPolicyService a_policyService) {
         this.findingRepository = a_findingRepository;
         this.capaRepository = a_capaRepository;
         this.auditAccess = a_auditAccess;
         this.currentUserService = a_currentUserService;
         this.timelineWriter = a_timelineWriter;
         this.departmentScope = a_departmentScope;
+        this.policyService = a_policyService;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +85,14 @@ public class FindingService {
         finding.setCategory(a_request.getCategory() == null ? "Practice" : a_request.getCategory());
         finding.setStatus("Open");
         finding.setCreatedBy(currentUserService.require(a_authentication));
+        if (audit.getDepartment() != null && audit.getDepartment().getOrganization() != null) {
+            Long organizationId = audit.getDepartment().getOrganization().getId();
+            finding.setPolicyVersion(policyService.applicable(organizationId, LocalDate.now()));
+            ResolvedPolicy policy = policyService.forFinding(finding);
+            String severity = CapaSchedule.severity(policy, null, a_request.getRiskLevel());
+            finding.setCanonicalSeverity(severity);
+            finding.setEscalated(policy.escalates(severity));
+        }
         findingRepository.save(finding);
         timelineWriter.add(audit, "finding", finding.getGsrCode(), finding.getCreatedBy());
         return findingView(finding);
@@ -92,15 +107,28 @@ public class FindingService {
                 || !visibleDepartments(a_authentication).contains(finding.getDepartment().getId())) {
             throw new NotFoundException("error.finding.not_found");
         }
+        User actor = currentUserService.require(a_authentication);
+        ResolvedPolicy policy = policyService.forFinding(finding);
+        String severity = CapaSchedule.severity(policy, finding.getCanonicalSeverity(), finding.getRiskLevel());
+        if (policy.requiresRootCause(severity)
+                && (a_form.getRootCause() == null || a_form.getRootCause().isBlank())) {
+            throw new AppException("error.policy.capa.root_cause", new Object[] {severity});
+        }
+        LocalDate opened = finding.getCreatedAt() == null ? LocalDate.now() : finding.getCreatedAt().toLocalDate();
         Capa capa = new Capa();
         capa.setFinding(finding);
         capa.setCorrectiveAction(a_form.getCorrectiveAction().trim());
         capa.setPreventiveAction(a_form.getPreventiveAction());
         capa.setResponsiblePerson(a_form.getResponsiblePerson().trim());
-        capa.setTargetDate(a_form.getTargetDate());
+        capa.setTargetDate(CapaSchedule.dueDate(policy, severity, opened, a_form.getTargetDate()));
+        capa.setDeadlineDays(policy.deadlineDays(severity));
+        capa.setPolicyVersion(finding.getPolicyVersion());
+        if (a_form.getRootCause() != null && !a_form.getRootCause().isBlank()) {
+            capa.setRootCause(trimReason(a_form.getRootCause(), 4000));
+        }
         capa.setProgress(a_form.getProgress());
         capa.setStatus(a_form.getStatus() == null ? "Open" : a_form.getStatus());
-        capa.setCreatedBy(currentUserService.require(a_authentication));
+        capa.setCreatedBy(actor);
         capaRepository.save(capa);
         return capaView(capa);
     }
@@ -135,12 +163,74 @@ public class FindingService {
         if (a_form.getProgress() < 0 || a_form.getProgress() > 100) {
             throw new AppException("error.validation.failed");
         }
+        User actor = currentUserService.require(a_authentication);
+        ResolvedPolicy policy = policyService.forFinding(finding);
+        applyTargetDate(capa, finding, a_form, actor, policy);
         capa.setProgress(a_form.getProgress());
-        capa.setStatus(a_form.getStatus() == null ? capa.getStatus() : a_form.getStatus());
+        String status = a_form.getStatus() == null ? capa.getStatus() : a_form.getStatus();
+        if ("Closed".equals(status) && policy.bool("capa.closeOnlyAfterVerification")) {
+            if (!Boolean.TRUE.equals(a_form.getVerified()) && capa.getVerifiedAt() == null) {
+                throw new AppException("error.policy.capa.verification");
+            }
+            if (!allowed(actor, policy, "capa.verifierRoleCodes")) {
+                throw new AppException("error.policy.capa.verifier");
+            }
+            if (capa.getVerifiedAt() == null) {
+                capa.setVerifiedAt(LocalDateTime.now());
+                capa.setVerifiedBy(actor);
+            }
+        }
+        capa.setStatus(status);
         if ("Closed".equals(capa.getStatus()) && capa.getFinding() != null) {
-            capa.getFinding().setStatus("Closed");
+            if (!policy.bool("capa.closeOnlyAfterVerification") || capa.getVerifiedAt() != null) {
+                capa.getFinding().setStatus("Closed");
+            }
         }
         return capaView(capa);
+    }
+
+    private void applyTargetDate(Capa a_capa, Finding a_finding, CapaForm a_form, User a_actor, ResolvedPolicy a_policy) {
+        if (a_form.getTargetDate() == null) {
+            return;
+        }
+        if (a_capa.getTargetDate() != null && a_form.getTargetDate().isAfter(a_capa.getTargetDate())) {
+            int limit = a_policy.integer("capa.maxExtensions");
+            if (a_capa.getExtensionCount() >= limit) {
+                throw new AppException("error.policy.capa.extension_limit", new Object[] {limit});
+            }
+            if (a_policy.bool("capa.extensionReasonRequired")
+                    && (a_form.getExtensionReason() == null || a_form.getExtensionReason().isBlank())) {
+                throw new AppException("error.policy.capa.extension_reason");
+            }
+            if (!allowed(a_actor, a_policy, "capa.extensionApproverRoleCodes")) {
+                throw new AppException("error.policy.capa.extension_role");
+            }
+            a_capa.setExtensionCount(a_capa.getExtensionCount() + 1);
+            if (a_form.getExtensionReason() != null) {
+                a_capa.setExtensionReason(trimReason(a_form.getExtensionReason(), 500));
+            }
+            a_capa.setTargetDate(a_form.getTargetDate());
+            return;
+        }
+        String severity = CapaSchedule.severity(a_policy, a_finding.getCanonicalSeverity(), a_finding.getRiskLevel());
+        LocalDate opened = a_finding.getCreatedAt() == null ? LocalDate.now() : a_finding.getCreatedAt().toLocalDate();
+        a_capa.setTargetDate(CapaSchedule.dueDate(a_policy, severity, opened, a_form.getTargetDate()));
+    }
+
+    private boolean allowed(User a_user, ResolvedPolicy a_policy, String a_key) {
+        if (a_user.isSuperAdmin()) {
+            return true;
+        }
+        String role = a_user.getRole() == null ? "" : a_user.getRole().getRoleCode();
+        return a_policy.roleAllowed(a_key, role);
+    }
+
+    private String trimReason(String a_value, int a_max) {
+        String value = a_value.trim();
+        if (value.length() > a_max) {
+            throw new AppException("error.validation.failed");
+        }
+        return value;
     }
 
     private FindingView findingView(Finding a_finding) {
@@ -208,5 +298,8 @@ public class FindingService {
         private LocalDate targetDate;
         private int progress;
         private String status;
+        private String rootCause;
+        private String extensionReason;
+        private Boolean verified;
     }
 }

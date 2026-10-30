@@ -43,6 +43,10 @@ public final class ScreenGate {
             return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode)
                     || holds(a_superAdmin, a_permissions, "MANAGE_ASSESSORS");
         }
+        if (path.equals("/quality-policy")) {
+            return holds(a_superAdmin, a_permissions, "QUALITY_POLICY_VIEW")
+                    || holds(a_superAdmin, a_permissions, "QUALITY_POLICY_EDIT");
+        }
         String required = permissionFor(path);
         if (required == null) {
             return true;

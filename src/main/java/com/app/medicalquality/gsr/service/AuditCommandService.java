@@ -13,6 +13,7 @@ import com.app.medicalquality.gsr.repository.AuditVersionRepository;
 import com.app.medicalquality.hospital.entity.Department;
 import com.app.medicalquality.hospital.repository.DepartmentRepository;
 import com.app.medicalquality.hospital.service.DepartmentScope;
+import com.app.medicalquality.policy.service.QualityPolicyService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class AuditCommandService {
     private final AuditTimelineWriter timelineWriter;
     private final LifecycleLogWriter lifecycleLogWriter;
     private final ObjectMapper objectMapper;
+    private final QualityPolicyService policyService;
 
     public AuditCommandService(
             AuditRepository a_auditRepository,
@@ -52,7 +54,8 @@ public class AuditCommandService {
             AuditQueryService a_auditQueryService,
             AuditTimelineWriter a_timelineWriter,
             LifecycleLogWriter a_lifecycleLogWriter,
-            ObjectMapper a_objectMapper) {
+            ObjectMapper a_objectMapper,
+            QualityPolicyService a_policyService) {
         this.auditRepository = a_auditRepository;
         this.versionRepository = a_versionRepository;
         this.departmentRepository = a_departmentRepository;
@@ -63,6 +66,7 @@ public class AuditCommandService {
         this.timelineWriter = a_timelineWriter;
         this.lifecycleLogWriter = a_lifecycleLogWriter;
         this.objectMapper = a_objectMapper;
+        this.policyService = a_policyService;
     }
 
     @Transactional
@@ -76,6 +80,11 @@ public class AuditCommandService {
         audit.setArchived(false);
         audit.setCreatedBy(user);
         applyDepartment(audit, a_request.getDepartmentId(), a_authentication, user);
+        if (audit.getDepartment() != null && audit.getDepartment().getOrganization() != null) {
+            policyService.assertAuditCreatable(audit.getDepartment(), audit.getAuditDate());
+            audit.setPolicyVersion(policyService.applicable(
+                    audit.getDepartment().getOrganization().getId(), audit.getAuditDate()));
+        }
         auditRepository.save(audit);
         timelineWriter.add(audit, "created", "Audit created", user);
         return auditQueryService.summary(audit, 0);

@@ -30,7 +30,9 @@ class UserPermissionOverridePolicyTest {
                 PermissionEnum.VIEW_SYSTEM_LOGS,
                 PermissionEnum.MANAGE_BACKUP,
                 PermissionEnum.MANAGE_RESTORE,
-                PermissionEnum.RESET_DATA);
+                PermissionEnum.RESET_DATA,
+                PermissionEnum.QUALITY_POLICY_VIEW,
+                PermissionEnum.QUALITY_POLICY_EDIT);
         EnumSet<PermissionEnum> actual = EnumSet.allOf(PermissionEnum.class);
         actual.removeAll(UserPermissionOverridePolicy.ELIGIBLE);
         assertEquals(expected, actual);
@@ -42,6 +44,8 @@ class UserPermissionOverridePolicyTest {
         assertFalse(UserPermissionOverridePolicy.eligible(PermissionEnum.MANAGE_USER_PERMISSION_OVERRIDES));
         assertFalse(UserPermissionOverridePolicy.eligible(PermissionEnum.VIEW_ALL_ASSESSORS_DATA));
         assertFalse(UserPermissionOverridePolicy.eligible(PermissionEnum.RESET_DATA));
+        assertFalse(UserPermissionOverridePolicy.eligible(PermissionEnum.QUALITY_POLICY_VIEW));
+        assertFalse(UserPermissionOverridePolicy.eligible(PermissionEnum.QUALITY_POLICY_EDIT));
         assertFalse(UserPermissionOverridePolicy.eligible("NOT_A_PERMISSION"));
         assertTrue(UserPermissionOverridePolicy.eligible(PermissionEnum.CONDUCT_AUDIT));
     }
