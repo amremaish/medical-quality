@@ -12,14 +12,35 @@
     <div class="workspace">
       <header th:replace="~{fragments/shell :: topbar}"></header>
       <main class="page" id="board" th:attr="data-title=${title}">
-        <section class="hero" id="hero"></section>
-        <div class="kpis" id="kpis"></div>
-        <div class="icon-stats" id="icon-stats"></div>
+        <header class="page-head">
+          <div>
+            <p class="quiet-text" id="board-scope">All audits on record.</p>
+          </div>
+        </header>
+        <section class="attention-board" aria-labelledby="attention-heading">
+          <h2 id="attention-heading">Needs attention</h2>
+          <p class="quiet-text attention-rule" id="attention-definition">Audits past their date or due today, CAPAs past their target date, findings with no CAPA, and findings open more than 30 days.</p>
+          <div class="pills" id="attention-pills"></div>
+          <div class="table-card">
+            <table class="data-table" aria-labelledby="attention-heading">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Department</th>
+                  <th>Owner</th>
+                  <th>Age</th>
+                </tr>
+              </thead>
+              <tbody id="attention-rows"></tbody>
+            </table>
+          </div>
+          <p class="quiet-text attention-more" id="attention-more" hidden></p>
+        </section>
         <div class="split">
-          <div class="chart-card" id="bars"></div>
-          <div class="chart-card" id="ring"></div>
+          <div class="chart-card" id="compliance"></div>
+          <div class="chart-card" id="by-department"></div>
         </div>
-        <div class="mini-row" id="mini"></div>
+        <p class="totals" id="totals"></p>
         <p class="err" id="err"></p>
       </main>
     </div>

@@ -2,78 +2,162 @@ function icon(name) {
   return "<svg class='icon' viewBox='0 0 24 24' aria-hidden='true'><use href='/icons/sprite.svg#" + name + "'></use></svg>";
 }
 
-function bars(completed, pending) {
-  const max = Math.max(completed, pending, 1);
-  const height = function (value) { return Math.max(8, Math.round(value / max * 120)); };
-  return "<div class='bars'><div><i style='height:" + height(completed) + "px'></i><b>" + completed + "</b><span>Completed</span></div>" +
-    "<div><i class='soft' style='height:" + height(pending) + "px'></i><b>" + pending + "</b><span>Pending</span></div></div>";
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+    return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+  });
 }
 
-function ring(percent) {
-  const radius = 58;
-  const length = 2 * Math.PI * radius;
-  const dash = (Math.max(0, Math.min(100, percent)) / 100) * length;
-  return "<svg class='ring' viewBox='0 0 140 140'><circle cx='70' cy='70' r='" + radius +
-    "' fill='none' stroke='#e6edf5' stroke-width='12'/><circle cx='70' cy='70' r='" + radius +
-    "' fill='none' stroke='#1f6fe5' stroke-width='12' stroke-linecap='round' stroke-dasharray='" +
-    dash + " " + length + "' transform='rotate(-90 70 70)'/><text x='70' y='76' text-anchor='middle' font-size='28'>" +
-    percent + "%</text></svg>";
+function countPhrase(count, singular, plural) {
+  return count + " " + (count === 1 ? singular : plural);
+}
+
+function attentionPill(href, tone, name, value, label, note, late) {
+  return "<a class='stat-pill' href='" + href + "'><span class='disc " + tone + "'>" + icon(name) +
+    "</span><div><b>" + value + "</b><small>" + esc(label) + "</small><small" +
+    (late ? " class='late'" : "") + ">" + esc(note) + "</small></div></a>";
+}
+
+function paintAttention(row) {
+  $("#attention-pills").html([
+    attentionPill(
+      "/audits",
+      "blue",
+      "clipboard",
+      row.pendingAudits,
+      "Pending audits",
+      auditAttentionNote(row),
+      row.overdueAudits > 0),
+    attentionPill(
+      "/findings",
+      row.findingsNeedingAction > 0 ? "red" : "orange",
+      "alert",
+      row.openFindings,
+      "Open findings",
+      findingAttentionNote(row),
+      row.findingsNeedingAction > 0),
+    attentionPill(
+      "/capas",
+      row.overdueCapas > 0 ? "red" : "orange",
+      "capa",
+      row.openCapas,
+      "Open CAPA",
+      capaAttentionNote(row),
+      row.overdueCapas > 0)
+  ].join(""));
+  const items = row.attention || [];
+  if (!items.length) {
+    $("#attention-rows").html("<tr><td colspan='4' class='empty'>Nothing is past due. Every open finding has a CAPA, and none has been open more than 30 days.</td></tr>");
+    $("#attention-more").prop("hidden", true).text("");
+    return;
+  }
+  $("#attention-rows").html(items.map(function (item) {
+    const tone = item.tone === "danger" ? "danger" : "warning";
+    return "<tr><td><a href='" + esc(item.href) + "' title='" + esc(item.title) + "'><span class='kind " + tone + "'>" +
+      esc(item.kind) + "</span><span class='item-title' dir='auto'>" + esc(item.title) +
+      "</span></a></td><td dir='auto'>" + esc(item.department) + "</td><td dir='auto'>" +
+      esc(item.owner) + "</td><td class='nowrap'>" + esc(item.age) + "</td></tr>";
+  }).join(""));
+  const extra = (row.attentionTotal || items.length) - items.length;
+  $("#attention-more").prop("hidden", extra <= 0).text(
+    extra > 0 ? "Showing " + items.length + " of " + row.attentionTotal + ". Open findings or CAPA for the full lists." : ""
+  );
+}
+
+function segment(count, total, css) {
+  if (!count || !total) return "";
+  return "<span class='" + css + "' style='width:" + (count / total * 100) + "%'></span>";
+}
+
+function legendItem(css, label) {
+  return "<span><i class='" + css + "'></i>" + esc(label) + "</span>";
+}
+
+function paintCompliance(row) {
+  if (!row.audits) {
+    $("#compliance").html("<h2>Compliance</h2><p class='empty'>No audits yet. The score appears after an audit is recorded.</p>");
+    $("#by-department").html("<h2>By department</h2><p class='empty'>Department scores appear with the first audit.</p>");
+    return;
+  }
+  const total = (row.met || 0) + (row.partial || 0) + (row.notMet || 0) + (row.notApplicable || 0) + (row.unscored || 0);
+  const label = "Element mix, separate from the mean: " +
+    countPhrase(row.met || 0, "met", "met") + ", " +
+    countPhrase(row.partial || 0, "partial", "partial") + ", " +
+    countPhrase(row.notMet || 0, "not met", "not met") + ", " +
+    countPhrase(row.notApplicable || 0, "not applicable", "not applicable") + ", " +
+    countPhrase(row.unscored || 0, "not scored", "not scored");
+  $("#compliance").html(
+    "<h2>Compliance</h2>" +
+    "<p class='compliance-figure'><b>" + row.averageCompliance + "%</b><span>mean</span></p>" +
+    "<details class='calc-note'><summary>How this is calculated</summary>" +
+    "<p>Mean of every audit. Met counts fully, partial counts half, and not-applicable elements are excluded. An audit with no scores counts as 0%.</p></details>" +
+    "<h3 class='mix-heading'>Element mix</h3>" +
+    "<div class='bar' role='img' aria-label='" + esc(label) + "'>" +
+      segment(row.met, total, "met") +
+      segment(row.partial, total, "partial") +
+      segment(row.notMet, total, "not") +
+      segment(row.notApplicable, total, "na") +
+      segment(row.unscored, total, "unscored") +
+    "</div>" +
+    "<div class='legend'>" +
+      legendItem("met", (row.met || 0) + " met") +
+      legendItem("partial", (row.partial || 0) + " partial") +
+      legendItem("not", (row.notMet || 0) + " not met") +
+      legendItem("na", (row.notApplicable || 0) + " not applicable") +
+      legendItem("unscored", (row.unscored || 0) + " not scored") +
+    "</div>"
+  );
+  const rows = row.departmentsByCompliance || [];
+  if (!rows.length) {
+    $("#by-department").html("<h2>By department</h2><p class='empty'>No department has an audit yet.</p>");
+    return;
+  }
+  const caption = row.scoredDepartments > rows.length
+    ? "Lowest " + rows.length + " of " + row.scoredDepartments + " departments with an audit."
+    : "Departments with an audit, lowest score first.";
+  $("#by-department").html(
+    "<h2>By department</h2><p class='quiet-text'>" + esc(caption) + "</p><ul class='score-list'>" +
+    rows.map(function (item) {
+      const audits = countPhrase(item.audits, "audit", "audits");
+      const href = item.departmentId != null && item.departmentId !== ""
+        ? "/audits?departmentId=" + encodeURIComponent(item.departmentId) + "&department=" + encodeURIComponent(item.name || "")
+        : "/audits?department=" + encodeURIComponent(item.name || "");
+      const bar = item.percent < row.averageCompliance ? "score below" : "score";
+      return "<li><a class='score-row' href='" + href + "'><span class='name' dir='auto' title='" + esc(item.name) + "'>" +
+        esc(item.name) + "<small>" + esc(audits) + "</small></span><b>" + item.percent + "%</b>" +
+        "<span class='bar' aria-hidden='true'><span class='" + bar + "' style='width:" +
+        Math.max(0, Math.min(100, item.percent)) + "%'></span></span></a></li>";
+    }).join("") +
+    "</ul>"
+  );
+}
+
+function totalLink(href, label) {
+  return "<a href='" + href + "'>" + esc(label) + "</a>";
+}
+
+function paintTotals(row) {
+  $("#totals").html([
+    totalLink("/departments", countPhrase(row.departments, "department", "departments")),
+    totalLink("/audits", countPhrase(row.audits, "audit", "audits") + ", " + countPhrase(row.completedAudits, "completed", "completed")),
+    totalLink("/evidence", countPhrase(row.evidence, "evidence file", "evidence files")),
+    totalLink("/assessors", countPhrase(row.assessors, "assessor", "assessors"))
+  ].join("<span class='sep' aria-hidden='true'>·</span>"));
 }
 
 function paint(row) {
   const title = $("#board").data("title") || "Command center";
-  const name = $("#profile-name").text() || "there";
-  $("#hero").html(
-    "<div><p>Good morning</p><h1>" + name + "</h1><p>" + title + ". Your quality work is ready.</p>" +
-    "<div class='pills'>" +
-    pill("blue", "clipboard", row.pendingAudits, "Pending audits") +
-    pill("orange", "alert", row.openFindings, "Open findings") +
-    pill("green", "capa", row.openCapas, "Open CAPA") +
-    "</div></div><div class='hero-art'><span>" + icon("stethoscope") + "</span><span>" + icon("clipboard") +
-    "</span><span>" + icon("heart") + "</span></div>"
-  );
-  $("#kpis").html([
-    ["grid", "Departments", row.departments, "/departments"],
-    ["clipboard", "Audits", row.audits, "/audits"],
-    ["calendar", "Completed", row.completedAudits, "/audits"],
-    ["chart", "Compliance", row.averageCompliance + "%", window.location.pathname]
-  ].map(function (card) {
-    return "<a class='kpi' href='" + card[3] + "'><span class='disc blue'>" + icon(card[0]) +
-      "</span><div><b>" + card[2] + "</b><span>" + card[1] + "</span></div></a>";
-  }).join(""));
-  $("#icon-stats").html([
-    ["clipboard", row.audits, "Audits", "/audits"],
-    ["stethoscope", "View", "Assessors", "/assessors"],
-    ["grid", row.departments, "Departments", "/departments"],
-    ["alert", row.openFindings, "Findings", "/findings"],
-    ["capa", row.openCapas, "CAPA", "/capas"],
-    ["folder", row.evidence, "Evidence", "/evidence"]
-  ].map(function (card) {
-    return "<a class='icon-stat' href='" + card[3] + "'><span class='disc'>" + icon(card[0]) +
-      "</span><b>" + card[1] + "</b><span>" + card[2] + "</span></a>";
-  }).join(""));
-  $("#bars").html("<h2>Audit progress</h2>" + bars(row.completedAudits, row.pendingAudits));
-  $("#ring").html("<h2>Average compliance</h2>" + ring(row.averageCompliance));
-  $("#mini").html([
-    ["alert", row.openFindings, "Open findings"],
-    ["capa", row.openCapas, "Open CAPA"],
-    ["folder", row.evidence, "Evidence files"]
-  ].map(function (card) {
-    return "<div class='kpi'><span class='disc orange'>" + icon(card[0]) + "</span><div><b>" + card[1] +
-      "</b><span>" + card[2] + "</span></div></div>";
-  }).join(""));
-}
-
-function pill(tone, name, value, label) {
-  return "<div class='stat-pill'><span class='disc " + tone + "'>" + icon(name) + "</span><div><b>" + value +
-    "</b><small>" + label + "</small></div></div>";
+  const asOf = formatAsOf(new Date());
+  $("#topbar-title").text(title).prop("hidden", false);
+  $("#board-scope").text("All audits on record, as of " + asOf + ".");
+  $("#global-search").attr("placeholder", "Search attention items");
+  paintAttention(row);
+  paintCompliance(row);
+  paintTotals(row);
 }
 
 $(function () {
-  $.when(api("GET", "/api/dashboard"), api("GET", "/api/auth/me")).done(function (dash, me) {
-    const name = me[0].data.username || "there";
-    $("#profile-name").text(name);
-    $("#profile-initial").text(name.slice(0, 1).toUpperCase());
+  $.when(api("GET", "/api/dashboard"), api("GET", "/api/auth/me")).done(function (dash) {
     paint(dash[0].data);
   }).fail(function (xhr) {
     $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Dashboard unavailable");

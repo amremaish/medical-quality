@@ -1,0 +1,103 @@
+/* Design tokens. Legacy names in app.css (--blue, --text, …) point here.
+   --radius-control/card/pill and --type-* are defined for a later phase and are not applied yet. */
+:root {
+  --color-primary-600: #2b5fae;
+  --color-primary-hover: #234f94;
+  --color-primary-pressed: #1c4079;
+  --color-primary-700: var(--color-primary-hover);
+  --color-primary-100: #c9daf2;
+  --color-primary-50: #eaf1fb;
+  --color-ink-900: #1b2433;
+  --color-ink-700: #344054;
+  --color-ink-600: #475467;
+  --color-ink-500: #667085;
+  --color-teal-500: #0f766e;
+  --color-accent-subtle: #e6f4f2;
+  --color-bg: #f6f8fb;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f9fafb;
+  --color-border: #e3e8ef;
+  --color-border-strong: #cbd3df;
+  --color-disabled-bg: #f2f4f7;
+  --color-on-emphasis: #ffffff;
+  /* Placeholder text. #98A2B3 is --color-neutral-solid (decorative), never text. */
+  --color-placeholder: var(--color-ink-500);
+  --color-success: #067647;
+  --color-success-bg: #ecfdf3;
+  --color-success-border: #abefc6;
+  /* #17b26a, #f79009, and #d92d20 are for dots and bars only, never text or a fill behind white text. */
+  --color-success-solid: #17b26a;
+  --color-warning: #93370d;
+  --color-warning-bg: #fffaeb;
+  --color-warning-border: #fedf89;
+  --color-warning-solid: #f79009;
+  --color-danger: #b42318;
+  --color-danger-bg: #fef3f2;
+  --color-danger-border: #fecdca;
+  --color-danger-solid: #d92d20;
+  --color-info: var(--color-primary-hover);
+  --color-info-bg: var(--color-primary-50);
+  --color-info-border: var(--color-primary-100);
+  --color-info-solid: var(--color-primary-600);
+  --color-neutral: #344054;
+  --color-neutral-bg: #f2f4f7;
+  --color-neutral-border: #e4e7ec;
+  --color-neutral-solid: #98a2b3;
+  --color-scrim: rgba(16, 24, 40, 0.36);
+  --chart-met: #2e9f6b;
+  /* #e3a83a is 2.12:1 on white, so partial stays the previous value. */
+  --chart-partial: #c27803;
+  --chart-not-met: #d4483b;
+  --chart-na: #c9d1dc;
+  /* Spec N/A #D0D5DD is 1.47:1 on white and not-scored #98A2B3 is 2.58:1.
+     Outline stays #8791A1 (3.18:1). Hatch is Phase 3. */
+  --chart-na-outline: #8791a1;
+  --chart-not-scored: #e9edf3;
+  /* Reserved until official compliance thresholds exist. Do not color scores with these. */
+  --score-low: unset;
+  --score-mid: unset;
+  --score-high: unset;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --focus-ring: 2px solid var(--color-primary-600);
+  --focus-ring-offset: 2px;
+  --font-sans: Inter, "Noto Sans Arabic", system-ui, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+  --line-xs: 1rem;
+  --line-sm: 1.25rem;
+  --line-md: 1.5rem;
+  --line-lg: 1.75rem;
+  --line-xl: 2.25rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --type-page-title-size: 1.5rem;
+  --type-page-title-line: 2rem;
+  --type-section-size: 1.125rem;
+  --type-section-line: 1.75rem;
+  --type-card-title-size: 1rem;
+  --type-card-title-line: 1.5rem;
+  --type-body-size: 0.875rem;
+  --type-body-line: 1.25rem;
+  --type-caption-size: 0.75rem;
+  --type-caption-line: 1rem;
+  --type-kpi-size: 1.75rem;
+  --type-kpi-line: 2.25rem;
+  --type-arabic-line-scale: 1.1;
+}

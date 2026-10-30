@@ -18,4 +18,6 @@ public interface AssessorRepository extends JpaRepository<Assessor, Long> {
     boolean existsByCodeAndIdNot(String a_code, Long a_id);
 
     long countByDeletedAtIsNull();
+
+    long countByOrganizationIdAndDeletedAtIsNull(Long a_organizationId);
 }
