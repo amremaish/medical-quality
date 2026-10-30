@@ -33,27 +33,33 @@
               <span>Active<small>Inactive assessors stay in the list and cannot be chosen for new work.</small></span>
             </label>
           </fieldset>
+          <section id="departments" class="exceptional">
+            <button type="button" class="exceptional-toggle" id="departments-toggle" aria-expanded="false" aria-controls="departments-body">
+              <i class="caret" aria-hidden="true"></i>
+              <span class="exceptional-copy">
+                <span class="exceptional-title">
+                  <h2>Departments</h2>
+                  <span class="exception-count" id="department-count">No departments</span>
+                </span>
+                <p>Add or remove departments here. Save stores the profile and these departments together. A department has one assessor, so adding one replaces the person already there.</p>
+              </span>
+            </button>
+            <div id="departments-body" hidden>
+              <div id="department-rows"></div>
+              <div class="assign-department">
+                <label for="add-department">Department</label>
+                <select id="add-department"><option value="">Select a department</option></select>
+                <button type="button" class="btn" id="add-department-btn">Add</button>
+              </div>
+              <p class="err" id="department-error"></p>
+            </div>
+          </section>
           <p class="err" id="form-error"></p>
           <div class="form-actions">
             <a class="btn ghost" href="/assessors">Cancel</a>
-            <button type="submit" class="btn" id="save-assessor">Save assessor</button>
+            <button type="submit" class="btn" id="save-assessor">Save</button>
           </div>
         </form>
-        <section id="departments" class="exceptional">
-          <button type="button" class="exceptional-toggle" id="departments-toggle" aria-expanded="false" aria-controls="departments-body">
-            <i class="caret" aria-hidden="true"></i>
-            <span class="exceptional-copy">
-              <span class="exceptional-title">
-                <h2>Departments</h2>
-                <span class="exception-count" id="department-count">No departments</span>
-              </span>
-              <p>Departments this assessor is assigned to score. Changing an assignment is done on the department.</p>
-            </span>
-          </button>
-          <div id="departments-body" hidden>
-            <div id="department-rows"></div>
-          </div>
-        </section>
       </section>
     </main>
   </div>
@@ -71,14 +77,24 @@
     $("#form-error").text(message);
   }
   const assessorId = Number($("body").attr("data-assessor-id"));
+  let hospitalDepartments = [];
+  let assignedDepartments = [];
   function setDepartmentsOpen(open) {
     $("#departments").toggleClass("is-open", open);
     $("#departments-toggle").attr("aria-expanded", open ? "true" : "false");
     $("#departments-body").prop("hidden", !open);
   }
-  function showDepartments(rows) {
-    const list = rows || [];
+  function departmentFail(xhr) {
+    const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Could not update the department";
+    $("#department-error").text(message);
+  }
+  function showDepartments() {
+    const list = assignedDepartments.slice().sort(function (a, b) {
+      return String(a.code || "").localeCompare(String(b.code || ""));
+    });
     const count = list.length;
+    const assigned = {};
+    list.forEach(function (row) { assigned[row.id] = true; });
     $("#department-count")
       .text(count === 0 ? "No departments" : count === 1 ? "1 department" : count + " departments")
       .toggleClass("has-some", count > 0);
@@ -86,8 +102,17 @@
       const status = row.status || "";
       return "<div class='department-row'><div><strong>" + esc(row.code) + " " + esc(row.nameAr) +
         "</strong><small>" + esc(row.nameEn) + "</small></div><div class='role-state" +
-        (status === "Active" ? " granted" : "") + "'>" + esc(status) + "</div></div>";
+        (status === "Active" ? " granted" : "") + "'>" + esc(status) + "</div>" +
+        "<button type='button' class='btn ghost sm' data-remove='" + row.id + "'>Remove</button></div>";
     }).join("") || "<p>No departments are assigned to this assessor.</p>");
+    const choices = hospitalDepartments.filter(function (row) { return !assigned[row.id]; });
+    $("#add-department").html("<option value=''>Select a department</option>" + choices.map(function (row) {
+      const name = row.nameEn || row.nameAr || row.code;
+      const current = row.assessorName ? " — currently " + row.assessorName : "";
+      return "<option value='" + row.id + "' data-current='" + esc(row.assessorName || "") + "'>" +
+        esc(row.code + " " + name + current) + "</option>";
+    }).join(""));
+    $("#add-department-btn").prop("disabled", choices.length === 0);
   }
   api("GET", "/api/assessors/" + assessorId).done(function (res) {
     const row = res.data;
@@ -101,9 +126,38 @@
     $("#name-ar").val(row.nameAr || "");
     $("#note").val(row.note || "");
     $("#active").prop("checked", !!row.active);
-    showDepartments(row.departments);
+    assignedDepartments = (row.departments || []).slice();
+    api("GET", "/api/departments").done(function (departments) {
+      hospitalDepartments = departments.data || [];
+      showDepartments();
+      setDepartmentsOpen(true);
+    }).fail(departmentFail);
     $("#code").trigger("focus");
   }).fail(fail);
+  $("#department-rows").on("click", "[data-remove]", function () {
+    const departmentId = $(this).attr("data-remove");
+    assignedDepartments = assignedDepartments.filter(function (row) {
+      return String(row.id) !== String(departmentId);
+    });
+    showDepartments();
+  });
+  $("#add-department-btn").on("click", function () {
+    const departmentId = $("#add-department").val();
+    if (!departmentId) return;
+    const source = hospitalDepartments.find(function (row) { return String(row.id) === String(departmentId); });
+    if (!source) return;
+    const current = $("#add-department option:selected").attr("data-current");
+    const mine = $("#name-en").val();
+    if (current && current !== mine && !window.confirm("This department is assigned to " + current + ". Assign it to this assessor instead?")) return;
+    assignedDepartments.push({
+      id: source.id,
+      code: source.code,
+      nameAr: source.nameAr,
+      nameEn: source.nameEn,
+      status: source.status
+    });
+    showDepartments();
+  });
   $("#departments-toggle").on("click", function () {
     setDepartmentsOpen(!$("#departments").hasClass("is-open"));
   });
@@ -116,7 +170,8 @@
       nameEn: $("#name-en").val(),
       nameAr: $("#name-ar").val(),
       note: $("#note").val(),
-      active: $("#active").prop("checked")
+      active: $("#active").prop("checked"),
+      departmentIds: assignedDepartments.map(function (row) { return row.id; })
     }).done(function () {
       window.location.href = "/assessors";
     }).fail(function (xhr) {

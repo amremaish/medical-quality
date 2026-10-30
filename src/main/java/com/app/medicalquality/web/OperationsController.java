@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -127,6 +128,25 @@ public class OperationsController {
             @RequestBody HospitalQueryService.AssessorForm a_form,
             Authentication a_authentication) {
         return AppResponse.success(hospitalQueryService.updateAssessor(a_id, a_form, a_authentication));
+    }
+
+    @PostMapping("/api/assessors/{id}/departments")
+    @HasPermission(PermissionEnum.MANAGE_ASSESSORS)
+    public ResponseEntity<AppResponse<HospitalQueryService.AssessorDetail>> assignDepartment(
+            @PathVariable("id") Long a_id,
+            @RequestBody HospitalQueryService.AssignDepartmentForm a_form,
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.assignDepartment(
+                a_id, a_form == null ? null : a_form.getDepartmentId(), a_authentication));
+    }
+
+    @DeleteMapping("/api/assessors/{id}/departments/{departmentId}")
+    @HasPermission(PermissionEnum.MANAGE_ASSESSORS)
+    public ResponseEntity<AppResponse<HospitalQueryService.AssessorDetail>> unassignDepartment(
+            @PathVariable("id") Long a_id,
+            @PathVariable("departmentId") Long a_departmentId,
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.unassignDepartment(a_id, a_departmentId, a_authentication));
     }
 
     @GetMapping("/api/dashboard")

@@ -11,7 +11,10 @@ import com.app.medicalquality.hospital.repository.DepartmentRepository;
 import com.app.medicalquality.hospital.repository.DepartmentTypeRepository;
 import com.app.medicalquality.hospital.repository.UnitRepository;
 import com.app.medicalquality.organization.entity.Organization;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.Authentication;
@@ -88,7 +91,63 @@ public class HospitalQueryService {
         assessor.setNote(optional(a_form.getNote(), 300));
         assessor.setActive(Boolean.TRUE.equals(a_form.getActive()));
         assessorRepository.save(assessor);
+        if (a_form.getDepartmentIds() != null) {
+            syncDepartments(assessor, organization.getId(), a_form.getDepartmentIds());
+        }
         return assessorDetail(assessor, organization.getId());
+    }
+
+    private void syncDepartments(Assessor a_assessor, Long a_organizationId, List<Long> a_departmentIds) {
+        List<Long> wanted = a_departmentIds.stream().filter(Objects::nonNull).distinct().toList();
+        Set<Long> wantedIds = new HashSet<>(wanted);
+        for (Department department : departmentRepository
+                .findByAssessorIdAndOrganizationIdAndDeletedAtIsNullOrderByCodeAsc(a_assessor.getId(), a_organizationId)) {
+            if (!wantedIds.contains(department.getId())) {
+                department.setAssessor(null);
+                departmentRepository.save(department);
+            }
+        }
+        for (Long departmentId : wanted) {
+            Department department = loadDepartment(departmentId, a_organizationId);
+            Assessor current = department.getAssessor();
+            if (current == null || !a_assessor.getId().equals(current.getId())) {
+                department.setAssessor(a_assessor);
+                departmentRepository.save(department);
+            }
+        }
+    }
+
+    @Transactional
+    public AssessorDetail assignDepartment(Long a_assessorId, Long a_departmentId, Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        Assessor assessor = loadAssessor(a_assessorId, organization.getId());
+        Department department = loadDepartment(a_departmentId, organization.getId());
+        department.setAssessor(assessor);
+        departmentRepository.save(department);
+        return assessorDetail(assessor, organization.getId());
+    }
+
+    @Transactional
+    public AssessorDetail unassignDepartment(Long a_assessorId, Long a_departmentId, Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        Assessor assessor = loadAssessor(a_assessorId, organization.getId());
+        Department department = loadDepartment(a_departmentId, organization.getId());
+        Assessor current = department.getAssessor();
+        if (current == null || !assessor.getId().equals(current.getId())) {
+            throw new AppException("error.assessor.not_on_department");
+        }
+        department.setAssessor(null);
+        departmentRepository.save(department);
+        return assessorDetail(assessor, organization.getId());
+    }
+
+    private Department loadDepartment(Long a_departmentId, Long a_organizationId) {
+        if (a_departmentId == null) {
+            throw new NotFoundException("error.department.not_found");
+        }
+        return departmentRepository
+                .findByIdAndOrganizationIdAndDeletedAtIsNull(a_departmentId, a_organizationId)
+                .orElseThrow(() -> new NotFoundException("error.department.not_found"));
     }
 
     private Assessor loadAssessor(Long a_id, Long a_organizationId) {
@@ -245,12 +304,19 @@ public class HospitalQueryService {
 
     @Getter
     @Setter
+    public static class AssignDepartmentForm {
+        private Long departmentId;
+    }
+
+    @Getter
+    @Setter
     public static class AssessorForm {
         private String code;
         private String nameAr;
         private String nameEn;
         private String note;
         private Boolean active;
+        private List<Long> departmentIds;
     }
 
     @Getter

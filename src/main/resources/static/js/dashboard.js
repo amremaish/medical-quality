@@ -12,10 +12,16 @@ function countPhrase(count, singular, plural) {
   return count + " " + (count === 1 ? singular : plural);
 }
 
+function canOpen(href) {
+  return typeof screenAllowed === "function" && screenAllowed(href, currentMe);
+}
+
 function attentionPill(href, tone, name, value, label, note, late) {
-  return "<a class='stat-pill' href='" + href + "'><span class='disc " + tone + "'>" + icon(name) +
+  const open = canOpen(href);
+  const tag = open ? "a" : "div";
+  return "<" + tag + " class='stat-pill'" + (open ? " href='" + href + "'" : "") + "><span class='disc " + tone + "'>" + icon(name) +
     "</span><div><b>" + value + "</b><small>" + esc(label) + "</small><small" +
-    (late ? " class='late'" : "") + ">" + esc(note) + "</small></div></a>";
+    (late ? " class='late'" : "") + ">" + esc(note) + "</small></div></" + tag + ">";
 }
 
 function paintAttention(row) {
@@ -53,14 +59,17 @@ function paintAttention(row) {
   }
   $("#attention-rows").html(items.map(function (item) {
     const tone = item.tone === "danger" ? "danger" : "warning";
-    return "<tr><td><a href='" + esc(item.href) + "' title='" + esc(item.title) + "'><span class='kind " + tone + "'>" +
-      esc(item.kind) + "</span><span class='item-title' dir='auto'>" + esc(item.title) +
-      "</span></a></td><td dir='auto'>" + esc(item.department) + "</td><td dir='auto'>" +
+    const title = "<span class='kind " + tone + "'>" + esc(item.kind) + "</span><span class='item-title' dir='auto'>" +
+      esc(item.title) + "</span>";
+    const cell = canOpen(item.href)
+      ? "<a href='" + esc(item.href) + "' title='" + esc(item.title) + "'>" + title + "</a>"
+      : title;
+    return "<tr><td>" + cell + "</td><td dir='auto'>" + esc(item.department) + "</td><td dir='auto'>" +
       esc(item.owner) + "</td><td class='nowrap'>" + esc(item.age) + "</td></tr>";
   }).join(""));
   const extra = (row.attentionTotal || items.length) - items.length;
   $("#attention-more").prop("hidden", extra <= 0).text(
-    extra > 0 ? "Showing " + items.length + " of " + row.attentionTotal + ". Open findings or CAPA for the full lists." : ""
+    extra > 0 ? "Showing " + items.length + " of " + row.attentionTotal + "." : ""
   );
 }
 
@@ -123,17 +132,22 @@ function paintCompliance(row) {
         ? "/audits?departmentId=" + encodeURIComponent(item.departmentId) + "&department=" + encodeURIComponent(item.name || "")
         : "/audits?department=" + encodeURIComponent(item.name || "");
       const bar = item.percent < row.averageCompliance ? "score below" : "score";
-      return "<li><a class='score-row' href='" + href + "'><span class='name' dir='auto' title='" + esc(item.name) + "'>" +
+      const body = "<span class='name' dir='auto' title='" + esc(item.name) + "'>" +
         esc(item.name) + "<small>" + esc(audits) + "</small></span><b>" + item.percent + "%</b>" +
         "<span class='bar' aria-hidden='true'><span class='" + bar + "' style='width:" +
-        Math.max(0, Math.min(100, item.percent)) + "%'></span></span></a></li>";
+        Math.max(0, Math.min(100, item.percent)) + "%'></span></span>";
+      const rowHtml = canOpen(href)
+        ? "<a class='score-row' href='" + href + "'>" + body + "</a>"
+        : "<div class='score-row'>" + body + "</div>";
+      return "<li>" + rowHtml + "</li>";
     }).join("") +
     "</ul>"
   );
 }
 
 function totalLink(href, label) {
-  return "<a href='" + href + "'>" + esc(label) + "</a>";
+  const text = esc(label);
+  return canOpen(href) ? "<a href='" + href + "'>" + text + "</a>" : "<span>" + text + "</span>";
 }
 
 function paintTotals(row) {
@@ -157,7 +171,8 @@ function paint(row) {
 }
 
 $(function () {
-  $.when(api("GET", "/api/dashboard"), api("GET", "/api/auth/me")).done(function (dash) {
+  $.when(api("GET", "/api/dashboard"), api("GET", "/api/auth/me")).done(function (dash, me) {
+    if (me[0] && me[0].data) currentMe = me[0].data;
     paint(dash[0].data);
   }).fail(function (xhr) {
     $("#err").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Dashboard unavailable");

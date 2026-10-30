@@ -18,7 +18,7 @@ public final class ScreenGate {
             boolean a_orgOpen,
             String a_roleCode,
             Set<String> a_permissions) {
-        String path = a_path == null ? "" : a_path;
+        String path = screenPath(a_path);
         if (path.equals("/account/password") || path.equals("/account/setup") || path.equals("/login")) {
             return true;
         }
@@ -39,7 +39,7 @@ public final class ScreenGate {
             return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode)
                     || holds(a_superAdmin, a_permissions, "MANAGE_USER_PERMISSION_OVERRIDES");
         }
-        if (path.startsWith("/assessors/")) {
+        if (path.equals("/assessors") || path.startsWith("/assessors/")) {
             return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode)
                     || holds(a_superAdmin, a_permissions, "MANAGE_ASSESSORS");
         }
@@ -89,6 +89,14 @@ public final class ScreenGate {
                 || a_path.startsWith("/hospitals/");
     }
 
+    private static String screenPath(String a_path) {
+        String path = a_path == null ? "" : a_path;
+        int query = path.indexOf('?');
+        int hash = path.indexOf('#');
+        int cut = query < 0 ? hash : hash < 0 ? query : Math.min(query, hash);
+        return cut < 0 ? path : path.substring(0, cut);
+    }
+
     private static String permissionFor(String a_path) {
         if (a_path.equals("/dashboard") || a_path.equals("/dashboard/")) {
             return "VIEW_COMMAND_CENTER";
@@ -105,17 +113,23 @@ public final class ScreenGate {
         if (a_path.startsWith("/dashboard/")) {
             return "";
         }
-        if (a_path.equals("/audits/new") || a_path.startsWith("/audits/new/")) {
+        if (a_path.equals("/audits") || a_path.startsWith("/audits/")) {
             return "CONDUCT_AUDIT";
         }
-        if (a_path.equals("/record-reviews/new") || a_path.startsWith("/record-reviews/new/")) {
+        if (a_path.equals("/record-reviews") || a_path.startsWith("/record-reviews/")) {
             return "CONDUCT_AUDIT";
         }
-        if (a_path.equals("/capas/new") || a_path.startsWith("/capas/new/")) {
+        if (a_path.equals("/findings") || a_path.startsWith("/findings/")) {
+            return "MANAGE_FINDINGS";
+        }
+        if (a_path.equals("/capas") || a_path.startsWith("/capas/")) {
             return "MANAGE_CAPA";
         }
-        if (a_path.equals("/evidence/new") || a_path.startsWith("/evidence/new/")) {
+        if (a_path.equals("/evidence") || a_path.startsWith("/evidence/")) {
             return "MANAGE_EVIDENCE";
+        }
+        if (a_path.equals("/departments") || a_path.startsWith("/departments/")) {
+            return "MANAGE_DEPARTMENTS";
         }
         if (a_path.equals("/imports") || a_path.startsWith("/imports/")) {
             return "MANAGE_IMPORT";

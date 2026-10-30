@@ -51,9 +51,11 @@ class ScreenGateTest {
 
     @Test
     void assessorEditFollowsManageAssessors() {
-        assertTrue(ScreenGate.allowed("/assessors", false, false, RoleCodes.ASSESSOR, Set.of()));
+        assertFalse(ScreenGate.allowed("/assessors", false, false, RoleCodes.ASSESSOR, Set.of()));
         assertFalse(ScreenGate.allowed("/assessors/3", false, false, RoleCodes.ASSESSOR, Set.of()));
+        assertTrue(ScreenGate.allowed("/assessors", false, false, "CUSTOM_ROLE", Set.of("MANAGE_ASSESSORS")));
         assertTrue(ScreenGate.allowed("/assessors/3", false, false, "CUSTOM_ROLE", Set.of("MANAGE_ASSESSORS")));
+        assertTrue(ScreenGate.allowed("/assessors", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
         assertTrue(ScreenGate.allowed("/assessors/3", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
     }
 
@@ -69,8 +71,17 @@ class ScreenGateTest {
         assertTrue(ScreenGate.allowed("/audits/new", false, false, "CUSTOM_ROLE", CONDUCT));
         assertTrue(ScreenGate.allowed("/record-reviews/new", false, false, "CUSTOM_ROLE", CONDUCT));
         assertTrue(ScreenGate.allowed("/audits", false, false, "CUSTOM_ROLE", CONDUCT));
-        assertTrue(ScreenGate.allowed("/capas", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/audits/4", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/audits?departmentId=2", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertFalse(ScreenGate.allowed("/capas", false, false, "CUSTOM_ROLE", CONDUCT));
         assertFalse(ScreenGate.allowed("/capas/new", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/capas", false, false, "CUSTOM_ROLE", Set.of("MANAGE_CAPA")));
+        assertFalse(ScreenGate.allowed("/findings", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/findings", false, false, "CUSTOM_ROLE", Set.of("MANAGE_FINDINGS")));
+        assertFalse(ScreenGate.allowed("/evidence", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/evidence", false, false, "CUSTOM_ROLE", Set.of("MANAGE_EVIDENCE")));
+        assertFalse(ScreenGate.allowed("/departments", false, false, "CUSTOM_ROLE", CONDUCT));
+        assertTrue(ScreenGate.allowed("/departments", false, false, "CUSTOM_ROLE", Set.of("MANAGE_DEPARTMENTS")));
         assertFalse(ScreenGate.allowed("/dashboard", false, false, "CUSTOM_ROLE", CONDUCT));
         assertFalse(ScreenGate.allowed("/imports", false, false, "CUSTOM_ROLE", CONDUCT));
         assertFalse(ScreenGate.allowed("/imports/new", false, false, "CUSTOM_ROLE", CONDUCT));
@@ -90,7 +101,9 @@ class ScreenGateTest {
     void directUrlToAGatedScreenIsDeniedWhenThePermissionIsMissing() {
         assertFalse(ScreenGate.allowed("/audits/new", false, false, RoleCodes.VIEW_ONLY, Set.of()));
         assertFalse(ScreenGate.allowed("/audits/new", false, false, RoleCodes.VIEW_ONLY, null));
-        assertTrue(ScreenGate.allowed("/audits", false, false, RoleCodes.VIEW_ONLY, null));
+        assertFalse(ScreenGate.allowed("/audits", false, false, RoleCodes.VIEW_ONLY, null));
+        assertFalse(ScreenGate.allowed("/findings", false, false, RoleCodes.VIEW_ONLY, Set.of("VIEW_ASSESSOR_DASHBOARD")));
+        assertTrue(ScreenGate.allowed("/dashboard/assessor", false, false, RoleCodes.VIEW_ONLY, Set.of("VIEW_ASSESSOR_DASHBOARD")));
         assertTrue(ScreenGate.allowed("/", false, false, RoleCodes.VIEW_ONLY, null));
     }
 
@@ -124,6 +137,35 @@ class ScreenGateTest {
                 false, Set.of("MANAGE_IMPORT", "CONDUCT_AUDIT"), "MANAGE_IMPORT", "CONDUCT_AUDIT"));
         assertTrue(ScreenGate.action(true, null, "MANAGE_CAPA"));
         assertFalse(ScreenGate.action(true, null, ""));
+    }
+
+    @Test
+    void eachRoleOpensOnlyTheScreensItsPermissionsAllow() {
+        Set<String> assessor = Set.of(
+                "CONDUCT_AUDIT",
+                "MANAGE_FINDINGS",
+                "MANAGE_CAPA",
+                "MANAGE_EVIDENCE",
+                "VIEW_ASSESSOR_DASHBOARD");
+        assertTrue(ScreenGate.allowed("/audits", false, false, RoleCodes.ASSESSOR, assessor));
+        assertTrue(ScreenGate.allowed("/record-reviews", false, false, RoleCodes.ASSESSOR, assessor));
+        assertTrue(ScreenGate.allowed("/findings", false, false, RoleCodes.ASSESSOR, assessor));
+        assertTrue(ScreenGate.allowed("/capas", false, false, RoleCodes.ASSESSOR, assessor));
+        assertTrue(ScreenGate.allowed("/evidence", false, false, RoleCodes.ASSESSOR, assessor));
+        assertTrue(ScreenGate.allowed("/dashboard/assessor", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/departments", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/assessors", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/dashboard", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/imports", false, false, RoleCodes.ASSESSOR, assessor));
+        assertFalse(ScreenGate.allowed("/users", false, false, RoleCodes.ASSESSOR, assessor));
+
+        Set<String> coordinator = Set.of("MANAGE_CAPA", "MANAGE_EVIDENCE", "VIEW_ASSESSOR_DASHBOARD");
+        assertTrue(ScreenGate.allowed("/capas", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+        assertTrue(ScreenGate.allowed("/evidence", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+        assertFalse(ScreenGate.allowed("/audits", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+        assertFalse(ScreenGate.allowed("/findings", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+        assertFalse(ScreenGate.allowed("/departments", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
+        assertFalse(ScreenGate.allowed("/assessors", false, false, RoleCodes.DEPARTMENT_COORDINATOR, coordinator));
     }
 
     @Test

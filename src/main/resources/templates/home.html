@@ -20,8 +20,8 @@
           </div>
         </section>
         <div class="home-links">
-          <a class="kpi" href="/audits"><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b>GSR audits</b><span id="home-audits">Audits in this hospital</span></div></a>
-          <a class="kpi" href="/record-reviews"><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b>Medical records</b><span id="home-records">Reviews in this hospital</span></div></a>
+          <a class="kpi" href="/audits" data-perm="CONDUCT_AUDIT" hidden><span class="disc blue"><svg th:replace="~{fragments/shell :: i('clipboard')}"></svg></span><div><b>GSR audits</b><span id="home-audits">Audits in this hospital</span></div></a>
+          <a class="kpi" href="/record-reviews" data-perm="CONDUCT_AUDIT" hidden><span class="disc green"><svg th:replace="~{fragments/shell :: i('file')}"></svg></span><div><b>Medical records</b><span id="home-records">Reviews in this hospital</span></div></a>
           <a class="kpi" id="home-dashboard" href="/dashboard" data-perm="VIEW_COMMAND_CENTER,VIEW_EXECUTIVE_DASHBOARD,VIEW_ASSESSOR_DASHBOARD,VIEW_QUALITY_DIRECTOR_DASHBOARD" hidden><span class="disc orange"><svg th:replace="~{fragments/shell :: i('chart')}"></svg></span><div><b id="home-dashboard-name">Command center</b><span id="home-compliance">Compliance for this hospital</span></div></a>
         </div>
       </main>

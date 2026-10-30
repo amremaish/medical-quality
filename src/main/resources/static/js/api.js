@@ -46,7 +46,14 @@ function directoryAdmin(me) {
   return (me.superAdmin && !!openedOrg()) || me.roleCode === "HOSPITAL_OWNER";
 }
 
+function screenPath(path) {
+  const value = path || "";
+  const cut = value.search(/[?#]/);
+  return cut >= 0 ? value.slice(0, cut) : value;
+}
+
 function screenAllowed(path, me) {
+  path = screenPath(path);
   if (!me) return false;
   if (path === "/account/password" || path === "/account/setup" || path === "/login") return true;
   if (isPlatform(path)) return !!me.superAdmin;
@@ -59,7 +66,7 @@ function screenAllowed(path, me) {
   if (path === "/users" || path.indexOf("/users/") === 0) {
     return directoryAdmin(me) || holds(me, "MANAGE_USER_PERMISSION_OVERRIDES");
   }
-  if (path.indexOf("/assessors/") === 0) {
+  if (path === "/assessors" || path.indexOf("/assessors/") === 0) {
     return directoryAdmin(me) || holds(me, "MANAGE_ASSESSORS");
   }
   const required = permissionFor(path);
@@ -79,10 +86,12 @@ function permissionFor(path) {
   if (path.indexOf("/dashboard/assessor") === 0) return "VIEW_ASSESSOR_DASHBOARD";
   if (path.indexOf("/dashboard/quality-director") === 0) return "VIEW_QUALITY_DIRECTOR_DASHBOARD";
   if (path.indexOf("/dashboard/") === 0) return "";
-  if (path === "/audits/new" || path.indexOf("/audits/new/") === 0) return "CONDUCT_AUDIT";
-  if (path === "/record-reviews/new" || path.indexOf("/record-reviews/new/") === 0) return "CONDUCT_AUDIT";
-  if (path === "/capas/new" || path.indexOf("/capas/new/") === 0) return "MANAGE_CAPA";
-  if (path === "/evidence/new" || path.indexOf("/evidence/new/") === 0) return "MANAGE_EVIDENCE";
+  if (path === "/audits" || path.indexOf("/audits/") === 0) return "CONDUCT_AUDIT";
+  if (path === "/record-reviews" || path.indexOf("/record-reviews/") === 0) return "CONDUCT_AUDIT";
+  if (path === "/findings" || path.indexOf("/findings/") === 0) return "MANAGE_FINDINGS";
+  if (path === "/capas" || path.indexOf("/capas/") === 0) return "MANAGE_CAPA";
+  if (path === "/evidence" || path.indexOf("/evidence/") === 0) return "MANAGE_EVIDENCE";
+  if (path === "/departments" || path.indexOf("/departments/") === 0) return "MANAGE_DEPARTMENTS";
   if (path === "/imports" || path.indexOf("/imports/") === 0) return "MANAGE_IMPORT";
   return null;
 }
@@ -216,15 +225,27 @@ function setShellCount(linkId, countId, count, label, tone) {
 
 function paintHome(row) {
   if (!$("#home-status").length) return;
-  const board = firstDashboard() || "/dashboard";
+  const board = firstDashboard();
   const compliance = row.audits ? row.averageCompliance + "%" : "—";
   const complianceLabel = row.audits ? "Compliance" : "No score yet";
-  $("#home-status").prop("hidden", false).html([
-    statusPill("/audits", "blue", "clipboard", row.pendingAudits, pluralWord(row.pendingAudits, "Pending audit", "Pending audits"), auditAttentionNote(row), row.overdueAudits > 0),
-    statusPill("/findings", row.findingsNeedingAction > 0 ? "red" : "orange", "alert", row.openFindings, "Open findings", findingAttentionNote(row), row.findingsNeedingAction > 0),
-    statusPill("/capas", row.overdueCapas > 0 ? "red" : "orange", "capa", row.openCapas, "Open CAPA", capaAttentionNote(row), row.overdueCapas > 0),
-    statusPill(board, "blue", "chart", compliance, complianceLabel)
-  ].join(""));
+  const pills = [];
+  if (screenAllowed("/audits", currentMe)) {
+    pills.push(statusPill("/audits", "blue", "clipboard", row.pendingAudits, pluralWord(row.pendingAudits, "Pending audit", "Pending audits"), auditAttentionNote(row), row.overdueAudits > 0));
+  }
+  if (screenAllowed("/findings", currentMe)) {
+    pills.push(statusPill("/findings", row.findingsNeedingAction > 0 ? "red" : "orange", "alert", row.openFindings, "Open findings", findingAttentionNote(row), row.findingsNeedingAction > 0));
+  }
+  if (screenAllowed("/capas", currentMe)) {
+    pills.push(statusPill("/capas", row.overdueCapas > 0 ? "red" : "orange", "capa", row.openCapas, "Open CAPA", capaAttentionNote(row), row.overdueCapas > 0));
+  }
+  if (board) pills.push(statusPill(board, "blue", "chart", compliance, complianceLabel));
+  if (!pills.length) {
+    $("#home-status").prop("hidden", true).empty();
+    $("#home-audits").text(auditLine(row));
+    $("#home-compliance").text(row.audits ? row.averageCompliance + "% compliance" : "No compliance score yet");
+    return;
+  }
+  $("#home-status").prop("hidden", false).html(pills.join(""));
   $("#home-audits").text(auditLine(row));
   $("#home-compliance").text(row.audits ? row.averageCompliance + "% compliance" : "No compliance score yet");
 }
@@ -275,6 +296,7 @@ function showNav(me) {
     $("#org-line").text(me.organizationName || "Quality platform for hospitals");
   }
   applyControls();
+  if (directoryAdmin(me)) $(".side-link[href='/assessors']").prop("hidden", false);
   $(".nav-section").each(function () {
     const visible = $(this).children("a.side-link").filter(function () { return !this.hidden; }).length;
     $(this).prop("hidden", visible === 0);
