@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script th:src="@{/js/i18n.js}"></script>
+  <title data-i18n="page.departmentEdit">Edit department</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-department-id=${departmentId}">
+<div class="app-shell">
+  <aside th:replace="~{fragments/shell :: sidebar}"></aside>
+  <div class="workspace">
+    <header th:replace="~{fragments/shell :: topbar}"></header>
+    <main class="page">
+      <a class="back" href="/departments" data-i18n="page.departments">Departments</a>
+      <section class="panel form-screen">
+        <div class="form-intro">
+          <div>
+            <h1 data-i18n="page.departmentEdit">Edit department</h1>
+            <p data-i18n="page.departmentEditLead">Change this clinical area. The code was assigned when the department was created.</p>
+          </div>
+        </div>
+        <form id="edit-department" class="stack">
+          <div><label for="code" data-i18n="field.code">Code</label><input id="code" maxlength="20" readonly></div>
+          <div><label for="nameAr" data-i18n="field.nameAr">Arabic name</label><input id="nameAr" maxlength="200" required dir="rtl"></div>
+          <div><label for="nameEn" data-i18n="field.nameEn">English name</label><input id="nameEn" maxlength="200" required dir="ltr"></div>
+          <div><label for="deptType" data-i18n="field.type">Type</label>
+            <select id="deptType" required><option value="" data-i18n="field.selectType">Select a type</option></select>
+          </div>
+          <div><label for="headName" data-i18n="field.head">Head</label><input id="headName" maxlength="200"></div>
+          <div><label for="coordinatorName" data-i18n="field.coordinator">Coordinator</label><input id="coordinatorName" maxlength="200"></div>
+          <div><label for="assessorId" data-i18n="field.assessor">Assessor</label><select id="assessorId"><option value="" data-i18n="field.none">None</option></select></div>
+          <div><label for="status" data-i18n="field.status">Status</label>
+            <select id="status"><option value="Active" data-i18n="field.active">Active</option><option value="Inactive" data-i18n="field.inactive">Inactive</option></select>
+          </div>
+          <div id="units-field"><label for="units" data-i18n="field.units">Units</label><textarea id="units" rows="4" data-i18n-placeholder="field.unitsHint" placeholder="One unit name per line"></textarea></div>
+          <p class="err" id="form-error"></p>
+          <div class="form-actions">
+            <a class="btn ghost" href="/departments" data-i18n="action.cancel">Cancel</a>
+            <button type="submit" id="save-department" data-i18n="action.save">Save</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+  const departmentId = Number($("body").attr("data-department-id"));
+  let departmentTypes = [];
+  let assessorChoices = [];
+  let loaded = null;
+  let chosenType = "";
+  let chosenAssessor = "";
+  let applied = false;
+  function paintDepartmentChoices() {
+    const type = chosenType;
+    const assessorId = chosenAssessor;
+    const blank = "<option value=''>" + esc(mqT("field.none")) + "</option>";
+    $("#deptType").html("<option value=''>" + esc(mqT("field.selectType")) + "</option>" + departmentTypes.map(function (row) {
+      const name = row.nameEn || row.code;
+      const extra = row.examplesAr || "";
+      const label = extra ? name + " — " + extra : name;
+      return "<option value='" + esc(row.code) + "'>" + esc(label) + "</option>";
+    }).join(""));
+    if (type) $("#deptType").val(type);
+    $("#assessorId").html(blank + assessorChoices.map(function (assessor) {
+      const name = mqLang() === "ar" ? (assessor.nameAr || assessor.nameEn || assessor.code) : (assessor.nameEn || assessor.code);
+      return "<option value='" + assessor.id + "'>" + esc(name) + "</option>";
+    }).join(""));
+    if (assessorId) $("#assessorId").val(assessorId);
+  }
+  function fillDepartment() {
+    if (!loaded) return;
+    if (!applied) {
+      $("#code").val(loaded.code || "");
+      $("#nameAr").val(loaded.nameAr || "");
+      $("#nameEn").val(loaded.nameEn || "");
+      $("#headName").val(loaded.headName || "");
+      $("#coordinatorName").val(loaded.coordinatorName || "");
+      $("#status").val(loaded.status || "Active");
+      $("#units").val((loaded.units || []).join("\n"));
+      chosenType = loaded.deptType || "";
+      chosenAssessor = loaded.assessorId == null ? "" : String(loaded.assessorId);
+      applied = true;
+    }
+    paintDepartmentChoices();
+  }
+  $("#deptType").on("change", function () { chosenType = $(this).val(); });
+  $("#assessorId").on("change", function () { chosenAssessor = $(this).val(); });
+  document.addEventListener("mq-lang", function () {
+    if (departmentTypes.length || assessorChoices.length) paintDepartmentChoices();
+  });
+  api("GET", "/api/department-types").done(function (res) {
+    departmentTypes = res.data || [];
+    paintDepartmentChoices();
+    fillDepartment();
+  });
+  api("GET", "/api/assessors").done(function (res) {
+    assessorChoices = res.data || [];
+    paintDepartmentChoices();
+    fillDepartment();
+  });
+  api("GET", "/api/departments/" + departmentId).done(function (res) {
+    loaded = res.data;
+    fillDepartment();
+    $("#nameAr").trigger("focus");
+  }).fail(function (xhr) {
+    $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not load the department", "تعذر تحميل القسم"));
+    $("#save-department").prop("disabled", true);
+  });
+  $("#edit-department").on("submit", function (event) {
+    event.preventDefault();
+    $("#form-error").text("");
+    const assessorId = $("#assessorId").val();
+    const units = $("#units").val().split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    $("#save-department").prop("disabled", true);
+    api("PUT", "/api/departments/" + departmentId, {
+      nameAr: $("#nameAr").val(),
+      nameEn: $("#nameEn").val(),
+      deptType: $("#deptType").val(),
+      headName: $("#headName").val(),
+      coordinatorName: $("#coordinatorName").val(),
+      status: $("#status").val(),
+      assessorId: assessorId ? Number(assessorId) : null,
+      units: units
+    }).done(function () {
+      window.location.href = "/departments";
+    }).fail(function (xhr) {
+      $("#save-department").prop("disabled", false);
+      $("#form-error").text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : mqText("Could not update the department", "تعذر تحديث القسم"));
+    });
+  });
+</script>
+</body>
+</html>

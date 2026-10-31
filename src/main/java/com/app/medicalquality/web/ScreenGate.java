@@ -29,7 +29,8 @@ public final class ScreenGate {
             return false;
         }
         if (path.equals("/users/new") || path.startsWith("/users/new/")
-                || path.equals("/departments/new") || path.startsWith("/departments/new/")) {
+                || path.equals("/departments/new") || path.startsWith("/departments/new/")
+                || departmentEdit(path)) {
             return directoryAdmin(a_superAdmin, a_orgOpen, a_roleCode);
         }
         if (path.equals("/roles") || path.startsWith("/roles/")) {
@@ -68,6 +69,10 @@ public final class ScreenGate {
             }
         }
         return true;
+    }
+
+    private static boolean departmentEdit(String a_path) {
+        return a_path.matches("/departments/\\d+");
     }
 
     private static boolean directoryAdmin(boolean a_superAdmin, boolean a_orgOpen, String a_roleCode) {

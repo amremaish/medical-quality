@@ -19,6 +19,7 @@ class ScreenGateTest {
         assertTrue(ScreenGate.allowed("/users/4", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
         assertTrue(ScreenGate.allowed("/roles/new", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
         assertTrue(ScreenGate.allowed("/departments/new", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
+        assertTrue(ScreenGate.allowed("/departments/4", false, false, RoleCodes.HOSPITAL_OWNER, Set.of()));
     }
 
     @Test
@@ -63,6 +64,8 @@ class ScreenGateTest {
     void manageDepartmentsDoesNotOpenDepartmentCreate() {
         assertFalse(ScreenGate.allowed(
                 "/departments/new", false, false, RoleCodes.QUALITY_SUPERVISOR, SUPERVISOR));
+        assertFalse(ScreenGate.allowed(
+                "/departments/4", false, false, RoleCodes.QUALITY_SUPERVISOR, SUPERVISOR));
         assertTrue(ScreenGate.allowed("/departments", false, false, RoleCodes.QUALITY_SUPERVISOR, SUPERVISOR));
     }
 

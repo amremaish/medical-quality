@@ -62,7 +62,8 @@ function screenAllowed(path, me) {
   if (isPlatform(path)) return !!me.superAdmin;
   if (me.superAdmin && !openedOrg()) return false;
   if (path === "/users/new" || path.indexOf("/users/new/") === 0
-      || path === "/departments/new" || path.indexOf("/departments/new/") === 0) {
+      || path === "/departments/new" || path.indexOf("/departments/new/") === 0
+      || /^\/departments\/\d+$/.test(path)) {
     return directoryAdmin(me);
   }
   if (path === "/roles" || path.indexOf("/roles/") === 0) return directoryAdmin(me);

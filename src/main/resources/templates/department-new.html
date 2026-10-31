@@ -16,9 +16,8 @@
       <a class="back" href="/departments" data-i18n="page.departments">Departments</a>
       <section class="panel form-card">
         <h1 data-i18n="page.departmentNew">New department</h1>
-        <p data-i18n="page.departmentLead">Add a clinical area this hospital knows. The code must be unique across the whole platform.</p>
+        <p data-i18n="page.departmentLead">Add a clinical area this hospital knows. The platform assigns the code.</p>
         <form id="create-department" class="stack">
-          <div><label for="code" data-i18n="field.code">Code</label><input id="code" maxlength="20" required></div>
           <div><label for="nameAr" data-i18n="field.nameAr">Arabic name</label><input id="nameAr" maxlength="200" required dir="rtl"></div>
           <div><label for="nameEn" data-i18n="field.nameEn">English name</label><input id="nameEn" maxlength="200" required dir="ltr"></div>
           <div><label for="deptType" data-i18n="field.type">Type</label>
@@ -84,7 +83,6 @@
     const assessorId = $("#assessorId").val();
     const units = $("#units").val().split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
     api("POST", "/api/departments", {
-      code: $("#code").val(),
       nameAr: $("#nameAr").val(),
       nameEn: $("#nameEn").val(),
       deptType: $("#deptType").val(),

@@ -17,7 +17,7 @@
         <div><h1 data-i18n="page.departments">Departments</h1><p data-i18n="page.departmentsLead">Clinical areas this hospital works with. Each hospital keeps its own list.</p></div>
         <a class="btn" id="new-department" href="/departments/new" hidden><svg th:replace="~{fragments/shell :: i('plus')}"></svg><span data-i18n="page.departmentNew">New department</span></a>
       </div>
-      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.code">Code</th><th data-i18n="col.name">Name</th><th data-i18n="col.type">Type</th><th data-i18n="col.head">Head</th><th data-i18n="col.assessor">Assessor</th><th data-i18n="col.status">Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="table-card"><table class="data-table"><thead><tr><th data-i18n="col.code">Code</th><th data-i18n="col.name">Name</th><th data-i18n="col.type">Type</th><th data-i18n="col.head">Head</th><th data-i18n="col.assessor">Assessor</th><th data-i18n="col.status">Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
     </main>
   </div>
 </div>
@@ -30,21 +30,28 @@
     });
   }
   api("GET", "/api/auth/me").done(function (res) {
-    if (res.data.superAdmin || res.data.roleCode === "HOSPITAL_OWNER") $("#new-department").prop("hidden", false);
+    departmentCanEdit = directoryAdmin(res.data);
+    if (departmentCanEdit) $("#new-department").prop("hidden", false);
+    if (departmentRows) paintDepartments();
   });
   let departmentRows = null;
   let departmentError = "";
+  let departmentCanEdit = false;
   function paintDepartments() {
     if (departmentError) {
-      $("#rows").html("<tr><td colspan='6' class='empty'>" + esc(departmentError) + "</td></tr>");
+      $("#rows").html("<tr><td colspan='7' class='empty'>" + esc(departmentError) + "</td></tr>");
       return;
     }
     if (!departmentRows) return;
     $("#rows").html(departmentRows.map(function (row) {
       const name = mqLang() === "ar" ? (row.nameAr || row.nameEn) : (row.nameEn || row.nameAr);
+      const action = departmentCanEdit
+        ? "<a class='btn ghost sm' href='/departments/" + row.id + "'>" + esc(mqT("action.edit")) + "</a>"
+        : "";
       return "<tr><td>" + esc(row.code) + "</td><td dir='auto'>" + esc(name) + "</td><td><span class='pill'>" + esc(row.deptType) + "</span></td><td>" +
-        esc(row.headName) + "</td><td>" + esc(row.assessorName) + "</td><td>" + esc(mqStatus(row.status)) + "</td></tr>";
-    }).join("") || "<tr><td colspan='6' class='empty'>" + esc(mqText("This hospital has no departments yet", "لا توجد أقسام في هذا المستشفى بعد")) + "</td></tr>");
+        esc(row.headName) + "</td><td>" + esc(row.assessorName) + "</td><td>" + esc(mqStatus(row.status)) +
+        "</td><td class='actions'>" + action + "</td></tr>";
+    }).join("") || "<tr><td colspan='7' class='empty'>" + esc(mqText("This hospital has no departments yet", "لا توجد أقسام في هذا المستشفى بعد")) + "</td></tr>");
   }
   document.addEventListener("mq-lang", paintDepartments);
   api("GET", "/api/departments").done(function (res) {

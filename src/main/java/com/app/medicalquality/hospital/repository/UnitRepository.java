@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UnitRepository extends JpaRepository<Unit, Long> {
 
-    List<Unit> findByDepartmentIdAndDeletedAtIsNullOrderByNameAsc(Long a_departmentId);
+    List<Unit> findByDepartmentIdAndDeletedAtIsNullOrderByIdAsc(Long a_departmentId);
 }

@@ -261,6 +261,7 @@ button.ghost, .btn.ghost, a.ghost {
 }
 button.danger, .btn.danger { background: var(--danger); color: var(--color-on-emphasis); }
 input:disabled:not([type="checkbox"]):not([type="radio"]),
+input[readonly],
 select:disabled,
 textarea:disabled {
   background: var(--color-disabled-bg);
@@ -320,7 +321,8 @@ tbody tr:hover td { background: var(--color-surface-subtle); }
 .form-screen > .stack > .exceptional,
 .form-screen > .stack > #departments-field,
 .form-screen > .stack > #note-field,
-.form-screen > .stack > #name-ar-field { grid-column: 1 / -1; }
+.form-screen > .stack > #name-ar-field,
+.form-screen > .stack > #units-field { grid-column: 1 / -1; }
 .form-intro { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
 .form-intro h1 { margin: 0; }
 .form-intro p { margin: 4px 0 0; }

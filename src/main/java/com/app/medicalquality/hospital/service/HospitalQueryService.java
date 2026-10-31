@@ -11,10 +11,13 @@ import com.app.medicalquality.hospital.repository.DepartmentRepository;
 import com.app.medicalquality.hospital.repository.DepartmentTypeRepository;
 import com.app.medicalquality.hospital.repository.UnitRepository;
 import com.app.medicalquality.organization.entity.Organization;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.Authentication;
@@ -23,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class HospitalQueryService {
+
+    private static final Pattern DEPARTMENT_CODE = Pattern.compile("^DEPT-(\\d+)$");
 
     private final DepartmentRepository departmentRepository;
     private final DepartmentTypeRepository departmentTypeRepository;
@@ -190,22 +195,18 @@ public class HospitalQueryService {
     public DepartmentView createDepartment(DepartmentForm a_form, Authentication a_authentication) {
         hospitalContext.requireManager(a_authentication);
         Organization organization = hospitalContext.require(a_authentication);
-        String code = required(a_form.getCode(), 20);
         String nameAr = required(a_form.getNameAr(), 200);
         String nameEn = required(a_form.getNameEn(), 200);
         String deptType = required(a_form.getDeptType(), 40);
-        if (code == null || nameAr == null || nameEn == null || deptType == null) {
+        if (nameAr == null || nameEn == null || deptType == null) {
             throw new AppException("error.department.fields");
         }
         DepartmentType type = departmentTypeRepository
                 .findById(deptType)
                 .orElseThrow(() -> new AppException("error.department.type"));
-        if (departmentRepository.existsByCode(code)) {
-            throw new AppException("error.department.code_taken");
-        }
         Department department = new Department();
         department.setOrganization(organization);
-        department.setCode(code);
+        department.setCode(nextDepartmentCode());
         department.setNameAr(nameAr);
         department.setNameEn(nameEn);
         department.setDepartmentType(type);
@@ -220,6 +221,88 @@ public class HospitalQueryService {
         departmentRepository.save(department);
         saveUnits(department, a_form.getUnits());
         return departmentView(department);
+    }
+
+    @Transactional(readOnly = true)
+    public DepartmentDetail department(Long a_id, Authentication a_authentication) {
+        Organization organization = hospitalContext.require(a_authentication);
+        return departmentDetail(loadDepartment(a_id, organization.getId()));
+    }
+
+    @Transactional
+    public DepartmentDetail updateDepartment(Long a_id, DepartmentForm a_form, Authentication a_authentication) {
+        hospitalContext.requireManager(a_authentication);
+        Organization organization = hospitalContext.require(a_authentication);
+        Department department = loadDepartment(a_id, organization.getId());
+        String nameAr = required(a_form.getNameAr(), 200);
+        String nameEn = required(a_form.getNameEn(), 200);
+        String deptType = required(a_form.getDeptType(), 40);
+        if (nameAr == null || nameEn == null || deptType == null) {
+            throw new AppException("error.department.fields");
+        }
+        DepartmentType type = departmentTypeRepository
+                .findById(deptType)
+                .orElseThrow(() -> new AppException("error.department.type"));
+        department.setNameAr(nameAr);
+        department.setNameEn(nameEn);
+        department.setDepartmentType(type);
+        department.setHeadName(optional(a_form.getHeadName(), 200));
+        department.setCoordinatorName(optional(a_form.getCoordinatorName(), 200));
+        department.setStatus(status(a_form.getStatus()));
+        if (a_form.getAssessorId() == null) {
+            department.setAssessor(null);
+        } else {
+            department.setAssessor(assessorRepository
+                    .findByIdAndOrganizationIdAndDeletedAtIsNull(a_form.getAssessorId(), organization.getId())
+                    .orElseThrow(() -> new NotFoundException("error.assessor.not_found")));
+        }
+        departmentRepository.save(department);
+        replaceUnits(department, a_form.getUnits());
+        return departmentDetail(department);
+    }
+
+    private String nextDepartmentCode() {
+        int next = 1;
+        for (String code : departmentRepository.findCodes()) {
+            if (code == null) {
+                continue;
+            }
+            Matcher matcher = DEPARTMENT_CODE.matcher(code.trim());
+            if (!matcher.matches()) {
+                continue;
+            }
+            int value;
+            try {
+                value = Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ex) {
+                continue;
+            }
+            if (value >= next) {
+                next = value + 1;
+            }
+        }
+        String candidate = departmentCode(next);
+        while (departmentRepository.existsByCode(candidate)) {
+            next++;
+            candidate = departmentCode(next);
+        }
+        return candidate;
+    }
+
+    private String departmentCode(int a_number) {
+        return "DEPT-" + String.format("%03d", a_number);
+    }
+
+    private void replaceUnits(Department a_department, List<String> a_units) {
+        if (a_units == null) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        for (Unit unit : unitRepository.findByDepartmentIdAndDeletedAtIsNullOrderByIdAsc(a_department.getId())) {
+            unit.setDeletedAt(now);
+            unitRepository.save(unit);
+        }
+        saveUnits(a_department, a_units);
     }
 
     private void saveUnits(Department a_department, List<String> a_units) {
@@ -264,6 +347,26 @@ public class HospitalQueryService {
         return value;
     }
 
+    private DepartmentDetail departmentDetail(Department a_department) {
+        List<String> units = unitRepository
+                .findByDepartmentIdAndDeletedAtIsNullOrderByIdAsc(a_department.getId())
+                .stream()
+                .map(Unit::getName)
+                .toList();
+        Assessor assessor = a_department.getAssessor();
+        return new DepartmentDetail(
+                a_department.getId(),
+                a_department.getCode(),
+                a_department.getNameAr(),
+                a_department.getNameEn(),
+                a_department.getDepartmentType().getCode(),
+                a_department.getHeadName() == null ? "" : a_department.getHeadName(),
+                a_department.getCoordinatorName() == null ? "" : a_department.getCoordinatorName(),
+                assessor == null ? null : assessor.getId(),
+                a_department.getStatus(),
+                units);
+    }
+
     private DepartmentView departmentView(Department a_department) {
         String assessor = a_department.getAssessor() == null ? "" : a_department.getAssessor().getNameEn();
         return new DepartmentView(
@@ -286,6 +389,18 @@ public class HospitalQueryService {
             String headName,
             String assessorName,
             String status) {}
+
+    public record DepartmentDetail(
+            Long id,
+            String code,
+            String nameAr,
+            String nameEn,
+            String deptType,
+            String headName,
+            String coordinatorName,
+            Long assessorId,
+            String status,
+            List<String> units) {}
 
     public record DepartmentTypeView(String code, String nameEn, String examplesAr) {}
 

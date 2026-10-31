@@ -74,6 +74,12 @@ public class PageController {
         return "department-new";
     }
 
+    @GetMapping("/departments/{id}")
+    public String editDepartment(@PathVariable("id") Long a_id, Model a_model) {
+        a_model.addAttribute("departmentId", a_id);
+        return "department-edit";
+    }
+
     @GetMapping("/assessors")
     public String assessors() {
         return "assessors";

@@ -109,6 +109,21 @@ public class OperationsController {
         return AppResponse.success(hospitalQueryService.createDepartment(a_form, a_authentication));
     }
 
+    @GetMapping("/api/departments/{id}")
+    public ResponseEntity<AppResponse<HospitalQueryService.DepartmentDetail>> department(
+            @PathVariable("id") Long a_id, Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.department(a_id, a_authentication));
+    }
+
+    @PutMapping("/api/departments/{id}")
+    @HasPermission(PermissionEnum.MANAGE_DEPARTMENTS)
+    public ResponseEntity<AppResponse<HospitalQueryService.DepartmentDetail>> updateDepartment(
+            @PathVariable("id") Long a_id,
+            @RequestBody HospitalQueryService.DepartmentForm a_form,
+            Authentication a_authentication) {
+        return AppResponse.success(hospitalQueryService.updateDepartment(a_id, a_form, a_authentication));
+    }
+
     @GetMapping("/api/assessors")
     public ResponseEntity<AppResponse<List<HospitalQueryService.AssessorView>>> assessors(
             Authentication a_authentication) {
